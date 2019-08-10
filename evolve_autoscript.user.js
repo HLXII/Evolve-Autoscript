@@ -2338,6 +2338,9 @@
         if (!settings.hasOwnProperty('studyORdeify')) {
             settings.studyORdeify = "study";
         }
+        if (!settings.hasOwnProperty('uniChoice')) {
+            settings.uniChoice = 'unify';
+        }
         if (!settings.hasOwnProperty('autoMarket')) {
             settings.autoMarket = false;
         }
@@ -3419,7 +3422,13 @@
                 if(items[i].id == "tech-study" && settings.studyORdeify == "deify") {continue;}
                 if(items[i].id == "tech-deify" && settings.studyORdeify == "study") {continue;}
                 // Checking if unification
-                if(items[i].id.indexOf("wc") >= 0 && items[i].id != "tech-wc_"+settings.uniChoice) {continue;}
+                if(items[i].id.indexOf("wc") >= 0) {
+                    if (settings.uniChoice == 'unify') {
+                        if (items[i].id == 'tech-wc_reject') {continue;}
+                    } else {
+                        if (items[i].id == 'tech-wc_conquest' || items[i].id == 'tech-wc_morale' || items[i].id == 'tech-wc_money') {continue;}
+                    }
+                }
                 items[i].children[0].click();
                 if(items[i].id.indexOf("wc") >= 0) {continue;}
                 if(settings.autoPrint){messageQueue("[AUTO-RESEARCH] " + items[i].children[0].children[0].innerText,'dark');}
@@ -3463,7 +3472,13 @@
             if(researches[x].id == "tech-study" && settings.studyORdeify == "deify") {continue;}
             if(researches[x].id == "tech-deify" && settings.studyORdeify == "study") {continue;}
             // Checking if unification
-            if(researches[x].id.indexOf("wc") >= 0 && researches[x].id != "tech-wc_"+settings.uniChoice) {continue;}
+            if(researches[x].id.indexOf("wc") >= 0) {
+                if (settings.uniChoice == 'unify') {
+                    if (researches[x].id == 'tech-wc_reject') {continue;}
+                } else {
+                    if (researches[x].id == 'tech-wc_conquest' || researches[x].id == 'tech-wc_morale' || researches[x].id == 'tech-wc_money') {continue;}
+                }
+            }
             research.push(researches[x]);
         }
         //console.log(research);
@@ -5318,13 +5333,27 @@
             updateSettings();
         };
         researchSettingTab.append(label).append(target1).append(target2);
+
+        // Creating Unification choice
         let label2 = $('<div><h3 class="name has-text-warning" title="Research choice that either gives morale boost or production increase">Unification:</h3></div></br>');
-        let uniChoice = $('<select style="width:150px;"><option value="conquest">Conquest</option><option value="morale">Morale</option><option value="money">Money</option><option value="reject">Reject</option></select>');
+        let uniChoice = $('<select style="width:150px;"><option value="unify">Unify</option><option value="reject">Reject</option></select>');
+        let unifyDesc = 'Choose Unification (Either by Conquest, Cultural Supremacy, or Buy the World). Will remove combat and give storage bonus';
+        let rejectDesc = 'Choose to reject Unification. Will give morale bonus';
         let target3 = $('<div style="padding-left:5%;display:flex;"><span style="width:4rem;">Choice: </span></div>');
         target3.append(uniChoice);
+        if (settings.uniChoice == "unify") {
+            uniChoice[0].title = unifyDesc;
+        } else {
+            uniChoice[0].title = rejectDesc;
+        }
         uniChoice[0].value = settings.uniChoice;
         uniChoice[0].onchange = function(){
             settings.uniChoice = uniChoice[0].value;
+            if (settings.uniChoice == "unify") {
+                uniChoice[0].title = unifyDesc;
+            } else {
+                uniChoice[0].title = rejectDesc;
+            }
             console.log("Changing target to ", settings.uniChoice);
             updateSettings();
         };
