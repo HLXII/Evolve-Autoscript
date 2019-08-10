@@ -2138,6 +2138,7 @@
     class Craftsman extends Job {
         constructor(id, priority) {
             super(id, priority);
+            this.workPhases = ['New Moon', 'Waxing Gibbous Moon', 'Full Moon', 'Waning Crescent Moon'];
         }
 
         get mainDiv() {
@@ -2155,6 +2156,15 @@
 
         get name() {
             return "Craftsman";
+        }
+
+        // Priority goes to zero when craftsman don't do any work
+        get priority() {
+            if (this.workPhases.includes(getLunarPhase())) {
+                return this._priority;
+            } else {
+                return 0;
+            }
         }
     }
     var jobs = {};
@@ -5587,16 +5597,17 @@
         try {
             return parseInt($('.day > .has-text-warning')[0].innerText);
         } catch(e) {
-            console.log('Error in getting current day');
+            console.log('Error: Day');
             return null;
         }
     }
     function getLunarPhase() {
-        try {
-            return $('.calendar > .is-primary')[0].attributes['data-label'].value;
-        } catch(e) {
-            console.log('Error in getting current lunar phase');
-            return null;
+        let moon = document.querySelector('.calendar > .is-primary');
+        if (moon !== null) {
+            return moon.attributes['data-label'].value;
+        } else {
+            console.log("Error: Lunar Phase");
+            return "";
         }
     }
     function getRace() {
