@@ -362,7 +362,7 @@
         let scale = Math.exp(-0.25 * priority);
         if (action !== null && action !== undefined) {
             if (action instanceof Research) {
-                scale /= 100;
+                scale /= 50;
             }
             if (action instanceof Building && action.softCap >= 0) {
                 let softCap = 1 + Math.exp(0.75 * (action.numTotal - action.softCap));
@@ -3646,16 +3646,17 @@
                         // Determining how much of the resource to save for this action
                         if (action.limitingRes == curRes.id) {
                             // This resource is the limiting factor, give nothing to the next actions
-                            curAmount -= action.getResDep(curRes.id);
-                            action.keptRes[curRes.id] = action.getResDep(curRes.id);
+                            action.keptRes[curRes.id] = action.getResDep(curRes.id)/2;
+                            curAmount -= action.keptRes[curRes.id];
+
                         } else {
                             // This resource isn't the limiting factor, give some leeway
                             // Higher priority, less leeway given
                             // Limiting resource will take a long time to complete, give more leeway
                             let priorityFactor = 1 / (1.0 + Math.exp(-0.1 * action.priority));
                             let timeFactor = Math.exp(-.005 * action.maxCompletionTime);
-                            action.keptRes[curRes.id] = priorityFactor * timeFactor * action.getResDep(curRes.id)/2;
-                            curAmount -= priorityFactor * timeFactor * action.getResDep(curRes.id);
+                            action.keptRes[curRes.id] = priorityFactor * timeFactor * action.getResDep(curRes.id)/(2*(i+1));
+                            curAmount -= action.keptRes[curRes.id];
                         }
                     } else {
                         // Action cannot be achieved with this resource
@@ -3767,11 +3768,14 @@
                 Aluminium:.5,
                 Cement:.75,
                 Coal:0,
-                Oil:3,
-                Uranium:3,
-                Steel:2,
-                Titanium:5,
-                Alloy:5
+                Oil:4,
+                Uranium:4,
+                Steel:3,
+                Titanium:10,
+                Alloy:10,
+                Polymer:10,
+                Iridium:10,
+                Helium_3:10
             };
             console.log("FOC LIST:", focusList);
             let focusSequence = [];
@@ -3786,6 +3790,7 @@
                 for (let i = 0;i < focusList.length;i++) {
                     curNum[focusList[i].res] = 0;
                     wantedRatio[focusList[i].res] = prioMultiplier[focusList[i].res] * focusList[i].action.priority / totalPriority;
+                    //console.log(focusList[i].res, focusList[i].action.priority , prioMultiplier[focusList[i].res], wantedRatio[focusList[i].res]);
                 }
                 for (let i = 0;i < totalTradeRoutes;i++) {
                     // Calculating error based on next value choice
