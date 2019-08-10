@@ -548,17 +548,17 @@
         }
 
         decPowerPriority() {
-            if (this.power_priority == 0) {return;}
-            this.power_priority -= 1;
+            if (this.powerPriority == 0) {return;}
+            this.powerPriority -= 1;
             updateSettings();
-            console.log("Decrementing Power Priority", this.id, this.power_priority);
+            console.log("Decrementing Power Priority", this.id, this.powerPriority);
         }
 
         incPowerPriority() {
-            if (this.power_priority == 99) {return;}
-            this.power_priority += 1;
+            if (this.powerPriority == 99) {return;}
+            this.powerPriority += 1;
             updateSettings();
-            console.log("Incrementing Priority", this.id, this.power_priority);
+            console.log("Incrementing Priority", this.id, this.powerPriority);
         }
     }
     var buildings = {};
@@ -4882,7 +4882,7 @@
             buildingDiv.append(prioControls);
 
             // Power Priority
-            if (building.hasOwnProperty('power_priority')) {
+            if (building instanceof PoweredBuilding) {
                 let powerSub = $('<span role="button" aria-label="Decrease Power Priority" class="sub ea-buildings-tab">«</span>');
                 powerSub.on('mouseup', function(e) {
                     buildings[building.id].decPowerPriority();
