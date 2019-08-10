@@ -314,7 +314,7 @@
                     let total_crafts = 100000000000;
                     for (let i = 0;i < this.sources.length;i++) {
                         let res = this.sources[i].res;
-                        let cost = this.sources[i].cost;
+                        let cost = this.sources[i].cost * 5;
                         let cur_crafts = Math.round((res.amount - (res.storage * .9)) / cost);
                         //console.log("Checking", res.name, "A/S", res.amount, res.storage, cur_crafts);
                         if (cur_crafts < total_crafts) {
@@ -351,11 +351,11 @@
     var craftableResources = {};
     function loadCraftableResources() {
         if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
-        craftableResources.Plywood = new CraftableResource("Plywood", "Plywood", false, [{res:resources.Lumber,cost:500}]);
-        craftableResources.Brick = new CraftableResource("Brick", "Brick", false, [{res:resources.Cement,cost:200}]);
-        craftableResources.Wrought_Iron = new CraftableResource("Wrought Iron", "Wrought_Iron", false, [{res:resources.Iron,cost:400}]);
-        craftableResources.Sheet_Metal = new CraftableResource("Sheet Metal", "Sheet_Metal", false, [{res:resources.Aluminium,cost:600}]);
-        craftableResources.Mythril = new CraftableResource("Mythril", "Mythril", false, [{res:resources.Alloy,cost:500}, {res:resources.Iridium,cost:1250}]);
+        craftableResources.Plywood = new CraftableResource("Plywood", "Plywood", false, [{res:resources.Lumber,cost:100}]);
+        craftableResources.Brick = new CraftableResource("Brick", "Brick", false, [{res:resources.Cement,cost:40}]);
+        craftableResources.Wrought_Iron = new CraftableResource("Wrought Iron", "Wrought_Iron", false, [{res:resources.Iron,cost:160}]);
+        craftableResources.Sheet_Metal = new CraftableResource("Sheet Metal", "Sheet_Metal", false, [{res:resources.Aluminium,cost:120}]);
+        craftableResources.Mythril = new CraftableResource("Mythril", "Mythril", false, [{res:resources.Alloy,cost:100}, {res:resources.Iridium,cost:250}]);
     }
 
     function priorityScale(value, priority, action) {
@@ -2138,7 +2138,7 @@
     class Craftsman extends Job {
         constructor(id, priority) {
             super(id, priority);
-            this.workPhases = ['New Moon', 'Waxing Gibbous Moon', 'Full Moon', 'Waning Crescent Moon'];
+            //this.workPhases = ['New Moon', 'Waxing Gibbous Moon', 'Full Moon', 'Waning Crescent Moon'];
         }
 
         get mainDiv() {
@@ -2158,6 +2158,7 @@
             return "Craftsman";
         }
 
+        /*
         // Priority goes to zero when craftsman don't do any work
         get priority() {
             if (this.workPhases.includes(getLunarPhase())) {
@@ -2165,7 +2166,7 @@
             } else {
                 return 0;
             }
-        }
+        }*/
     }
     var jobs = {};
     function loadJobs() {
