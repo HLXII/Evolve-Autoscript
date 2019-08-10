@@ -5149,7 +5149,7 @@
                     priorityAdd.on('mouseup', function(e) {
                         autoEmployer.higherPriority(jobs[job.id]);
                     });
-                    let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job.priority+'</span>');
+                    let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
                     let priorityControls = $('<div class="foundry controls ea-employ-craft-settings" style="text-align:right;min-width:9.25rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     let parent = $('#foundry > .job > .foundry').parent();
                     parent.append(priorityControls);
@@ -5162,7 +5162,7 @@
                     priorityAdd.on('mouseup', function(e) {
                         autoEmployer.higherPriority(jobs[job.id]);
                     });
-                    let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job.priority+'</span>');
+                    let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
                     let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;min-width:9.25rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     $('#civ-'+job.id).append(priorityControls)
                 }else {
@@ -5174,7 +5174,7 @@
                     priorityAdd.on('mouseup', function(e) {
                         autoEmployer.higherPriority(jobs[job.id]);
                     });
-                    let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job.priority+'</span>');
+                    let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
                     let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;min-width:6rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     $('#civ-'+job.id).append(priorityControls)
                 }
