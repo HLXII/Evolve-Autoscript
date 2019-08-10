@@ -25,36 +25,6 @@
     *
     ***/
 
-    // Theoretically used to make sure script clicks don't have the modifier keys
-    // However, can just turn off multiplier keys
-    var ctrlDown = false;
-    var altDown = false;
-    var shiftDown = false;
-
-    /*
-    document.onkeydown = function(e) {
-        if (e.key == "Control") {
-            ctrlDown = true;
-        }
-        if (e.key == "Alt") {
-            altDown = true;
-        }
-        if (e.key == "Shift") {
-            shiftDown = true;
-        }
-    };
-    document.onkeyup = function(e) {
-        if (e.key == "Control") {
-            ctrlDown = false;
-        }
-        if (e.key == "Alt") {
-            altDown = false;
-        }
-        if (e.key == "Shift") {
-            shiftDown = false;
-        }
-    };*/
-
     // Used to ensure no modal window conflicts
     let modal = false;
 
@@ -4160,7 +4130,6 @@
         loadSettings();
         updateSettings();
         autoFarm();
-        let noKeys = !ctrlDown && !altDown && !shiftDown;
         if ($('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child(1)')[0].style.display != 'none') {
             // Evolution Automation
             if(settings.autoEvolution) {
@@ -4168,19 +4137,19 @@
             }
         } else {
             // Civilization Automation
-            if(settings.autoCraft && noKeys){
+            if(settings.autoCraft){
                 autoCraft();
             }
             if(settings.autoBuild && !settings.autoPrioritize){
                 autoBuild();
             }
-            if(settings.autoSupport && noKeys) {
+            if(settings.autoSupport) {
                 autoSupport();
             }
-            if(settings.autoEmploy && noKeys){
+            if(settings.autoEmploy){
                 autoEmployer.autoEmploy();
             }
-            if(settings.autoTax && noKeys) {
+            if(settings.autoTax) {
                 autoTax();
             }
             if(settings.autoBattle){
@@ -4189,7 +4158,7 @@
             if(settings.autoResearch && !settings.autoPrioritize){
                 autoResearch();
             }
-            if(settings.autoMarket && noKeys){
+            if(settings.autoMarket){
                 autoMarket();
             }
             if(settings.autoARPA && !settings.autoPrioritize){
@@ -4405,9 +4374,6 @@
 
     function resetUI() {
         console.log("Resetting UI");
-        ctrlDown = false;
-        altDown = false;
-        shiftDown = false;
         removeEvolutionSettings();
         removeStorageSettings();
         removeCraftSettings();
@@ -4489,36 +4455,36 @@
     function createEvolutionSettings() {
         removeEvolutionSettings();
         let evoDecision = $(`<select class="ea-evolution-settings" style="width:150px;">
-<option value="elven">Elven</option>
-<option value="orc">Orc</option>
-<option value="human">Human</option>
-<option value="troll">Troll</option>
-<option value="orge">Ogre</option>
-<option value="cylops">Cyclops</option>
-<option value="kobold">Kobold</option>
-<option value="goblin">Goblin</option>
-<option value="gnome">Gnome</option>
-<option value="cath">Cath</option>
-<option value="wolven">Wolven</option>
-<option value="centuar">Centuar</option>
-<option value="tortoisan">Tortoisan</option>
-<option value="gecko">Gecko</option>
-<option value="slitheryn">Slitheryn</option>
-<option value="arraak">Arraak</option>
-<option value="pterodacti">Pterodacti</option>
-<option value="dracnid">Dracnid</option>
-<option value="sporgar">Sporgar</option>
-<option value="shroomi">Shroomi</option>
-<option value="mantis">Mantis</option>
-<option value="scorpid">Scorpid</option>
-<option value="antid">Antid</option>
-<option value="entish">Entish</option>
-<option value="cacti">Cacti</option>
-<option value="sharkin">Sharkin</option>
-<option value="octigoran">Octigoran</option>
-<option value="balorg">Balorg</option>
-<option value="imp">Imp</option>
-</select>`);
+                            <option value="elven">Elven</option>
+                            <option value="orc">Orc</option>
+                            <option value="human">Human</option>
+                            <option value="troll">Troll</option>
+                            <option value="orge">Ogre</option>
+                            <option value="cylops">Cyclops</option>
+                            <option value="kobold">Kobold</option>
+                            <option value="goblin">Goblin</option>
+                            <option value="gnome">Gnome</option>
+                            <option value="cath">Cath</option>
+                            <option value="wolven">Wolven</option>
+                            <option value="centuar">Centuar</option>
+                            <option value="tortoisan">Tortoisan</option>
+                            <option value="gecko">Gecko</option>
+                            <option value="slitheryn">Slitheryn</option>
+                            <option value="arraak">Arraak</option>
+                            <option value="pterodacti">Pterodacti</option>
+                            <option value="dracnid">Dracnid</option>
+                            <option value="sporgar">Sporgar</option>
+                            <option value="shroomi">Shroomi</option>
+                            <option value="mantis">Mantis</option>
+                            <option value="scorpid">Scorpid</option>
+                            <option value="antid">Antid</option>
+                            <option value="entish">Entish</option>
+                            <option value="cacti">Cacti</option>
+                            <option value="sharkin">Sharkin</option>
+                            <option value="octigoran">Octigoran</option>
+                            <option value="balorg">Balorg</option>
+                            <option value="imp">Imp</option>
+                            </select>`);
         evoDecision[0].value = settings.evolution;
         evoDecision[0].onchange = function(){
             settings.evolution = evoDecision[0].value;
@@ -4749,15 +4715,14 @@
         buildingsTab.append(buildSettingsDiv);
 
         let buildingList = $('<div id="buildingList"></div>');
-        let buildingListLabel = $(`
-<div style="display:flex;">
-<span class="name has-text-warning" style="width:20%;" title="Building Name. Can be lowercase id if not currently available">Building</span>
-<span class="name has-text-warning" style="width:20%;text-align:center;" title="Will stop building this building after reaching this limit">Limit</span>
-<span class="name has-text-warning" style="width:20%;text-align:center;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
-<span class="name has-text-warning" style="width:10%;" title="Enables this building for being automatically built">Enabled</span>
-<span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this building to be built">Priority</span>
-<span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority for powering this building">Power Priority</span>
-</div>`);
+        let buildingListLabel = $(`<div style="display:flex;">
+                                    <span class="name has-text-warning" style="width:20%;" title="Building Name. Can be lowercase id if not currently available">Building</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will stop building this building after reaching this limit">Limit</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
+                                    <span class="name has-text-warning" style="width:10%;" title="Enables this building for being automatically built">Enabled</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this building to be built">Priority</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority for powering this building">Power Priority</span>
+                                    </div>`);
         buildingList.append(buildingListLabel);
         buildingsTab.append(buildingList);
         populateBuildingList();
@@ -5461,11 +5426,10 @@
         researchSettingTab.append(listParamDiv);
 
         let researchList = $('<div id="researchList"></div>');
-        let researchListLabel = $(`
-<div style="display:flex;">
-<span class="name has-text-warning" style="width:30%;" title="Research Name. Can be lowercase id if not currently available">Research</span>
-<span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this building to be built">Priority</span>
-</div>`);
+        let researchListLabel = $(`<div style="display:flex;">
+                                    <span class="name has-text-warning" style="width:30%;" title="Research Name. Can be lowercase id if not currently available">Research</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this building to be built">Priority</span>
+                                    </div>`);
         researchList.append(researchListLabel);
         researchSettingTab.append(researchList);
         populateResearchList();
