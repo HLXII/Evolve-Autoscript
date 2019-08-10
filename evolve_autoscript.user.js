@@ -15,9 +15,7 @@
     'use strict';
     var settings = {};
     var jsonSettings = localStorage.getItem('settings');
-    if(jsonSettings != null){
-        settings = JSON.parse(jsonSettings);
-    }
+    if(jsonSettings != null){settings = JSON.parse(jsonSettings);}
 
     /***
     *
@@ -34,41 +32,57 @@
             this.id = id;
         }
 
-        get amount() {
-            try {
-                return getRealValue($('#cnt'+this.id)[0].innerHTML.split(' / ')[0]);
-            } catch(e) {
-                console.log("Error: Resource", this.name, "Amount invalid");
-                return null;
-            }
+        get mainDiv() {
+            return document.getElementById('res'+this.id);
         }
-
-        get storage() {
-            try {
-                return getRealValue($('#cnt'+this.id)[0].innerHTML.split(' / ')[1]);
-            } catch(e) {
-                console.log("Error: Resource", this.name, "Storage invalid");
-                return null;
-            }
+        get cntLabel() {
+            return document.getElementById('cnt'+this.id);
         }
-
-        get ratio() {
-            return this.amount / this.storage;
+        get rateLabel() {
+            return document.getElementById('inc'+this.id);
         }
 
         get unlocked() {
-            try {
-                return $('#res'+this.id)[0].style.display != 'none';
-            } catch(e) {
-                return false;
-            }
+            return (this.mainDiv !== null && this.mainDiv.style.display != 'none');
         }
 
+        get amount() {
+            if (this.cntLabel !== null) {
+                let data = this.cntLabel.innerHTML.split(' / ');
+                if (data.length == 0) {
+                    console.log("Error:", this.id, "Amount");
+                    return -1;
+                } else {
+                    return getRealValue(data[0]);
+                }
+            } else {
+                console.log("Error:", this.id, "Amount");
+                return -1;
+            }
+        }
+        get storage() {
+            if (this.cntLabel !== null) {
+                let data = this.cntLabel.innerHTML.split(' / ');
+                if (data.length != 2) {
+                    console.log("Error:", this.id, "Storage");
+                    return -1;
+                } else {
+                    return getRealValue(data[1]);
+                }
+            } else {
+                console.log("Error:", this.id, "Amount");
+                return -1;
+            }
+        }
+        get ratio() {
+            return this.amount / this.storage;
+        }
         get rate() {
-            try {
-                return getRealValue($('#inc'+this.id)[0].innerText.substr(0, $('#inc'+this.id)[0].innerText.length - 3))
-            } catch(e) {
-                return null;
+            if (this.rateLabel !== null) {
+                return getRealValue(this.rateLabel.innerText.substr(0, this.rateLabel.innerText.length - 3));
+            } else {
+                console.log("Error:", this.id, "Rate");
+                return -1;
             }
         }
     }
@@ -126,68 +140,94 @@
             }
         }
 
-        tradeDec() {
-            try {
-                $('#market-'+this.id+' > .trade > .is-primary')[1].children[0].click();
-            } catch(e) {
-                console.log("Error:", this.id, "Trade Decrement");
+        get tradeDecSpan() {
+            let nodes = document.querySelectorAll('#market-'+this.id+' > .trade > .is-primary');
+            if (nodes.length == 0) {
+                console.log("Error:", this.id, "Trade Dec Span");
                 return null;
+            } else {
+                return nodes[0];
+            }
+        }
+        get tradeIncSpan() {
+            let nodes = document.querySelectorAll('#market-'+this.id+' > .trade > .is-primary');
+            if (nodes.length != 2) {
+                console.log("Error:", this.id, "Trade Inc Span");
+                return null;
+            } else {
+                return nodes[1];
+            }
+        }
+        get tradeDecBtn() {
+            return document.querySelector('#market-'+this.id+' > .trade > .is-primary > .add');
+        }
+        get tradeIncBtn() {
+            return document.querySelector('#market-'+this.id+' > .trade > .is-primary > .sub');
+        }
+        get tradeLabel() {
+            return document.querySelector('#market-'+this.id+' > .trade > .current');
+        }
+
+        tradeDec() {
+            if (this.tradeDecBtn !== null) {
+                this.tradeDecBtn.click();
+            } else {
+                console.log("Error:", this.id, "Trade Decrement");
             }
         }
         tradeInc() {
-            try {
-                $('#market-'+this.id+' > .trade > .is-primary')[0].children[0].click();
-            } catch(e) {
+            if (this.tradeIncBtn !== null) {
+                this.tradeIncBtn.click();
+            } else {
                 console.log("Error:", this.id, "Trade Increment");
-                return null;
             }
         }
 
         get tradeNum() {
-            try {
-                return parseInt($('#market-'+this.id+' > .trade > .current')[0].innerText);
-            } catch(e) {
+            if (this.tradeLabel !== null) {
+                return parseInt(this.tradeLabel.innerText);
+            } else {
                 console.log("Error:", this.id, "Trade Num");
-                return null;
+                return -1;
             }
         }
         get tradeBuyCost() {
-            try {
-                let dataStr = $('#market-'+this.id+' > .trade > .is-primary')[0].attributes['data-label'].value;
+            if (this.tradeDecSpan !== null) {
+                let dataStr = this.tradeDecSpan.attributes['data-label'].value;
                 var reg = /Auto-buy\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
                 return parseFloat(reg[2]);
-            } catch(e) {
+            } else {
                 console.log("Error:", this.id, "Trade Buy Cost");
-                return null;
+                return -1;
             }
         }
         get tradeSellCost() {
-            try {
-                let dataStr = $('#market-'+this.id+' > .trade > .is-primary')[1].attributes['data-label'].value;
+            if (this.tradeIncSpan !== null) {
+                let dataStr = this.tradeIncSpan.attributes['data-label'].value;
                 var reg = /Auto-sell\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
                 return parseFloat(reg[2]);
-            } catch(e) {
+            } else {
                 console.log("Error:", this.id, "Trade Sell Cost");
-                return null;
+                return -1;
             }
         }
         get tradeAmount() {
-            try {
-            let dataStr = $('#market-'+this.id+' > .trade > .is-primary')[1].attributes['data-label'].value;
-            var reg = /Auto-sell\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
-            return parseFloat(reg[1]);
-            } catch(e) {
+            if (this.tradeIncSpan !== null) {
+                let dataStr = this.tradeIncSpan.attributes['data-label'].value;
+                var reg = /Auto-sell\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
+                return parseFloat(reg[1]);
+            } else {
                 console.log("Error:", this.id, "Trade Amount");
-                return null;
+                return -1;
             }
         }
 
         get crateable() {
             try {
-                return ($('#con'+this.id)[0] !== undefined);
+                return (document.getElementById('con'+this.id) !== null);
             } catch(e) {
                 console.log("Error:", this.id, "Crateable");
-                return null;
+                return false;
             }
         }
         openStorage() {
@@ -343,27 +383,22 @@
         get priority() {return settings.actions[this.id].priority;}
         set priority(priority) {settings.actions[this.id].priority = priority;}
 
+        get label() {
+            return document.querySelector('#'+this.id+' > a > .aTitle');
+        }
+        get btn() {
+            return document.getElementById(this.id);
+        }
+
         get unlocked() {
-            try {
-                let label = $('#'+this.id+' > a > .aTitle')[0];
-                return ($('#'+this.id+' > a > .aTitle')[0] !== undefined);
-            } catch(e) {
-                console.log("Error:", this.id, "Unlocked");
-                return false;
-            }
+            return this.label !== null;
         }
 
         get name() {
-            try {
-                let label = $('#'+this.id+' > a > .aTitle');
-                if (label.length != 0) {
-                    return label[0].innerText;
-                } else {
-                    return this.id;
-                }
-            } catch(e) {
-                console.log("Error:", this.id, "Name");
-                return null;
+            if (this.label !== null) {
+                return this.label.innerText;
+            } else {
+                return this.id;
             }
         }
 
@@ -373,7 +408,6 @@
             updateSettings();
             console.log("Decrementing Priority", this.id, this.priority);
         }
-
         incPriority() {
             if (this.priority == 99) {return;}
             this.priority += 1;
@@ -401,18 +435,15 @@
         }
 
         click() {
-            try {
-                let btn = document.getElementById(this.id);
-                if (btn.className.indexOf('cna') < 0) {
-                    btn.getElementsByTagName("a")[0].click();
+            if (this.btn !== null) {
+                if (this.btn.className.indexOf('cna') < 0) {
+                    this.btn.getElementsByTagName("a")[0].click();
                     return true;
                 }
                 return false;
-            } catch(e) {
-                console.log("Error:", this.id, "Click");
+            } else {
                 return false;
             }
-            return false;
         }
     }
 
@@ -1684,14 +1715,14 @@
             this.res = res;
         }
 
-        get unlocked() {
-            try {
-                let btn = document.querySelector('#arpa'+this.id+' > div.buy > button.button.x10');
-                return (btn !== null);
-            } catch(e) {
-                console.log("Error:", this.id, "Unlocked");
-                return false;
-            }
+        get label() {
+            return document.querySelector('#arpa'+this.id+' > .head > .desc');
+        }
+        get btn() {
+            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x10');
+        }
+        get rankLabel() {
+            return document.querySelector('#arpa'+this.id+' > .head > .rank');
         }
 
         get enabled() {
@@ -1699,14 +1730,13 @@
         }
 
         get rank() {
-            try {
-                let rankLabel = document.querySelector('#arpa'+this.id+' > .head > .rank');
-                let rankStr = rankLabel.innerText;
+            if (this.rankLabel !== null) {
+                let rankStr = this.rankLabel.innerText;
                 let reg = /Level - ([\d]+)/.exec(rankStr);
                 return parseInt(reg[1]);
-            } catch(e) {
+            } else {
                 console.log("Error:", this.id, "Rank");
-                return null;
+                return -1;
             }
         }
 
@@ -1718,12 +1748,10 @@
         }
 
         click() {
-            try {
-                let btn = document.querySelector('#arpa'+this.id+' > div.buy > button.button.x10');
-                btn.click();
+            if (this.btn !== null) {
+                this.btn.click();
                 return true;
-            } catch(e) {
-                console.log("Error:", this.id, "Click");
+            } else {
                 return false;
             }
         }
@@ -1759,14 +1787,8 @@
                                         sheet_metal:15000,
                                         alloy:25000});
         arpas.monument = new ArpaAction('monument', ['arpa'], 5);
-        let type = null;
-        try {
-            type = $('#arpamonument > .head > .desc')[0].innerText;
-        } catch(e) {
-            //console.log("Error: could not load Monument");
-        }
-        if (type !== null) {
-            switch(type) {
+        if (arpas.monument.label !== null) {
+            switch(arpas.monument.label.innerText) {
                 case "Obelisk":
                     {
                         arpas.monument.res = {stone:1000000};
@@ -1797,6 +1819,10 @@
             this.res = res;
         }
 
+        get countLabel() {
+            return document.querySelector('#cnt'+this.name+'s');
+        }
+
         get unlocked() {
             if (this.id == 'crate') {
                 return researched('tech-containerization');
@@ -1810,11 +1836,12 @@
         }
 
         get full() {
-            try {
-                let data = $('#cnt'+this.name+'s')[0].innerText.split(' / ');
+            if (this.countLabel !== null) {
+                let data = this.countLabel.innerText.split(' / ');
                 return (parseInt(data[0]) == parseInt(data[1]));
-            } catch(e) {
+            } else {
                 console.log("Error:", this.id, "Full");
+                return true;
             }
         }
 
@@ -2005,36 +2032,55 @@
         get _priority() {return settings.jobs[this.id].priority;}
         set _priority(priority) {settings.jobs[this.id].priority = priority;}
 
+        get mainDiv() {
+            return document.getElementById('civ-'+this.id);
+        }
+        get label() {
+            return document.querySelector('#civ-'+this.id+' > .job_label > h3');
+        }
+        get employLabel() {
+            return document.querySelector('#civ-'+this.id+' > .job_label > .count');
+        }
+        get hireBtn() {
+            return document.querySelector('#civ-'+this.id+' > .controls > .add');
+        }
+        get fireBtn() {
+            return document.querySelector('#civ-'+this.id+' > .controls > .sub');
+        }
+
         get name() {
-            try {
-                let _name = document.querySelector('#civ-'+this.id+' > .job_label > h3').innerText;
-                if (_name === null || _name === undefined) {
-                    return this.id;
-                }
-                return _name;
-            } catch(e) {
-                console.log("Error:", this.id, "Name");
-                return null;
+            if (this.label !== null) {
+                return this.label.innerText;
+            } else {
+                return this.id;
             }
         }
 
         get employed() {
-            try {
-                let employees = document.querySelector('#civ-'+this.id+' > .job_label > .count');
-                return parseInt(employees.innerText.split('/')[0]);
-            } catch(e) {
+            if (this.employLabel !== null) {
+                let employees = this.employLabel.innerText.split('/');
+                if (employees.length == 0) {
+                    console.log("Error:", this.id, "Employed");
+                    return -1;
+                } else {
+                    return parseInt(employees[0]);
+                }
+            } else {
                 console.log("Error:", this.id, "Employed");
-                return null;
+                return -1;
             }
         }
-
         get maxEmployed() {
-            try {
-                let employees = document.querySelector('#civ-'+this.id+' > .job_label > .count');
-                return parseInt((employees.innerText.split('/').length > 1) ? employees.innerText.split('/')[1] : -1);
-            } catch(e) {
-                console.log("Error:", this.id, "MaxEmployed");
-                return null;
+            if (this.employLabel !== null) {
+                let employees = this.employLabel.innerText.split('/');
+                if (employees.length != 2) {
+                    return -1;
+                } else {
+                    return parseInt(employees[1]);
+                }
+            } else {
+                console.log("Error:", this.id, "Max Employed");
+                return -1;
             }
         }
 
@@ -2048,7 +2094,6 @@
             updateSettings();
             console.log("Lowering", this.id, "Priority", this._priority);
         }
-
         higherPriority() {
             if (this._priority == 9) {return;}
             this._priority += 1;
@@ -2057,42 +2102,22 @@
         }
 
         get unlocked() {
-            // Finding civicsTab
-            try {
-                let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
-                let civicsOn = false;
-                for (let i = 0;i < nav.length;i++) {
-                    if (nav[i].innerText == "Civics") {
-                        let nth = i+1;
-                        civicsOn = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')[0].style.display != 'none';
-                        break;
-                    }
-                }
-                return $('#civ-'+this.id)[0].style.display != 'none' && civicsOn;
-            } catch(e) {
-                console.log("Error:", this.id, "Unlocked");
-                return false;
-            }
+            return (civicsOn() && this.mainDiv !== null && this.mainDiv.style.display != 'none');
         }
 
         hire() {
-            try {
-                let hireBtn = document.querySelector('#civ-'+this.id+' > .controls > .add');
-                hireBtn.click();
+            if (this.hireBtn !== null) {
+                this.hireBtn.click();
                 return true;
-            } catch(e) {
-                console.log("Error:", this.id, "Hire");
+            } else {
                 return false;
             }
         }
-
         fire() {
-            try {
-                let fireBtn = document.querySelector('#civ-'+this.id+' > .controls > .sub');
-                fireBtn.click();
+            if (this.fireBtn !== null) {
+                this.fireBtn.click();
                 return true;
-            } catch(e) {
-                console.log("Error:", this.id, "Fire");
+            } else {
                 return false;
             }
         }
@@ -2115,68 +2140,21 @@
             super(id, priority);
         }
 
+        get mainDiv() {
+            return document.getElementById('foundry');
+        }
+        get employLabel() {
+            return document.querySelector('#foundry > .job > .foundry > .count');
+        }
+        get hireBtn() {
+            return document.querySelector('#foundry .job:nth-child(2) > .controls > .add')
+        }
+        get fireBtn() {
+            return document.querySelector('#foundry .job:nth-child(2) > .controls > .sub')
+        }
+
         get name() {
             return "Craftsman";
-        }
-
-        get employed() {
-            try {
-                let employees = document.querySelector('#foundry > .job > .foundry > .count');
-                return parseInt(employees.innerText.split('/')[0]);
-            } catch(e) {
-                console.log("Error:", this.id, "Employed");
-                return null;
-            }
-        }
-
-        get maxEmployed() {
-            try {
-                let employees = document.querySelector('#foundry > .job > .foundry > .count');
-                return parseInt((employees.innerText.split('/').length > 1) ? employees.innerText.split('/')[1] : -1);
-            } catch(e) {
-                console.log("Error:", this.id, "MaxEmployed");
-                return null;
-            }
-        }
-
-        get unlocked() {
-            try {
-                // Finding civicsTab
-                let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
-                let civicsOn = false;
-                for (let i = 0;i < nav.length;i++) {
-                    if (nav[i].innerText == "Civics") {
-                        let nth = i+1;
-                        civicsOn = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')[0].style.display != 'none';
-                        break;
-                    }
-                }
-                return $('#foundry')[0].style.display != 'none' && civicsOn && $('#foundry')[0].children.length > 0;
-            } catch(e) {
-                console.log("Error:", this.id, "Unlocked");
-                return false;
-            }
-        }
-
-        hire() {
-            try {
-                let hireBtn = document.querySelectorAll('#foundry .job')[1].children[1].children[1];
-                hireBtn.click();
-                return true;
-            } catch(e) {
-                console.log("Error:", this.id, "Hire");
-                return false;
-            }
-        }
-
-        fire() {
-            try {
-                let fireBtn = document.querySelectorAll('#foundry .job')[1].children[1].children[0];
-                fireBtn.click();
-            } catch(e) {
-                console.log("Error:", this.id, "Fire");
-                return false;
-            }
         }
     }
     var jobs = {};
@@ -2203,71 +2181,20 @@
             super(id, priority);
         }
 
-        get name() {
-            try {
-                let _name = document.querySelector('#craft'+this.id+' > h3').innerText;
-                if (_name === null || _name === undefined) {
-                    return this.id;
-                }
-                return _name;
-            } catch(e) {
-                console.log("Error:", this.id, "Name");
-                return null;
-            }
+        get mainDiv() {
+            return document.getElementById('craft'+this.id);
         }
-
-        get employed() {
-            try {
-                let employees = document.querySelector('#craft'+this.id+' > .count');
-                return parseInt(employees.innerText.split('/')[0]);
-            } catch(e) {
-                console.log("Error:", this.id, "Employed");
-                return null;
-            }
+        get label() {
+            return document.querySelector('#craft'+this.id+' > h3');
         }
-        get maxEmployed() {
-            try {
-                let employees = document.querySelector('#craft'+this.id+' > .count');
-                return parseInt((employees.innerText.split('/').length > 1) ? employees.innerText.split('/')[1] : -1);
-            } catch(e) {
-                console.log("Error:", this.id, "MaxEmployed");
-                return null;
-            }
+        get employLabel() {
+            return document.querySelector('#craft'+this.id+' > .count');
         }
-
-        get unlocked() {
-            // Finding civicsTab
-            let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
-            let civicsOn = false;
-            for (let i = 0;i < nav.length;i++) {
-                if (nav[i].innerText == "Civics") {
-                    let nth = i+1;
-                    civicsOn = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')[0].style.display != 'none';
-                    break;
-                }
-            }
-            return (typeof $('#craft'+this.id)[0] !== 'undefined') && civicsOn;
+        get hireBtn() {
+            return document.getElementById('craft'+this.id).parentNode.children[1].children[1];
         }
-
-        hire() {
-            try {
-                let hireBtn = document.getElementById('craft'+this.id).parentNode.children[1].children[1];
-                hireBtn.click();
-                return true;
-            } catch(e) {
-                console.log("Error:", this.id, "Hire");
-                return false;
-            }
-        }
-        fire() {
-            try {
-                let fireBtn = document.getElementById('craft'+this.id).parentNode.children[1].children[0];
-                fireBtn.click();
-                return true;
-            } catch(e) {
-                console.log("Error:", this.id, "Fire");
-                return false;
-            }
+        get fireBtn() {
+            return document.getElementById('craft'+this.id).parentNode.children[1].children[0];
         }
     }
     var craftJobs = {};
@@ -3125,9 +3052,9 @@
             for (var x in resources) {
                 let resource = resources[x];
                 // Continue if resource hasn't been unlocked
-                if(!resource.unlocked) {return;}
+                if(!resource.unlocked) {continue;}
 
-                //console.log("Auto Market", element.name);
+                //console.log("Auto Market", resource.name);
                 let curResource = resource.amount;
                 let maxResource = resource.storage;
                 // Can sell resource
@@ -3674,8 +3601,7 @@
             limits[curRes.id] = null;
             // Determining resource completion
             // Resource filled, set all to completion
-            //console.log(curRes.id, curRes.ratio);
-            if (curRes.ratio > 0.99) {
+            if (!(curRes instanceof CraftableResource) && curRes.ratio > 0.99) {
                 //console.log(curRes.id, "ratio > 0.99. Set all to complete");
                 for (let j = 0;j < pq.length;j++) {
                     pq[j].completion[curRes.id.toLowerCase()] = true;
@@ -3733,6 +3659,9 @@
                 if (clicked) {
                     if (settings.autoPrint) {
                         messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
+                        if (action.id == 'tech-mad') {
+                            settings.log.push(getTotalGameDays());
+                        }
                     }
                     break;
                 }
@@ -4130,7 +4059,7 @@
         loadSettings();
         updateSettings();
         autoFarm();
-        if ($('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child(1)')[0].style.display != 'none') {
+        if (inEvolution()) {
             // Evolution Automation
             if(settings.autoEvolution) {
                 autoEvolution();
@@ -4173,7 +4102,7 @@
     setInterval(fastAutomate, 1000);
 
     function midAutomate() {
-        if ($('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child(1)')[0].style.display == 'none') {
+        if (!inEvolution()) {
             if (settings.autoStorage) {
                 autoStorage();
             }
@@ -4267,7 +4196,7 @@
             createSettingToggle('autoFarm', 'Turns on autofarming of resources');
         }
         // If not currently in the evolution stage (thus civilization stage
-        if($('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child(1)')[0].style.display == 'none') {
+        if(!inEvolution()) {
             // These toggles only appear after the evolution stage is over
             // Creating Buildings Tab
             if ($('.ea-buildings-tab').length == 0) {
@@ -5679,6 +5608,7 @@
         }
     }
 
+    // Convert from abbreviated value to actual number
     function getRealValue(num){
         var suffix = {
             K:1000,
@@ -5696,11 +5626,28 @@
         return parseFloat(num);
     }
 
+    // Determines if the research given has already been researched
     function researched(id) {
         let researched = $('#oldTech > div');
         for (let i = 0;i < researched.length;i++) {
             if (id == researched[i].id) {
                 return true;
+            }
+        }
+        return false;
+    }
+
+    // Determines if stage is currently in evolution
+    function inEvolution() {
+        return $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child(1)')[0].style.display != 'none';
+    }
+    // Determines if the civics tab has been unlocked
+    function civicsOn() {
+        let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
+        for (let i = 0;i < nav.length;i++) {
+            if (nav[i].innerText == "Civics") {
+                let nth = i+1;
+                return $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')[0].style.display != 'none';
             }
         }
         return false;
