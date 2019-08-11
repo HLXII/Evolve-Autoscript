@@ -2158,6 +2158,10 @@
             return "Craftsman";
         }
 
+        get unlocked() {
+            return (civicsOn() && this.mainDiv !== null && this.mainDiv.children.length > 0);
+        }
+
         /*
         // Priority goes to zero when craftsman don't do any work
         get priority() {
