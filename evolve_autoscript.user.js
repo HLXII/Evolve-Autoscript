@@ -3650,7 +3650,7 @@
                         // Determining how much of the resource to save for this action
                         if (action.limitingRes == curRes.id) {
                             // This resource is the limiting factor, give nothing to the next actions
-                            action.keptRes[curRes.id] = action.getResDep(curRes.id)/2;
+                            action.keptRes[curRes.id] = action.getResDep(curRes.id);
                             curAmount -= action.keptRes[curRes.id];
 
                         } else {
@@ -3659,7 +3659,7 @@
                             // Limiting resource will take a long time to complete, give more leeway
                             let priorityFactor = 1 / (1.0 + Math.exp(-0.1 * action.priority));
                             let timeFactor = Math.exp(-.005 * action.maxCompletionTime);
-                            action.keptRes[curRes.id] = priorityFactor * timeFactor * action.getResDep(curRes.id)/(2*(i+1));
+                            action.keptRes[curRes.id] = priorityFactor * timeFactor * action.getResDep(curRes.id)/(i+1);
                             curAmount -= action.keptRes[curRes.id];
                         }
                     } else {
