@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.7
+// @version      1.1.8
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -166,6 +166,22 @@
         }
         get tradeLabel() {
             return document.querySelector('#market-'+this.id+' > .trade > .current');
+        }
+        get sellBtn() {
+            let sellBtn = document.querySelectorAll('#market-'+this.id+' > .order');
+            if (sellBtn !== null && sellBtn.length >= 2) {
+                return sellBtn[1];
+            } else {
+                return null;
+            }
+        }
+        get buyBtn() {
+            let buyBtn = document.querySelectorAll('#market-'+this.id+' > .order');
+            if (buyBtn !== null && buyBtn.length >= 1) {
+                return buyBtn[0];
+            } else {
+                return null;
+            }
         }
 
         tradeDec() {
@@ -3071,13 +3087,15 @@
                 let resource = resources[x];
                 // Continue if resource hasn't been unlocked
                 if(!resource.unlocked) {continue;}
+                // Continue if resource isn't tradeable
+                if(!(resource instanceof TradeableResource)) {continue;}
 
                 //console.log("Auto Market", resource.name);
                 let curResource = resource.amount;
                 let maxResource = resource.storage;
                 // Can sell resource
-                //console.log(resource.ratio, resource.sellRatio);
-                if (resource.autosell && resource.ratio > resource.sellRatio) {
+                //console.log(resource.id, resource.ratio, resource.sellRatio);
+                if (resource.autoSell && resource.ratio > resource.sellRatio && resource.sellBtn !== null) {
                     //console.log("Autoselling", resource.name);
                     let sellValue = getRealValue(resource.sellBtn.innerHTML.substr(1));
                     let counter = 0;
@@ -3099,7 +3117,8 @@
                     return;
                 }
 
-                if (resource.autobuy && resource.ratio < resource.buyRatio) {
+                if (resource.autoBuy && resource.ratio < resource.buyRatio && resource.buyBtn !== null) {
+                    //console.log("Autobuying", resource.name);
                     let buyValue = getRealValue(resource.buyBtn.innerHTML.substr(1));
                     //console.log("CURM:", curMoney, "sellV", buyValue, "MAXM", maxMoney, "CURR", curResource, "MAXR", maxResource, "MINM", getMinMoney());
                     while(true) {
