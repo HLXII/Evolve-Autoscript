@@ -75,14 +75,6 @@
         "imp":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-imp"]
     };
     let maxEvo = {}
-    /*
-    let maxEvo = {
-        "evo-membrane":6,
-        "evo-organelles":2,
-        "evo-nucleus":2,
-        "evo-eukaryotic_cell":3,
-        "evo-mitochondria":5,
-    };*/
     function loadEvolution() {
         // Loading all maximum values for evolution upgrades
         maxEvo = {};
@@ -95,7 +87,10 @@
             needed *= 0.8;
         }
         let baseStorage = 100;
-        //TODO: Add increase for that perk from that acheivement idk
+        // Adding to baseStorage if Creator is unlocked
+        if (achievementUnlocked('Creator') != -1) {
+            baseStorage += (achievementUnlocked('Creator')-1)*50;
+        }
         // Finding most optimal maxes to reach sentience
         let total = 1000;
         for (let i = 0;i < 10;i++) {
@@ -108,6 +103,10 @@
             }
         }
         maxEvo['evo-membrane'] = Math.ceil((needed-baseStorage) / (5 * maxEvo['evo-mitochondria'] + 5))
+        // Setting minimum to 1 for unlocking next upgrades
+        maxEvo['evo-membrane'] = (maxEvo['evo-membrane'] <= 0) ? 1 : maxEvo['evo-membrane'];
+        maxEvo['evo-eukaryotic_cell'] = (maxEvo['evo-eukaryotic_cell'] <= 0) ? 1 : maxEvo['evo-eukaryotic_cell'];
+        maxEvo['evo-mitochondria'] = (maxEvo['evo-mitochondria'] <= 0) ? 1 : maxEvo['evo-mitochondria'];
     }
 
     class Resource {
@@ -5746,12 +5745,24 @@
                 return false;
         }
         let divList = $('#perksPanel > div');
-        for (let i = 0;i < divList;i++) {
+        for (let i = 0;i < divList.length;i++) {
             if (pat.exec(divList[i].innerText) !== null) {
                 return true;
             }
         }
         return false;
+    }
+    // Determines if an achievement has been unlocked
+    // Returns the achievement level (1-5) if unlocked
+    // Returns -1 if not unlocked
+    function achievementUnlocked(achievement) {
+        let divList = $('.achievement');
+        for (let i = 0;i < divList.length;i++) {
+            if (divList[i].children[0].innerText == achievement) {
+                return $('.achievement')[0].children[2].children[0].attributes.class.value[4];
+            }
+        }
+        return -1;
     }
 
     function getMinMoney() {
