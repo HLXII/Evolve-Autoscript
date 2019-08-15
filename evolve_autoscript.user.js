@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.8
+// @version      1.1.9
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -25,6 +25,90 @@
 
     // Used to ensure no modal window conflicts
     let modal = false;
+
+    let evoFarmActions = ["evo-rna", "evo-dna"];
+    let evoRaceActions = ["evo-phagocytosis", "evo-chitin", "evo-chloroplasts",
+                          "evo-eggshell", "evo-mammals", "evo-athropods",
+                          "evo-ectothermic", "evo-endothermic",
+                          "evo-humanoid", "evo-gigantism", "evo-animalism", "evo-dwarfism",
+                          "evo-aquatic", "evo-demonic",
+                          "evo-entish", "evo-cacti",
+                          "evo-sporgar", "evo-shroomi",
+                          "evo-arraak", "evo-pterodacti", "evo-dracnid",
+                          "evo-tortoisan", "evo-gecko", "evo-slitheryn",
+                          "evo-human", "evo-elven", "evo-orc",
+                          "evo-orge", "evo-cyclops", "evo-troll",
+                          "evo-kobold", "evo-goblin", "evo-gnome",
+                          "evo-cath", "evo-wolven", "evo-centuar",
+                          "evo-mantis", "evo-scorpid", "evo-antid",
+                          "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp"];
+    let evoRaceTrees = {
+        "entish":["evo-chloroplasts", "evo-entish"],
+        "cacti":["evo-chloroplasts", "evo-cacti"],
+        "sporgar":["evo-chitin", "evo-sporgar"],
+        "shroomi":["evo-chitin", "evo-shroomi"],
+        "arraak":["evo-phagocytosis", "evo-eggshell", "evo-endothermic", "evo-arraak"],
+        "pterodacti":["evo-phagocytosis", "evo-eggshell", "evo-endothermic", "evo-pterodacti"],
+        "dracnid":["evo-phagocytosis", "evo-eggshell", "evo-endothermic", "evo-dracnid"],
+        "tortoisan":["evo-phagocytosis", "evo-eggshell", "evo-ectothermic", "evo-tortoisan"],
+        "gecko":["evo-phagocytosis", "evo-eggshell", "evo-ectothermic", "evo-gecko"],
+        "slitheryn":["evo-phagocytosis", "evo-eggshell", "evo-ectothermic", "evo-slitheryn"],
+        "human":["evo-phagocytosis", "evo-mammals", "evo-humanoid", "evo-human"],
+        "elven":["evo-phagocytosis", "evo-mammals", "evo-humanoid", "evo-elven"],
+        "orc":["evo-phagocytosis", "evo-mammals", "evo-humanoid", "evo-orc"],
+        "orge":["evo-phagocytosis", "evo-mammals", "evo-gigantism", "evo-orge"],
+        "cyclops":["evo-phagocytosis", "evo-mammals", "evo-gigantism", "evo-cyclops"],
+        "troll":["evo-phagocytosis", "evo-mammals", "evo-gigantism", "evo-troll"],
+        "kobold":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-kobold"],
+        "goblin":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-goblin"],
+        "gnome":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-gnome"],
+        "cath":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-cath"],
+        "wolven":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-wolven"],
+        "centuar":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-centuar"],
+        "mantis":["evo-phagocytosis", "evo-athropods", "evo-mantis"],
+        "scorpid":["evo-phagocytosis", "evo-athropods", "evo-scorpid"],
+        "antid":["evo-phagocytosis", "evo-athropods", "evo-antid"],
+        "sharkin":["evo-phagocytosis", "evo-aquatic", "evo-sharkin"],
+        "octigoran":["evo-phagocytosis", "evo-aquatic", "evo-octigoran"],
+        "octigoran":["evo-phagocytosis", "evo-aquatic", "evo-octigoran"],
+        "balorg":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-balorg"],
+        "imp":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-imp"]
+    };
+    let maxEvo = {}
+    /*
+    let maxEvo = {
+        "evo-membrane":6,
+        "evo-organelles":2,
+        "evo-nucleus":2,
+        "evo-eukaryotic_cell":3,
+        "evo-mitochondria":5,
+    };*/
+    function loadEvolution() {
+        // Loading all maximum values for evolution upgrades
+        maxEvo = {};
+        // Need these to unlock next upgrades
+        maxEvo['evo-organelles'] = 2;
+        maxEvo['evo-nucleus'] = 1;
+        // Determining how much storage is necessary
+        let needed = 320
+        if (perkUnlocked('Morphogenesis')) {
+            needed *= 0.8;
+        }
+        let baseStorage = 100;
+        //TODO: Add increase for that perk from that acheivement idk
+        // Finding most optimal maxes to reach sentience
+        let total = 1000;
+        for (let i = 0;i < 10;i++) {
+            let numEuk = i;
+            let numMit = Math.ceil((((needed-baseStorage) / numEuk) - 10)/10)
+            if ((numEuk + numMit) <= total) {
+                maxEvo['evo-eukaryotic_cell'] = numEuk;
+                maxEvo['evo-mitochondria'] = numMit;
+                total = numEuk + numMit
+            }
+        }
+        maxEvo['evo-membrane'] = Math.ceil((needed-baseStorage) / (5 * maxEvo['evo-mitochondria'] + 5))
+    }
 
     class Resource {
         constructor(name, id) {
@@ -2278,6 +2362,8 @@
     ***/
 
     function loadSettings() {
+        // Evolution
+        loadEvolution();
         // Farm
         loadFarm();
         // Resources
@@ -2429,61 +2515,6 @@
         }
     }
 
-    let evoFarmActions = ["evo-rna", "evo-dna"];
-    let evoRaceActions = ["evo-phagocytosis", "evo-chitin", "evo-chloroplasts",
-                          "evo-eggshell", "evo-mammals", "evo-athropods",
-                          "evo-ectothermic", "evo-endothermic",
-                          "evo-humanoid", "evo-gigantism", "evo-animalism", "evo-dwarfism",
-                          "evo-aquatic", "evo-demonic",
-                          "evo-entish", "evo-cacti",
-                          "evo-sporgar", "evo-shroomi",
-                          "evo-arraak", "evo-pterodacti", "evo-dracnid",
-                          "evo-tortoisan", "evo-gecko", "evo-slitheryn",
-                          "evo-human", "evo-elven", "evo-orc",
-                          "evo-orge", "evo-cyclops", "evo-troll",
-                          "evo-kobold", "evo-goblin", "evo-gnome",
-                          "evo-cath", "evo-wolven", "evo-centuar",
-                          "evo-mantis", "evo-scorpid", "evo-antid",
-                          "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp"];
-    let evoRaceTrees = {
-        "entish":["evo-chloroplasts", "evo-entish"],
-        "cacti":["evo-chloroplasts", "evo-cacti"],
-        "sporgar":["evo-chitin", "evo-sporgar"],
-        "shroomi":["evo-chitin", "evo-shroomi"],
-        "arraak":["evo-phagocytosis", "evo-eggshell", "evo-endothermic", "evo-arraak"],
-        "pterodacti":["evo-phagocytosis", "evo-eggshell", "evo-endothermic", "evo-pterodacti"],
-        "dracnid":["evo-phagocytosis", "evo-eggshell", "evo-endothermic", "evo-dracnid"],
-        "tortoisan":["evo-phagocytosis", "evo-eggshell", "evo-ectothermic", "evo-tortoisan"],
-        "gecko":["evo-phagocytosis", "evo-eggshell", "evo-ectothermic", "evo-gecko"],
-        "slitheryn":["evo-phagocytosis", "evo-eggshell", "evo-ectothermic", "evo-slitheryn"],
-        "human":["evo-phagocytosis", "evo-mammals", "evo-humanoid", "evo-human"],
-        "elven":["evo-phagocytosis", "evo-mammals", "evo-humanoid", "evo-elven"],
-        "orc":["evo-phagocytosis", "evo-mammals", "evo-humanoid", "evo-orc"],
-        "orge":["evo-phagocytosis", "evo-mammals", "evo-gigantism", "evo-orge"],
-        "cyclops":["evo-phagocytosis", "evo-mammals", "evo-gigantism", "evo-cyclops"],
-        "troll":["evo-phagocytosis", "evo-mammals", "evo-gigantism", "evo-troll"],
-        "kobold":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-kobold"],
-        "goblin":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-goblin"],
-        "gnome":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-gnome"],
-        "cath":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-cath"],
-        "wolven":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-wolven"],
-        "centuar":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-centuar"],
-        "mantis":["evo-phagocytosis", "evo-athropods", "evo-mantis"],
-        "scorpid":["evo-phagocytosis", "evo-athropods", "evo-scorpid"],
-        "antid":["evo-phagocytosis", "evo-athropods", "evo-antid"],
-        "sharkin":["evo-phagocytosis", "evo-aquatic", "evo-sharkin"],
-        "octigoran":["evo-phagocytosis", "evo-aquatic", "evo-octigoran"],
-        "octigoran":["evo-phagocytosis", "evo-aquatic", "evo-octigoran"],
-        "balorg":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-balorg"],
-        "imp":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-imp"]
-    };
-    let maxEvo = {
-        "evo-membrane":6,
-        "evo-organelles":2,
-        "evo-nucleus":2,
-        "evo-eukaryotic_cell":3,
-        "evo-mitochondria":5,
-    };
     function autoEvolution() {
         let actions = document.querySelectorAll('#evolution .action');
         for(let i = 0; i < actions.length; i++){
@@ -3079,7 +3110,7 @@
         let maxMoney = resources.Money.storage;
         let multipliers = $('#market-qty').children();
         // If multipliers don't exist (aka cannot manual buy/sell) don't autoMarket
-        if (multipliers === null || multipliers === undefined) {return;}
+        if (multipliers === null || multipliers === undefined || multipliers.length == 0) {return;}
         multipliers[2].click();
         let qty = 25;
         setTimeout(function(){ //timeout needed to let the click on multiplier take effect
@@ -3601,7 +3632,7 @@
             for (let j = 0;j < actions.length;j++) {
                 let cost = actions[j].getResDep(curRes.id);
                 //console.log(actions[j].id, cost);
-                if (cost !== null && cost > 0) {
+                if (cost !== null && cost !== NaN && cost > 0) {
 
                     pq.push(actions[j]);
                     // Setting up completion attribute
@@ -3610,8 +3641,8 @@
             }
             // Sorting actions by scaled priority
             pq.sort(function(a,b) {
-                let aCost = priorityScale(a.res[curRes.id.toLowerCase()], a.priority, a);
-                let bCost = priorityScale(b.res[curRes.id.toLowerCase()], b.priority, b);
+                let aCost = priorityScale(a.getResDep(curRes.id.toLowerCase()), a.priority, a);
+                let bCost = priorityScale(b.getResDep(curRes.id.toLowerCase()), b.priority, b);
                 return aCost > bCost;
             });
 
@@ -4443,7 +4474,7 @@
                             <option value="human">Human</option>
                             <option value="troll">Troll</option>
                             <option value="orge">Ogre</option>
-                            <option value="cylops">Cyclops</option>
+                            <option value="cyclops">Cyclops</option>
                             <option value="kobold">Kobold</option>
                             <option value="goblin">Goblin</option>
                             <option value="gnome">Gnome</option>
@@ -5717,6 +5748,24 @@
             if (nav[i].innerText == "Civics") {
                 let nth = i+1;
                 return $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')[0].style.display != 'none';
+            }
+        }
+        return false;
+    }
+    // Determines if a perk has been unlocked
+    function perkUnlocked(perk) {
+        let pat = "";
+        switch(perk) {
+            case 'Morphogenesis':
+                pat = /Evolution costs decreased/;
+                break;
+            default:
+                return false;
+        }
+        let divList = $('#perksPanel > div');
+        for (let i = 0;i < divList;i++) {
+            if (pat.exec(divList[i].innerText) !== null) {
+                return true;
             }
         }
         return false;
