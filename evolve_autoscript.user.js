@@ -3705,6 +3705,10 @@
             if (canBuy) {
                 console.log(action.id, "can buy");
                 let clicked = action.click();
+                // Don't count unification research
+                if (action.id == 'tech-wc_conquest' || action.id == 'tech-wc_morale' || action.id == 'tech-wc_money' || action.id == 'tech-wc_reject') {
+                    clicked = false;
+                }
                 if (clicked) {
                     if (settings.autoPrint) {
                         messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
@@ -3809,7 +3813,7 @@
             Titanium:10,
             Alloy:10,
             Polymer:10,
-            Iridium:10,
+            Iridium:15,
             Helium_3:10
         };
         console.log("FOC LIST:", focusList);
