@@ -3019,6 +3019,14 @@
             }
             total_priority -= job.priority;
         }
+        // Sometimes there's still some free agents left
+        for (let i = 0;i < sortedJobs.length;i++) {
+            let job = sortedJobs[i];
+            if (job.id == 'free') {continue;}
+            for (let j = 0;j < free_agents;j++) {
+                job.hire();
+            }
+        }
 
         // Divy up Craftsmen
 
