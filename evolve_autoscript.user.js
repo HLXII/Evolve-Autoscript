@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.11
+// @version      1.1.12
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -395,7 +395,7 @@
         resources.Helium_3 = new TradeableResource("Helium_3", false, false, .5, .9, 0, 0);
         resources.Neutronium = new Resource("Neutronium");
         resources.Elerium = new Resource("Elerium");
-        resources['Nano Tube'] = new Resource("Nano_Tube");
+        resources.Nano_Tube = new Resource("Nano_Tube");
     }
 
     class CraftableResource extends Resource {
@@ -570,17 +570,15 @@
         get softCap() {return settings.actions[this.id].softCap;}
         set softCap(softCap) {settings.actions[this.id].softCap = softCap;}
 
+        get amountLabel() {
+            return document.querySelector('#'+this.id+' > a > .count')
+        }
+
         get numTotal() {
-            try {
-                let amountLabel = $('#'+this.id+' > a > .count')[0];
-                if (amountLabel !== undefined) {
-                    return parseInt(amountLabel.innerText);
-                } else {
-                    return null;
-                }
-            } catch(e) {
-                console.log("Error:", this.id, "numTotal");
-                return null;
+            if (this.amountLabel !== null) {
+                return +this.amountLabel.innerText
+            } else {
+                return 0;
             }
         }
 
@@ -635,23 +633,25 @@
             }
         }
 
-        get numOn() {
-            try {
-                let incBtn = $('#'+this.id+' > .on')[0];
-                return parseInt(incBtn.innerText);
-            } catch(e) {
-                console.log("Error:", this.id, "numOn");
-                return null;
-            }
+        get incBtn() {
+            return document.querySelector('#'+this.id+' > .on');
+        }
+        get decBtn() {
+            return document.querySelector('#'+this.id+' > .off');
         }
 
+        get numOn() {
+            if (this.incBtn !== null) {
+                return +this.incBtn.innerText
+            } else {
+                return 0;
+            }
+        }
         get numOff() {
-            try {
-                let decBtn = $('#'+this.id+' > .off')[0];
-                return parseInt(decBtn.innerText);
-            } catch(e) {
-                console.log("Error:", this.id, "numOff");
-                return null;
+            if (this.decBtn !== null) {
+                return +this.decBtn.innerText
+            } else {
+                return 0;
             }
         }
 
@@ -3381,6 +3381,183 @@
         }, 100);
     }
 
+    function autoFactory(limits) {
+        // Don't Auto factory if not unlocked
+        if (!researched('tech-industrialization')) {return;}
+        // Checking if modal already open
+        if ($('.modal').length != 0) {
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            return;
+        }
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+
+        console.log("Auto Factory");
+        // Opening modal
+        $('#city-factory > .special').click();
+        // Delaying for modal animation
+        setTimeout(function() {
+            // Finding relevent elements
+            let decBtns = $('#specialModal > div > .sub');
+            let incBtns = $('#specialModal > div > .add');
+            let labels = $('#specialModal > div > span.current');
+            let datas = $('#specialModal > div > span.is-primary');
+            let luxNum = null; let alloyNum = null; let polymerNum = null; let nanoTubeNum = null;
+            let luxFurCost = null; let luxMoneyProduct = null;
+            let alloyCopperCost = null; let alloyAluminiumCost = null;
+            let polymerOilCost = null; let polymerLumberCost = null;
+            let nanoTubeCoalCost = null; let nanoTubeNeutroniumCost = null;
+            // Getting Data values
+            if (decBtns.length > 0) {
+                let str = datas[0].attributes['data-label'].value;
+                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
+                luxFurCost = temp[1];
+                luxMoneyProduct = temp[2];
+                luxNum = +labels[0].innerText
+            }
+            if (decBtns.length > 1) {
+                let str = datas[1].attributes['data-label'].value;
+                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+                alloyCopperCost = temp[1];
+                alloyAluminiumCost = temp[2];
+                alloyNum = +labels[1].innerText
+            }
+            if (decBtns.length > 2) {
+                let str = datas[2].attributes['data-label'].value;
+                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+                polymerOilCost = temp[1];
+                polymerLumberCost = temp[2];
+                polymerNum = +labels[2].innerText
+            }
+            if (decBtns.length > 3) {
+                let str = datas[2].attributes['data-label'].value;
+                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+                nanoTubeCoalCost = temp[1];
+                nanoTubeNeutroniumCost = temp[2];
+                nanoTubeNum = +labels[3].innerText
+            }
+            //console.log("L", luxNum, luxFurCost, luxMoneyProduct, "A", alloyNum, alloyCopperCost, alloyAluminiumCost, "P", polymerNum, polymerOilCost, polymerLumberCost, "N", nanoTubeNum, nanoTubeCoalCost ,nanoTubeNeutroniumCost);
+            // Resetting temp rates
+            if (luxNum !== null) {resources.Money.temp_rate -= luxMoneyProduct * luxNum; resources.Furs.temp_rate += luxFurCost * luxNum;}
+            if (alloyNum !== null) {resources.Copper.temp_rate += alloyCopperCost * alloyNum; resources.Aluminium.temp_rate += alloyAluminiumCost * alloyNum;}
+            if (polymerNum !== null) {resources.Oil.temp_rate += polymerOilCost * polymerNum; resources.Lumber.temp_rate += polymerLumberCost * polymerNum;}
+            if (nanoTubeNum !== null) {resources.Coal.temp_rate += nanoTubeCoalCost * nanoTubeNum; resources.Neutronium.temp_rate += nanoTubeNeutroniumCost * nanoTubeNum;}
+            // TODO: Alloy/Polymer/Nanotube production numbers aren't reset, since their numbers can't be found in the data values. Some how find this info
+            // Calculating changes
+            let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn
+            let wantedLux = 0; let luxPriority = 0;
+            let wantedAlloy = 0; let alloyPriority = 0;
+            let wantedPolymer = 0; let polymerPriority = 0;
+            let wantedNanoTube = 0; let nanoTubePriority = 0;
+            let totalPriority = 0;
+            // TODO: Bring priomultipliers into editable settings
+            let prioMultipliers = {
+                0:.1,
+                1:5,
+                2:4,
+                3:5
+            }
+            if (limits.Money !== null && limits.Money !== undefined) {luxPriority = limits.Money.priority * prioMultipliers[0]; totalPriority += luxPriority; }
+            if (limits.Alloy !== null && limits.Alloy !== undefined) {alloyPriority = limits.Alloy.priority * prioMultipliers[1]; totalPriority += alloyPriority;}
+            if (limits.Polymer !== null && limits.Polymer !== undefined) {polymerPriority = limits.Polymer.priority * prioMultipliers[2]; totalPriority += polymerPriority;}
+            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined) {nanoTubePriority = limits.Nano_Tube.priority * prioMultipliers[3]; totalPriority += nanoTubePriority;}
+            //console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
+            // Creating allocation list
+            let allocation = [];
+            for (let i = 0;i < totalFactories;i++) {
+                // Attempting to allocate
+                // Must be possible (positive temp_rates), as well as lowers ratio error
+                let posAllocation = null
+                let posAllocationError = 100000000000;
+                for (let j = 0;j < decBtns.length;j++) {
+                    let tempError = 0;
+                    switch(j) {
+                        case 0: {
+                            // Luxury Goods
+                            if (limits.Money !== null && resources.Furs.temp_rate > luxFurCost) {
+                                tempError += ((wantedLux+1)/(i+1) - luxPriority/totalPriority)**2
+                                tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
+                                tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
+                                tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
+                            }
+                            break;
+                        }
+                        case 1: {
+                            // Alloy
+                            if (limits.Alloy !== null && resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
+                                tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
+                                tempError += ((wantedAlloy+1)/(i+1) - alloyPriority/totalPriority)**2
+                                tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
+                                tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
+                            }
+                            break;
+                        }
+                        case 2: {
+                            // Polymer
+                            if (limits.Polymer !== null && resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
+                                tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
+                                tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
+                                tempError += ((wantedPolymer+1)/(i+1) - polymerPriority/totalPriority)**2
+                                tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
+                            }
+                            break;
+                        }
+                        case 3: {
+                            // Nano Tubes
+                            if (limits.Nano_Tube !== null && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
+                                tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
+                                tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
+                                tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
+                                tempError += ((wantedNanoTube+1)/(i+1) - nanoTubePriority/totalPriority)**2
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    // Availible Choice
+                    //console.log(j, tempError)
+                    if (tempError != 0) {
+                        if (tempError < posAllocationError) {
+                            posAllocation = j;
+                            posAllocationError = tempError;
+                        }
+                    } else {
+                        continue;
+                    }
+                }
+                if (posAllocation === null) {
+                    break;
+                } else {
+                    allocation.push(posAllocation);
+                    switch(posAllocation) {
+                        case 0: {wantedLux += 1; break;}
+                        case 1: {wantedAlloy += 1; break;}
+                        case 2: {wantedPolymer += 1; break;}
+                        case 3: {wantedNanoTube += 1; break;}
+                        default: break;
+                    }
+                }
+            }
+            //console.log(allocation);
+
+            // Removing all settings
+            for (let i = 0;i < totalFactories;i++) {
+                decBtns.click();
+            }
+            for (let i = 0;i < allocation.length;i++) {
+                incBtns[allocation[i]].click();
+            }
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
+        }, 100);
+    }
+
     function autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
@@ -3777,6 +3954,9 @@
         if (settings.autoSmelter && (count % 20 == 0)) {
             autoSmelter(limits);
         }
+        if (settings.autoFactory && (count % 23 == 0)) {
+            autoFactory(limits);
+        }
 
         // Determining rate priorities
         console.log("LIM:", limits);
@@ -4002,7 +4182,7 @@
         }
     }
 
-    let count = 0;
+    let count = 1;
     function fastAutomate() {
         console.clear();
         console.log(count);
@@ -4180,9 +4360,9 @@
             } else if (settings.autoSmelter && $('.ea-smelter-settings').length == 0 && researched('tech-smelting')) {
                 createSmelterSettings();
             }
-            if ($('#autoFactory').length == 0 && researched('tech-factory')) {
+            if ($('#autoFactory').length == 0 && researched('tech-industrialization')) {
                 createSettingToggle('autoFactory', 'Automatically allocates resources in the factory. See Buildings tab for more settings', createFactorySettings, removeFactorySettings);
-            } else if (settings.autoFactory && $('.ea-factory-settings').length == 0 && researched('tech-factory')) {
+            } else if (settings.autoFactory && $('.ea-factory-settings').length == 0 && researched('tech-industrialization')) {
                 createFactorySettings();
             }
             // Support requires electricity
