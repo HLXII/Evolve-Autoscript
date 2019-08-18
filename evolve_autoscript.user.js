@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.10
+// @version      1.1.11
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -110,8 +110,7 @@
     }
 
     class Resource {
-        constructor(name, id) {
-            this.name = name;
+        constructor(id) {
             this.id = id;
         }
 
@@ -123,6 +122,14 @@
         }
         get rateLabel() {
             return document.getElementById('inc'+this.id);
+        }
+
+        get name() {
+            if (this.mainDiv !== null) {
+                return this.mainDiv.children[0].innerText
+            } else {
+                return this.id;
+            }
         }
 
         get unlocked() {
@@ -171,8 +178,8 @@
     }
 
     class TradeableResource extends Resource {
-        constructor(name, id, autoBuy, autoSell, buyRatio, sellRatio, storePriority, storeMin) {
-            super(name, id);
+        constructor(id, autoBuy, autoSell, buyRatio, sellRatio, storePriority, storeMin) {
+            super(id);
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
             if (!settings.resources[this.id].hasOwnProperty('autoSell')) {settings.resources[this.id].autoSell = autoSell;}
             if (!settings.resources[this.id].hasOwnProperty('autoBuy')) {settings.resources[this.id].autoBuy = autoBuy;}
@@ -367,30 +374,33 @@
     var resources = [];
     function loadResources() {
         if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
-        resources.Money = new Resource("Money", "Money");
-        resources.Knowledge = new Resource("Knowledge", "Knowledge");
-        resources.Food = new TradeableResource("Food", "Food", false, false, .5, .9, 0, 0);
-        resources.Lumber = new TradeableResource("Lumber", "Lumber", false, false, .5, .9, 3, 0);
-        resources.Stone = new TradeableResource("Stone", "Stone", false, false, .5, .9, 3, 0);
-        resources.Furs = new TradeableResource("Furs", "Furs", false, false, .5, .9, 2, 0);
-        resources.Copper = new TradeableResource("Copper", "Copper", false, false, .5, .9, 2, 0);
-        resources.Iron = new TradeableResource("Iron", "Iron", false, false, .5, .9, 2, 0);
-        resources.Aluminium = new TradeableResource("Aluminium", "Aluminium", false, false, .5, .9, 2, 0);
-        resources.Cement = new TradeableResource("Cement", "Cement", false, false, .5, .9, 2, 0);
-        resources.Coal = new TradeableResource("Coal", "Coal", false, false, .5, .9, 0, 0);
-        resources.Oil = new TradeableResource("Oil", "Oil", false, false, .5, .9, 0, 0);
-        resources.Uranium = new TradeableResource("Uranium", "Uranium", false, false, .5, .9, 0, 0);
-        resources.Steel = new TradeableResource("Steel", "Steel", false, false, .5, .9, 3, 10);
-        resources.Titanium = new TradeableResource("Titanium", "Titanium", false, false, .5, .9, 3, 10);
-        resources.Alloy = new TradeableResource("Alloy", "Alloy", false, false, .5, .9, 3, 10);
-        resources.Polymer = new TradeableResource("Polymer", "Polymer", false, false, .5, .9, 3, 10);
-        resources.Iridium = new TradeableResource("Iridium", "Iridium", false, false, .5, .9, 3, 10);
-        resources.Helium_3 = new TradeableResource("Helium-3", "Helium_3", false, false, .5, .9, 0, 0);
+        resources.Money = new Resource("Money");
+        resources.Knowledge = new Resource("Knowledge");
+        resources.Food = new TradeableResource("Food", false, false, .5, .9, 0, 0);
+        resources.Lumber = new TradeableResource("Lumber", false, false, .5, .9, 3, 0);
+        resources.Stone = new TradeableResource("Stone", false, false, .5, .9, 3, 0);
+        resources.Furs = new TradeableResource("Furs", false, false, .5, .9, 2, 0);
+        resources.Copper = new TradeableResource("Copper", false, false, .5, .9, 2, 0);
+        resources.Iron = new TradeableResource("Iron", false, false, .5, .9, 2, 0);
+        resources.Aluminium = new TradeableResource("Aluminium", false, false, .5, .9, 2, 0);
+        resources.Cement = new TradeableResource("Cement", false, false, .5, .9, 2, 0);
+        resources.Coal = new TradeableResource("Coal", false, false, .5, .9, 0, 0);
+        resources.Oil = new TradeableResource("Oil", false, false, .5, .9, 0, 0);
+        resources.Uranium = new TradeableResource("Uranium", false, false, .5, .9, 0, 0);
+        resources.Steel = new TradeableResource("Steel", false, false, .5, .9, 3, 10);
+        resources.Titanium = new TradeableResource("Titanium", false, false, .5, .9, 3, 10);
+        resources.Alloy = new TradeableResource("Alloy", false, false, .5, .9, 3, 10);
+        resources.Polymer = new TradeableResource("Polymer", false, false, .5, .9, 3, 10);
+        resources.Iridium = new TradeableResource("Iridium", false, false, .5, .9, 3, 10);
+        resources.Helium_3 = new TradeableResource("Helium_3", false, false, .5, .9, 0, 0);
+        resources.Neutronium = new Resource("Neutronium");
+        resources.Elerium = new Resource("Elerium");
+        resources['Nano Tube'] = new Resource("Nano_Tube");
     }
 
     class CraftableResource extends Resource {
-        constructor(name, id, enabled, sources) {
-            super(name, id);
+        constructor(id, enabled, sources) {
+            super(id);
             this.sources = sources;
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
             if (!settings.resources[this.id].hasOwnProperty('enabled')) {settings.resources[this.id].enabled = enabled;}
@@ -449,11 +459,11 @@
     var craftableResources = {};
     function loadCraftableResources() {
         if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
-        craftableResources.Plywood = new CraftableResource("Plywood", "Plywood", false, [{res:resources.Lumber,cost:100}]);
-        craftableResources.Brick = new CraftableResource("Brick", "Brick", false, [{res:resources.Cement,cost:40}]);
-        craftableResources.Wrought_Iron = new CraftableResource("Wrought Iron", "Wrought_Iron", false, [{res:resources.Iron,cost:160}]);
-        craftableResources.Sheet_Metal = new CraftableResource("Sheet Metal", "Sheet_Metal", false, [{res:resources.Aluminium,cost:120}]);
-        craftableResources.Mythril = new CraftableResource("Mythril", "Mythril", false, [{res:resources.Alloy,cost:100}, {res:resources.Iridium,cost:250}]);
+        craftableResources.Plywood = new CraftableResource("Plywood", false, [{res:resources.Lumber,cost:100}]);
+        craftableResources.Brick = new CraftableResource("Brick", false, [{res:resources.Cement,cost:40}]);
+        craftableResources.Wrought_Iron = new CraftableResource("Wrought_Iron", false, [{res:resources.Iron,cost:160}]);
+        craftableResources.Sheet_Metal = new CraftableResource("Sheet_Metal", false, [{res:resources.Aluminium,cost:120}]);
+        craftableResources.Mythril = new CraftableResource("Mythril", false, [{res:resources.Alloy,cost:100}, {res:resources.Iridium,cost:250}]);
     }
 
     function priorityScale(value, priority, action) {
@@ -1721,7 +1731,7 @@
         researches['tech-space_manufacturing'] = new Research('tech-space_manufacturing',
                                                               ['space', 'factory'],
                                                               3);
-        researches['tech-exotic_lab'] = new Research('tech-exotic_lab',
+        researches['tech-energy_lab'] = new Research('tech-energy_lab',
                                                      ['space', 'knowledge', 'power'],
                                                      0);
         researches['tech-dyson_sphere'] = new Research('tech-dyson_sphere',
@@ -2337,6 +2347,7 @@
     let stoneBtn = null;
     let rnaBtn = null;
     let dnaBtn = null;
+    let slaughterBtn = null;
     function loadFarm () {
         try {
             foodBtn = document.getElementById("city-food").getElementsByTagName("a")[0];
@@ -2360,6 +2371,11 @@
         }
         try {
             dnaBtn = document.getElementById("evo-dna").getElementsByTagName("a")[0];
+        } catch(e) {
+            //console.log("Error :DNA button could not be loaded");
+        }
+        try {
+            slaughterBtn = document.getElementById("city-slaughter").getElementsByTagName("a")[0];
         } catch(e) {
             //console.log("Error :DNA button could not be loaded");
         }
@@ -2511,6 +2527,7 @@
         if(stoneBtn!==null){stoneBtn.click();}
         if(rnaBtn!==null){rnaBtn.click();}
         if(dnaBtn!==null){dnaBtn.click();}
+        if(slaughterBtn!==null){slaughterBtn.click();}
     }
 
     let farmInterval = null;
@@ -2539,6 +2556,10 @@
                 if(action.id == "evo-sentience") {continue;}
                 // Don't take junker
                 if(action.id == "evo-junker") {continue;}
+                // Don't take joyless
+                if(action.id == "evo-joyless") {continue;}
+                // Don't take planets
+                if(/\w+\d+/.exec(action.id) !== null) {continue;}
                 // Check for challenge runs
                 if(action.id == "evo-plasmid" && !settings.Plasmid) {continue;}
                 if(action.id == "evo-craft" && !settings.Craft) {continue;}
@@ -2955,7 +2976,7 @@
             job.wanted = Math.round(maxEmployed /(1+Math.pow(Math.E, -job.priority+4.5)));
             job.need = job.wanted - job.employed;
             job.temp_employed = job.employed;
-            //console.log(element.name, element.wanted, element.need);
+            //console.log(job.name, job.priority, job.wanted, job.need);
             // If there is negative need, send to unemployed
             if (job.need < 0) {
                 // Removal from craftsman requires additional work
@@ -2998,7 +3019,7 @@
         for (let i = 0;i < sortedJobs.length;i++) {
             let job = sortedJobs[i];
             for (let i = 0;i < job.need;i++) {
-                job.hire();
+                if (job.id != 'free') {job.hire();}
                 job.temp_employed += 1;
                 free_agents -= 1;
             }
@@ -3006,25 +3027,25 @@
 
         //console.log("Finished sending initial agents");
 
+
         // Divy up the remaining free agents based on priority
         // The pie is split based on total priority points
         for (let i = 0;i < sortedJobs.length;i++) {
             let job = sortedJobs[i];
-            if (job.id == "free") {continue;}
-            //console.log("Sending secondary agents", job.name);
+            //if (job.id == "free") {continue;}
             let pie = Math.round(free_agents * job.priority / total_priority);
             for (let j = 0;j < Math.min(pie,job.max_employed - job.temp_employed);j++) {
-                job.hire();
+                if (job.id != 'free') {job.hire();}
                 free_agents -= 1;
             }
             total_priority -= job.priority;
         }
         // Sometimes there's still some free agents left
-        for (let i = 0;i < sortedJobs.length;i++) {
-            let job = sortedJobs[i];
-            if (job.id == 'free') {continue;}
-            for (let j = 0;j < free_agents;j++) {
-                job.hire();
+        for (let j = 0;j < free_agents;j++) {
+            for (let i = 0;i < sortedJobs.length;i++) {
+                let job = sortedJobs[i];
+                if (job.id == 'free') {continue;}
+                job.hire()
             }
         }
 
@@ -3198,7 +3219,7 @@
                     lumberDec = decBtns[0];
                     let temp = labels[0].attributes[0].value;
                     lumberFuel = parseFloat(/Consume ([\d\.]+).*/.exec(temp)[1]);
-                    lumberNum = parseInt(/Lumber ([\d]+)/.exec(labels[0].innerText)[1]);
+                    lumberNum = parseInt(/\w+ ([\d]+)/.exec(labels[0].innerText)[1]);
                     coalInc = incBtns[1];
                     coalDec = decBtns[1];
                     temp = labels[1].attributes[0].value;
@@ -3223,7 +3244,7 @@
                 lumberDec = decBtns[0];
                 let temp = labels[0].attributes[0].value;
                 lumberFuel = parseFloat(/Consume ([\d\.]+).*/.exec(temp)[1]);
-                lumberNum = parseInt(/Lumber ([\d]+)/.exec(labels[0].innerText)[1]);
+                lumberNum = parseInt(/\w+ ([\d]+)/.exec(labels[0].innerText)[1]);
                 coalInc = incBtns[1];
                 coalDec = decBtns[1];
                 temp = labels[1].attributes[0].value;
@@ -3302,10 +3323,11 @@
                 wantedLumber = wantedTotal;
             }
 
-            //console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
+            console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
             let pos_coal_rate = resources.Coal.temp_rate - wantedCoal*coalFuel - wantedSteel*steelCoalFuel;
+            console.log(pos_coal_rate, resources.Coal, resources.Coal.temp_rate, coalFuel, steelCoalFuel)
             while(pos_coal_rate < 0) {
-                //console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel, "CR", pos_coal_rate);
+                console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel, "CR", pos_coal_rate);
                 // Try getting rid of coal
                 if (wantedCoal > 0) {
                     wantedCoal -= 1;
@@ -3340,7 +3362,7 @@
                 }
                 pos_iron_rate = resources.Iron.temp_rate * (1 + ironPercent*wantedIron / 100) - wantedSteel*steelIronFuel;
             }
-            //console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
+            console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
             // Removing all settings
             for (let i = 0;i < totalSmelters;i++) {
                 if (lumberDec !== null) {lumberDec.click();}
@@ -3443,6 +3465,24 @@
                 //console.log(c, 0);
             }
         }
+    }
+
+    function _autoSupport(priorityData) {
+        // Don't start autoSupport if haven't unlocked power
+        if (!researched('tech-electricity')) {return;}
+        var x;
+        // Getting support categories
+        var resourceConsumers;
+        var resourceProducers;
+        var electricityConsumers;
+        var moonConsumers;
+        var redConsumers;
+        var beltConsumers;
+
+        // Calculating base values of resource production
+        // Constant Consumption
+
+        // Percent Gain
     }
 
     function autoResearch(){
@@ -3572,11 +3612,16 @@
         let actions = getAvailableActions();
         //console.log(actions);
 
+        // Storing temporary rates
+        for (var x in resources) {
+            resources[x].temp_rate = resources[x].rate;
+        }
+
         // Removing trade routes (if exists) for accurate rate
         resources.Money.temp_rate = resources.Money.rate;
         if (researched('tech-trade')) {
             // Clearing out trade routes
-            for (var x in resources) {
+            for (x in resources) {
                 let resource = resources[x];
                 resource.temp_rate = resource.rate;
                 if (!(resource instanceof TradeableResource)) {continue;}
@@ -3743,6 +3788,8 @@
     function autoTrade(priorityData) {
         // If haven't researched trade, don't do anything
         if (!researched('tech-trade')) {return;}
+        // Haven't made non-AutoPrioritize autoTrade, so ignore otherwise
+        if (priorityData === null) {return;}
         let limits = priorityData.limits
         let PQs = priorityData.PQs
         // Finding total trade routes
