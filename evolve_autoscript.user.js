@@ -4024,7 +4024,6 @@
             focusList.push({action:limits[x], res:x});
             //console.log(x, limits[x].id, limits[x].completionTime, priorityScale(Math.log(limits[x].completionTime[x]), limits[x].priority), limits[x].priority);
         }
-        //if (buyRes !== null) {console.log("Focusing on", buyRes, "for", limits[buyRes].name);}
         if (focusList.length > 0) {
             focusList.sort(function(a,b) {
                 return prioCompare(a.action, b.action);
@@ -4032,24 +4031,24 @@
         }
         // TODO: Move this to front end for users to change
         let prioMultiplier = {
-            Money:2,
+            Money:20,
             Food:0,
             Lumber:0,
             Stone:0,
-            Furs:.5,
-            Copper:.75,
-            Iron:.75,
-            Aluminium:.5,
-            Cement:.75,
-            Coal:0,
-            Oil:4,
-            Uranium:4,
-            Steel:3,
-            Titanium:10,
-            Alloy:10,
-            Polymer:10,
-            Iridium:15,
-            Helium_3:10
+            Furs:1,
+            Copper:1,
+            Iron:1,
+            Aluminium:1,
+            Cement:10,
+            Coal:20,
+            Oil:20,
+            Uranium:30,
+            Steel:30,
+            Titanium:40,
+            Alloy:40,
+            Polymer:40,
+            Iridium:60,
+            Helium_3:40
         };
         console.log("FOC LIST:", focusList);
         let focusSequence = [];
@@ -4060,7 +4059,7 @@
         if (focusList.length > 0) {
             // Creating sequence of trade route allocations to match priority ratios
             let curError = 0;
-            for (let i = 0;i < focusList.length;i++) {totalPriority += focusList[i].action.priority;}
+            for (let i = 0;i < focusList.length;i++) {totalPriority += prioMultiplier[focusList[i].res] * focusList[i].action.priority;}
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
                 wantedRatio[focusList[i].res] = prioMultiplier[focusList[i].res] * focusList[i].action.priority / totalPriority;
@@ -4071,6 +4070,8 @@
                 let error = -1;
                 let choice = -1;
                 for (let j = 0;j < focusList.length;j++) {
+                    // There is no trade route for money
+                    if (focusList[j].res == 'Money') {continue;}
                     let total = i+1;
                     let tempError = 0;
                     // Finding new error based on adding this trade route
@@ -4091,10 +4092,6 @@
                 curNum[focusList[choice].res] += 1;
             }
             console.log("FOC SEQ:", focusSequence);
-        } else {
-            for (let i = 0;i < totalTradeRoutes;i++) {
-                focusSequence.push('Money');
-            }
         }
 
         // Allocating trade routes
@@ -4105,35 +4102,9 @@
             let curFreeTradeRoutes = totalTradeRoutes;
             // Keeping fraction of base money for money
             if (wantedRatio.Money > 0) {resources.Money.temp_rate *= wantedRatio.Money;}
-            while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
-                //console.log("CUR", curFocus, focusSequence[curFocus]);
-                if (focusSequence[curFocus] == 'Money') {
-                    //console.log("Focusing on Money");
-                    // Focusing on money, add a sell trade route
-                    if (curSell == sellSequence.length) {curFocus+=1;continue;}
-                    resources[sellSequence[curSell]].tradeDec();
-                    curFreeTradeRoutes -= 1;
-                    curSell += 1;
-                    curFocus += 1;
-                } else {
-                    // Focusing on resource
-                    //console.log("Focusing on", focusSequence[curFocus]);
-                    if (resources.Money.temp_rate > resources[focusSequence[curFocus]].tradeBuyCost) {
-                        //console.log("Buying", focusSequence[curFocus], curFocus);
-                        resources[focusSequence[curFocus]].tradeInc();
-                        resources.Money.temp_rate -= resources[focusSequence[curFocus]].tradeBuyCost;
-                        curFreeTradeRoutes -= 1;
-                        curFocus += 1;
-                    } else {
-                        break;
-                    }
-                }
-            }
-
             // Begin allocating algorithm
-            while (curFreeTradeRoutes > 0) {
+            while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
                 // Checking if can buy trade route
-                if (focusSequence[curFocus] == 'Money') {curFocus += 1; continue;}
                 if (resources.Money.temp_rate > resources[focusSequence[curFocus]].tradeBuyCost) {
                     // Can buy trade route
                     //console.log("Buying", focusSequence[curFocus], curFocus);
