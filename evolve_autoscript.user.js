@@ -273,19 +273,71 @@
                 return null;
             }
         }
+        get crateIncBtn() {
+            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            if (storageDiv.length > 0) {
+                return storageDiv[0].children[3]
+            } else {
+                return null;
+            }
+        }
+        get crateSpan() {
+            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            if (storageDiv.length > 0) {
+                return storageDiv[0].children[2]
+            } else {
+                return null;
+            }
+        }
+        get crateDecBtn() {
+            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            if (storageDiv.length > 0) {
+                return storageDiv[0].children[1]
+            } else {
+                return null;
+            }
+        }
+        get containerIncBtn() {
+            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            if (storageDiv.length > 1) {
+                return storageDiv[1].children[3]
+            } else {
+                return null;
+            }
+        }
+        get containerSpan() {
+            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            if (storageDiv.length > 1) {
+                return storageDiv[1].children[2]
+            } else {
+                return null;
+            }
+        }
+        get containerDecBtn() {
+            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            if (storageDiv.length > 1) {
+                return storageDiv[1].children[1]
+            } else {
+                return null;
+            }
+        }
 
         tradeDec() {
             if (this.tradeDecBtn !== null) {
                 this.tradeDecBtn.click();
+                return true;
             } else {
                 console.log("Error:", this.id, "Trade Decrement");
+                return false;
             }
         }
         tradeInc() {
             if (this.tradeIncBtn !== null) {
                 this.tradeIncBtn.click();
+                return true;
             } else {
                 console.log("Error:", this.id, "Trade Increment");
+                return false;
             }
         }
 
@@ -328,13 +380,55 @@
             }
         }
 
-        get crateable() {
-            try {
-                return (document.getElementById('con'+this.id) !== null);
-            } catch(e) {
-                console.log("Error:", this.id, "Crateable");
+        crateInc() {
+            if (this.crateIncBtn !== null) {
+                this.crateIncBtn.click();
+                return true;
+            } else {
                 return false;
             }
+        }
+        crateDec() {
+            if (this.crateDecBtn !== null) {
+                this.crateDecBtn.click();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        containerInc() {
+            if (this.containerIncBtn !== null) {
+                this.containerIncBtn.click();
+                return true;
+            } else {
+                return false;
+            }
+        }
+        containerDec() {
+            if (this.containerDecBtn !== null) {
+                this.containerDecBtn.click();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        get crateNum() {
+            if (this.crateSpan !== null) {
+                return +this.crateSpan.innerText;
+            } else {
+                return 0;
+            }
+        }
+        get containerNum() {
+            if (this.containerSpan !== null) {
+                return +this.containerSpan.innerText;
+            } else {
+                return 0;
+            }
+        }
+        get crateable() {
+            return this.crateSpan !== null;
         }
         openStorage() {
             try {
@@ -2594,7 +2688,6 @@
         }
     }
 
-    let storage = {};
     function getMaxCrates() {
         let crateMax = 0;
         // Freight Yards
@@ -2649,236 +2742,67 @@
         }
         return containerMax;
     }
-    function getCurrentStorageNum(id) {
-        //console.log("Getting Current Storage", id);
-        storage[id] = {};
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            return;
-        }
-        // Opening modal
-        resources[id].openStorage();
-        // Delaying for modal animation
-        setTimeout(function() {
-            let str = null;
-            let reg = null;
-            try {
-                str = $('.crateHead > span')[1].innerText;
-                reg = /Crates Assigned: ([\d]+)/.exec(str);
-                storage[id].current_crates = parseInt(reg[1]);
-            } catch(e) {
-                console.log("Error in reading crates", id);
-            }
-            try {
-                str = $('.crateHead > span')[3].innerText;
-                reg = /Containers Assigned: ([\d]+)/.exec(str);
-                storage[id].current_containers = parseInt(reg[1]);
-            } catch(e) {
-                console.log("Error in reading containers", id);
-            }
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            //console.log("Closing", id, parseInt(reg[1]));
-        }, 100);
-    }
-    function getCurrentStorageTotal() {
-        storage = {};
-        let i = 0;
-        for (var x in resources) {
-            // Ignoring uncrateable resources
-            if (!resources[x].crateable) {continue;}
-            // Ignoring locked resources
-            if (!resources[x].unlocked) {continue;}
-            let id = x;
-            setTimeout(function() {
-                getCurrentStorageNum(id);
-            }, i * 400);
-            i += 1;
-        }
-        return i * 400;
-    }
-    function removeStorage(excessStorage) {
-        for (let i = 0;i < excessStorage.length;i++) {
-            setTimeout(function() {
-                let id = excessStorage[i];
-                console.log("Removing storage", id);
-                // Checking if modal already open
-                if ($('.modal').length != 0) {
-                    // Closing modal
-                    let closeBtn = $('.modal-close')[0];
-                    if (closeBtn !== undefined) {closeBtn.click();}
-                }
-                // Opening modal
-                resources[id].openStorage();
-                // Delaying for modal animation
-                setTimeout(function() {
-                    // Removing unneeded crates
-                    console.log(id, storage[id].needed_crates, storage[id].needed_containers);
-                    if (storage[id].needed_crates < 0) {
-                        let removeBtn = $('#modalCrates > span:nth-child(3) > button');
-                        console.log(removeBtn);
-                        for (let j = 0;j < -storage[id].needed_crates;j++) {
-                            removeBtn.click();
-                        }
-                        console.log("Removed", -storage[id].needed_crates, "Crates");
-                    }
-                    // Removing unneeded containers
-                    if (researched('tech-steel_containers') && storage[id].needed_containers < 0) {
-                        let removeBtn = $('#modalContainers > span:nth-child(3) > button');
-                        for (let j = 0;j < -storage[id].needed_containers;j++) {
-                            removeBtn.click();
-                        }
-                        console.log("Removed", -storage[id].needed_containers, "Containers");
-                    }
-                    // Closing modal
-                    let closeBtn = $('.modal-close')[0];
-                    if (closeBtn !== undefined) {closeBtn.click();}
-                }, 100);
-            }, i * 500);
-        }
-        return excessStorage.length * 300;
-    }
-    function addStorage(neededStorage) {
-        for (let i = 0;i < neededStorage.length;i++) {
-            setTimeout(function() {
-                let id = neededStorage[i];
-                console.log("Adding Storage", id);
-                // Checking if modal already open
-                if ($('.modal').length != 0) {
-                    // Closing modal
-                    let closeBtn = $('.modal-close')[0];
-                    if (closeBtn !== undefined) {closeBtn.click();}
-                }
-                // Opening modal
-                resources[id].openStorage();
-                // Delaying for modal animation
-                setTimeout(function() {
-                    // Adding needed crates
-                    if (storage[id].needed_crates > 0) {
-                        let addBtn = $('#modalCrates > span:nth-child(4) > button');
-                        for (let j = 0;j < storage[id].needed_crates;i=j++) {
-                            addBtn.click();
-                        }
-                        console.log("Adding", storage[id].needed_crates, "Crates");
-                    }
-                    // Adding needed containers
-                    if (researched('tech-steel_containers') && storage[id].needed_containers > 0) {
-                        let addBtn = $('#modalContainers > span:nth-child(4) > button');
-                        for (let j = 0;j < storage[id].needed_containers;i=j++) {
-                            addBtn.click();
-                        }
-                        console.log("Adding", storage[id].needed_containers, "Containers");
-                    }
-                    // Closing modal
-                    let closeBtn = $('.modal-close')[0];
-                    if (closeBtn !== undefined) {closeBtn.click();}
-                }, 100);
-            }, i * 500);
-        }
-        return neededStorage.length * 500;
-    }
     function autoStorage() {
         // Don't do autoStorage if haven't unlocked storage
         if (!researched('tech-containerization')) {return;}
-        // Ensuring no modal conflicts
-        if (modal) {
-            return;
-        }
-        modal = true;
-        // Finding
+        // Finding values
         let crateMax = getMaxCrates();
-        let freeCrates = parseInt($('#cntCrates')[0].innerText.split(' / ')[0]);
+        let totalCrates = parseInt($('#cntCrates')[0].innerText.split(' / ')[0]);
         let containerMax = getMaxContainers();
-        let freeContainers = parseInt($('#cntContainers')[0].innerText.split(' / ')[0]);
+        let totalContainers = parseInt($('#cntContainers')[0].innerText.split(' / ')[0]);
+        // Creating crateable object
+        let storage = {}
+        for (var x in resources) {
+            if (resources[x].crateable) {storage[x]=resources[x];}
+        }
+        for (var x in storage) {
+            totalCrates += storage[x].crateNum;
+            totalContainers += storage[x].containerNum;
+        }
 
-        // Must wait for getCurrentStorageTotal() to finish
-        let waitTime = getCurrentStorageTotal();
-        setTimeout(function() {
-            // Finding total used crates;
-            let curCrateTotal = 0;
-            let curContainerTotal = 0;
-            let error = false;
-            //console.log(storage);
-            for (var x in storage) {
-                //console.log(x, storage[x]);
-                // If there was an error in reading the storage values
-                if (!storage[x].hasOwnProperty('current_crates')) {error = true;break;}
-                curCrateTotal += storage[x].current_crates;
-                curContainerTotal += storage[x].current_containers;
-            }
-            // Checking if error occured
-            if (error) {
-                console.log("Error in counting storage");
-                return;
-            }
+        console.log("Current Crate Usage", totalCrates);
+        console.log("Max Crates", crateMax);
+        console.log("Current Container Usage", totalContainers);
+        console.log("Max Containers", containerMax);
 
-            console.log("Current Crate Usage", curCrateTotal);
-            console.log("Free Crates", freeCrates);
-            console.log("Max Crates", crateMax);
-            console.log("Current Container Usage", curContainerTotal);
-            console.log("Free Containers", freeContainers);
-            console.log("Max Containers", containerMax);
-
-            // Getting total number of usable storage
-            let totalCrates = curCrateTotal + freeCrates;
-            let totalContainers = curContainerTotal + freeContainers;
-            // Getting total priority
-            let totalPriority = 0;
-            for (x in storage) {totalPriority += resources[x].storePriority}
-            // Calculating crate differentials
-            for (x in storage) {
-                storage[x].wanted_crates = Math.round(totalCrates * resources[x].storePriority / totalPriority);
-                storage[x].wanted_crates = Math.max(storage[x].wanted_crates, resources[x].storeMin);
-                storage[x].needed_crates = storage[x].wanted_crates - storage[x].current_crates;
-                storage[x].wanted_containers = Math.round(totalContainers * resources[x].storePriority / totalPriority);
-                storage[x].needed_containers = storage[x].wanted_containers - storage[x].current_containers;
-                console.log(x, "CR_WANT", storage[x].wanted_crates, "CR_NEED", storage[x].needed_crates, "CO_WANT", storage[x].wanted_containers, "CO_NEED", storage[x].needed_containers);
-            }
-            // Removing extra storage
-            let excessStorage = [];
-            for (x in storage) {
-                if (storage[x].needed_crates < 0) {
-                    excessStorage.push(x);
-                } else if (researched('tech-steel_containers') && storage[x].needed_containers < 0) {
-                    excessStorage.push(x);
+        // Getting total priority
+        let totalPriority = 0;
+        for (x in storage) {totalPriority += storage[x].storePriority}
+        // Calculating crate differentials
+        for (x in storage) {
+            storage[x].wanted_crates = Math.round(totalCrates * storage[x].storePriority / totalPriority);
+            storage[x].wanted_crates = Math.max(storage[x].wanted_crates, storage[x].storeMin);
+            storage[x].needed_crates = storage[x].wanted_crates - storage[x].crateNum;
+            storage[x].wanted_containers = Math.round(totalContainers * storage[x].storePriority / totalPriority);
+            storage[x].needed_containers = storage[x].wanted_containers - storage[x].containerNum;
+            console.log(x, "CR_WANT", storage[x].wanted_crates, "CR_NEED", storage[x].needed_crates, "CO_WANT", storage[x].wanted_containers, "CO_NEED", storage[x].needed_containers);
+        }
+        // Removing extra storage
+        let excessStorage = [];
+        for (x in storage) {
+            if (storage[x].needed_crates < 0) {
+                for (let i = 0;i < -storage[x].needed_crates;i++) {
+                    storage[x].crateDec();
                 }
             }
-            // Must wait for removing crates
-            console.log("Excess", excessStorage);
-            let removeWaitTime = removeStorage(excessStorage);
-            setTimeout(function() {
-                // Adding needed storage
-                let neededStorage = [];
-                for (x in storage) {
-                    if (storage[x].needed_crates > 0) {
-                        neededStorage.push(x);
-                    } else if (researched('tech-steel_containers') && storage[x].needed_containers > 0) {
-                        neededStorage.push(x);
-                    }
+            if (researched('tech-steel_containers') && storage[x].needed_containers < 0) {
+                for (let i = 0;i < -storage[x].needed_containers;i++) {
+                    storage[x].containerDec();
                 }
-                neededStorage.sort(function(a,b) {
-                    if (resources[b].storeMin > resources[a].storeMin) {
-                        return 1;
-                    }
-                    return resources[b].store_priority - resources[a].store_priority;
-                });
-                //console.log(neededStorage);
-                let addWaitTime = addStorage(neededStorage);
-                setTimeout(function() {
-                    console.log('Finished Adding Storage');
-                    // Closing modal if still open
-                    let closeBtn = $('.modal-close')[0];
-                    if (closeBtn !== undefined) {closeBtn.click();}
-                    // Freeing modal window
-                    modal = false;
-                }, addWaitTime);
-            }, removeWaitTime);
-
-        }, waitTime);
+            }
+        }
+        for (x in storage) {
+            if (storage[x].needed_crates > 0) {
+                for (let i = 0;i < storage[x].needed_crates;i++) {
+                    storage[x].crateInc();
+                }
+            }
+            if (researched('tech-steel_containers') && storage[x].needed_containers > 0) {
+                for (let i = 0;i < storage[x].needed_containers;i++) {
+                    storage[x].containerInc();
+                }
+            }
+        }
     }
 
     class AutoBattler {
@@ -4550,61 +4474,54 @@
     function createStorageSetting(id) {
         if (!resources[id].unlocked) {return;}
         if (!resources[id].crateable) {return;}
-        let resourceSpan = $('#res'+resources[id].id);
-        let prioritySub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Priority" class="sub ea-storage-settings" style="width:25%">«</span>');
+        let resourceSpan = $('#stack-'+resources[id].id);
+        let prioritySub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Priority" class="sub has-text-danger ea-storage-settings">«</span>');
         prioritySub.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].decStorePriority();
             priorityLabel[0].removeChild(priorityLabel[0].firstChild);
             priorityLabel[0].appendChild(document.createTextNode(resources[id].storePriority));
         });
-        let priorityAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Priority" class="add ea-storage-settings" style="width:25%">»</span>');
+        let priorityAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Priority" class="add has-text-success ea-storage-settings">»</span>');
         priorityAdd.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].incStorePriority();
             priorityLabel[0].removeChild(priorityLabel[0].firstChild);
             priorityLabel[0].appendChild(document.createTextNode(resources[id].storePriority));
         });
-        let priorityLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:30%;text-align:center;">'+resources[id].storePriority+'</span>');
-        let priorityControls = $('<div class="controls ea-storage-settings" style="position:absolute;left:5.5%;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
+        let priorityLabel = $('<span class="count current" style="width:2rem;">'+resources[id].storePriority+'</span>');
+        let priorityControls = $('<div class="trade controls ea-storage-settings" style="min-width:0;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
         resourceSpan.append(priorityControls)
 
-        let minSub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Minimum" class="sub ea-storage-settings" style="width:25%">«</span>');
+        let minSub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Minimum" class="sub has-text-danger ea-storage-settings">«</span>');
         minSub.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].decStoreMin();
             minLabel[0].removeChild(minLabel[0].firstChild);
             minLabel[0].appendChild(document.createTextNode(resources[id].storeMin));
         });
-        let minAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Minimum" class="add ea-storage-settings" style="width:25%">»</span>');
+        let minAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Minimum" class="add has-text-success ea-storage-settings">»</span>');
         minAdd.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].incStoreMin();
             minLabel[0].removeChild(minLabel[0].firstChild);
             minLabel[0].appendChild(document.createTextNode(resources[id].storeMin));
         });
-        let minLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:30%;text-align:center;">'+resources[id].storeMin+'</span>');
-        let minControls = $('<div class="controls ea-storage-settings" style="position:absolute;left:9%;">').append(minSub).append(minLabel).append(minAdd).append('</div>');
+        let minLabel = $('<span class="count current" style="width:2rem;">'+resources[id].storeMin+'</span>');
+        let minControls = $('<div class="controls trade ea-storage-settings" style="min-width:0;">').append(minSub).append(minLabel).append(minAdd).append('</div>');
         resourceSpan.append(minControls)
     }
     function createStorageSettings() {
         removeStorageSettings();
         // Creating labels
-        let labelSpan = $('#resContainers');
-        let prioLabel = $('<div class="ea-storage-settings" style="position:absolute;left:6%;"><span class="has-text-warning">Priority</span></div>');
-        let minLabel = $('<div class="ea-storage-settings" style="position:absolute;left:10%;"><span class="has-text-warning">Min</span></div>');
+        let labelSpan = $('#createHead');
+        let prioLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:2.8rem"><span class="has-text-warning">Priority</span></div>');
+        let minLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:3.8rem"><span class="has-text-warning">Min</span></div>');
         labelSpan.append(prioLabel).append(minLabel);
         // Creating individual counters
         for (var x in resources) {
             createStorageSetting(x);
         }
-        // Creating manual button
-        let autoStorageBtn = $('<a class="button is-dark is-small ea-storage-settings" id="manualStorage" title="Manual trigger for autoStorage (instead of waiting for automatic check)"><span>Manual</span></a>');
-        autoStorageBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            autoStorage();
-        });
-        $('#autoStorage_right').append(autoStorageBtn);
     }
     function removeStorageSettings() {
         $('.ea-storage-settings').remove();
@@ -5353,9 +5270,9 @@
         let completeTab = $('#research > .b-tabs > .tabs > ul > li:nth-child(2)');
         let newTabItem = $('#tech');
         let completeTabItem = $('#oldTech');
-        $('#research > .b-tabs > .tabs > ul').append(researchSettingTabLabel);
+        $('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child(5) > .b-tabs > .tabs > ul').append(researchSettingTabLabel);
         let researchSettingTab = $('<div id="researchSettings" class="tab-item ea-research-tab" style="display:none"><h2 class="is-sr-only">Auto Research Settings</h2></div>');
-        $('#research > .b-tabs > .tab-content').append(researchSettingTab);
+        $('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child(5) > .b-tabs > .tab-content').append(researchSettingTab);
         newTab.on('mouseup',function(e) {
             if (e.which != 1) {return;}
             if (researchSettingTabLabel.hasClass("is-active")) {
