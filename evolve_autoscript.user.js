@@ -672,399 +672,410 @@
     var buildings = {};
     function loadBuildings() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
-        buildings['city-house']             = new Building('city-house',
-                                                           ['city', 'citizen'],
-                                                           false, -1, 1);
-        buildings['city-cottage']           = new Building('city-cottage',
-                                                           ['city', 'citizen'],
-                                                           false, -1, 0);
-        buildings['city-apartment']         = new PoweredBuilding('city-apartment',
-                                                                  ['city', 'citizen', 'power'],
-                                                                  false, -1, 5,
-                                                                  9,
-                                                                  [{res:'electricity',cost:1}],
-                                                                  []);
-        buildings['city-lodge']             = new Building('city-lodge',
-                                                           ['city', 'citizen'],
-                                                           false, -1, 1);
-        buildings['city-smokehouse']        = new Building('city-smokehouse',
-                                                           ['city', 'food'],
-                                                           false, -1, 1);
-        buildings['city-soul_well']         = new Building('city-soul_well',
-                                                           ['city'],
-                                                           false, -1, 1);
-        buildings['city-slave_pen']         = new Building('city-slave_pen',
-                                                           ['city'],
-                                                           false, -1, 1);
-        buildings['city-farm']              = new Building('city-farm',
-                                                           ['city', 'food'],
-                                                           false, -1, 1);
-        buildings['city-mill']              = new Building('city-mill',
-                                                           ['city', 'food'],
-                                                           false, -1, 1);
-        buildings['city-windmill']          = new PoweredBuilding('city-windmill',
-                                                                  ['city', 'food', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:resources.Food,cost:0.1}],
-                                                                  [{res:'electricity',cost:1}]);
-        buildings['city-silo']              = new Building('city-silo',
-                                                           ['city', 'food'],
-                                                           false, -1, 0);
-        buildings['city-garrison']          = new Building('city-garrison',
-                                                           ['city', 'army'],
-                                                           false, -1, 4);
-        buildings['city-hospital']          = new Building('city-hospital',
-                                                           ['city', 'army'],
-                                                           false, -1, 3);
-        buildings['city-boot_camp']         = new Building('city-boot_camp',
-                                                           ['city', 'army'],
-                                                           false, -1, 3);
-        buildings['city-shed']              = new Building('city-shed',
-                                                           ['city', 'storage'],
-                                                           false, -1, 2);
-        buildings['city-storage_yard']      = new Building('city-storage_yard',
-                                                           ['city', 'storage'],
-                                                           false, -1, 0);
-        buildings['city-warehouse']         = new Building('city-warehouse',
-                                                           ['city', 'storage'],
-                                                           false, -1, 0);
-        buildings['city-bank']              = new Building('city-bank',
-                                                           ['city', 'money'],
-                                                           false, -1, 5);
-        buildings['city-lumber_yard']       = new Building('city-lumber_yard',
-                                                           ['city'],
-                                                           false, -1, 1);
-        buildings['city-sawmill']           = new PoweredBuilding('city-sawmill',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 1,
-                                                                  1,
-                                                                  [{res:'electricity',cost:1}],
-                                                                  []);
-        buildings['city-rock_quarry']       = new PoweredBuilding('city-rock_quarry',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 1,
-                                                                  1,
-                                                                  [{res:'electricity',cost:1}],
-                                                                  []);
-        buildings['city-cement_plant']      = new PoweredBuilding('city-cement_plant',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 5,
-                                                                  3,
-                                                                  [{res:'electricity',cost:2}],
-                                                                  []);
-        buildings['city-foundry']           = new Building('city-foundry',
-                                                           ['city'],
-                                                           false, -1, 5);
-        buildings['city-factory']           = new PoweredBuilding('city-factory',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'electricity',cost:3}],
-                                                                  []);
-        buildings['city-smelter']           = new Building('city-smelter',
-                                                           ['city'],
-                                                           false, -1, 1);
-        buildings['city-metal_refinery']    = new Building('city-metal_refinery',
-                                                           ['city'],
-                                                           false, -1, 1);
-        buildings['city-mine']              = new PoweredBuilding('city-mine',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 1,
-                                                                  2,
-                                                                  [{res:'electricity',cost:1}],
-                                                                  []);
-        buildings['city-coal_mine']         = new PoweredBuilding('city-coal_mine',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 1,
-                                                                  2,
-                                                                  [{res:'electricity',cost:1}],
-                                                                  []);
-        buildings['city-oil_well']          = new Building('city-oil_well',
-                                                           ['city'],
-                                                           false, -1, 6);
-        buildings['city-oil_depot']         = new Building('city-oil_depot',
-                                                           ['city'],
-                                                           false, -1, 2);
-        buildings['city-trade']             = new Building('city-trade',
-                                                           ['city'],
-                                                           false, -1, 3);
-        buildings['city-wharf']             = new Building('city-wharf',
-                                                           ['city'],
-                                                           false, -1, 1);
-        buildings['city-tourist_center']    = new PoweredBuilding('city-tourist_center',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [{res:resources.Food,cost:50}],
-                                                                  []);
-        buildings['city-amphitheatre']      = new Building('city-amphitheatre',
-                                                           ['city'],
-                                                           false, -1, 6);
-        buildings['city-casino']            = new PoweredBuilding('city-casino',
-                                                                  ['city'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [{res:'electricity',cost:5}],
-                                                                  []);
-        buildings['city-temple']            = new Building('city-temple',
-                                                           ['city'],
-                                                           false, -1, 5);
-        buildings['city-university']        = new Building('city-university',
-                                                           ['city', 'knowledge'],
-                                                           false, -1, 8);
-        buildings['city-library']           = new Building('city-library',
-                                                           ['city', 'knowledge'],
-                                                           false, -1, 2);
-        buildings['city-wardenclyffe']      = new PoweredBuilding('city-wardenclyffe',
-                                                                  ['city', 'power', 'knowledge'],
-                                                                  false, -1, 9,
-                                                                  9,
-                                                                  [{res:'electricity',cost:2}],
-                                                                  []);
-        buildings['city-biolab']            = new PoweredBuilding('city-biolab',
-                                                                  ['city', 'power', 'knowledge'],
-                                                                  false, -1, 6,
-                                                                  9,
-                                                                  [{res:'electricity',cost:2}],
-                                                                  []);
-        buildings['city-coal_power']        = new PoweredBuilding('city-coal_power',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 4,
-                                                                  9,
-                                                                  [{res:resources.Coal,cost:0.35}],
-                                                                  [{res:'electricity',cost:5}]);
-        buildings['city-oil_power']         = new PoweredBuilding('city-oil_power',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 4,
-                                                                  9,
-                                                                  [{res:resources.Oil,cost:0.65}],
-                                                                  [{res:'electricity',cost:6}]);
-        buildings['city-fission_power']     = new PoweredBuilding('city-fission_power',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 5,
-                                                                  9,
-                                                                  [{res:resources.Uranium,cost:0.1}],
-                                                                  [{res:'electricity',cost:14}]);
-        buildings['city-mass_driver']       = new PoweredBuilding('city-mass_driver',
-                                                                  ['city', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'electricity',cost:5}],
-                                                                  []);
-        buildings['space-test_launch']      = new Building('space-test_launch',
-                                                           ['space', 'home', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-satellite']        = new Building('space-satellite',
-                                                           ['space', 'home', 'knowledge'],
-                                                           false, -1, 1);
-        buildings['space-gps']              = new Building('space-gps',
-                                                           ['space', 'home', 'trade'],
-                                                           false, -1, 0);
-        buildings['space-propellant_depot'] = new Building('space-propellant_depot',
-                                                           ['space', 'home', 'storage'],
-                                                           false, -1, 1);
-        buildings['space-nav_beacon']       = new PoweredBuilding('space-nav_beacon',
-                                                                  ['space', 'home', 'power'],
-                                                                  false, -1, 2,
-                                                                  9,
-                                                                  [{res:'electricity',cost:2}],
-                                                                  [{res:'moon_support',cost:1}]);
-        buildings['space-moon_mission']     = new Building('space-moon_mission',
-                                                           ['space', 'moon', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-moon_base']        = new PoweredBuilding('space-moon_base',
-                                                                  ['space', 'moon', 'power'],
-                                                                  false, -1, 2,
-                                                                  9,
-                                                                  [],
-                                                                  [{res:'moon_support',cost:2}]);
-        buildings['space-iridium_mine']     = new PoweredBuilding('space-iridium_mine',
-                                                                  ['space', 'moon', 'power'],
-                                                                  false, -1, 3,
-                                                                  9,
-                                                                  [{res:'moon_support',cost:1}],
-                                                                  []);
-        buildings['space-helium_mine']      = new PoweredBuilding('space-helium_mine',
-                                                                  ['space', 'moon', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'moon_support',cost:1}],
-                                                                  []);
-        buildings['space-observatory']      = new PoweredBuilding('space-observatory',
-                                                                  ['space', 'moon', 'knowledge', 'power'],
-                                                                  false, -1, 2,
-                                                                  9,
-                                                                  [{res:'moon_support',cost:1}],
-                                                                  []);
-        buildings['space-red_mission']      = new Building('space-red_mission',
-                                                           ['space', 'red', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-spaceport']        = new PoweredBuilding('space-spaceport',
-                                                                  ['space', 'red', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [],
-                                                                  [{res:'red_support',cost:3}]);
-        buildings['space-red_tower']        = new PoweredBuilding('space-red_tower',
-                                                                  ['space', 'red', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'red_support',cost:1}],
-                                                                  []);
-        buildings['space-living_quarters']  = new PoweredBuilding('space-living_quarters',
-                                                                  ['space', 'red', 'citizen', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'red_support',cost:1}],
-                                                                  []);
-        buildings['space-garage']           = new Building('space-garage',
-                                                           ['space', 'red', 'storage'],
-                                                           false, -1, 1);
-        buildings['space-red_mine']         = new PoweredBuilding('space-red_mine',
-                                                                  ['space', 'red', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'red_support',cost:1}],
-                                                                  []);
-        buildings['space-fabrication']      = new PoweredBuilding('space-fabrication',
-                                                                  ['space', 'red', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'red_support',cost:1}],
-                                                                  []);
-        buildings['space-red_factory']      = new PoweredBuilding('space-red_factory',
-                                                                  ['space', 'red', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [{res:'electricity',cost:3}],
-                                                                  []);
-        buildings['space-biodome']          = new PoweredBuilding('space-biodome',
-                                                                  ['space', 'red', 'food', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [{res:'red_support',cost:1}],
-                                                                  []);
-        buildings['space-exotic_lab']       = new PoweredBuilding('space-exotic_lab',
-                                                                  ['space', 'red', 'knowledge', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [{res:'red_support',cost:1}],
-                                                                  []);
-        buildings['space-ziggurat']         = new Building('space-ziggurat',
-                                                           ['space', 'red'],
-                                                           false, -1, 3);
-        buildings['space-space_barracks']   = new Building('space-space_barracks',
-                                                           ['space', 'red', 'army'],
-                                                           false, -1, 0);
-        buildings['space-hell_mission']     = new Building('space-hell_mission',
-                                                           ['space', 'hell', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-geothermal']       = new PoweredBuilding('space-geothermal',
-                                                                  ['space', 'hell', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-swarm_plant']      = new Building('space-swarm_plant',
-                                                           ['space', 'hell'],
-                                                           false, -1, 0);
-        buildings['space-sun_mission']      = new Building('space-sun_mission',
-                                                           ['space', 'sun', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-swarm_control']    = new PoweredBuilding('space-swarm_control',
-                                                                  ['space', 'sun', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-swarm_satellite']  = new PoweredBuilding('space-swarm_satellite',
-                                                                  ['space', 'sun', 'power'],
-                                                                  false, -1, 3,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-gas_mission']      = new Building('space-gas_mission',
-                                                           ['space', 'gas', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-gas_mining']       = new PoweredBuilding('space-gas_mining',
-                                                                  ['space', 'gas', 'power'],
-                                                                  false, -1, 4,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-gas_storage']      = new Building('space-gas_storage',
-                                                           ['space', 'gas', 'storage'],
-                                                           false, -1, 2);
-        buildings['space-star_dock']        = new Building('space-star_dock',
-                                                           ['space', 'gas'],
-                                                           false, 1, 6);
-        buildings['space-gas_moon_mission'] = new Building('space-gas_moon_mission',
-                                                           ['space', 'gas_moon', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-outpost']          = new PoweredBuilding('space-outpost',
-                                                                  ['space', 'gas_moon', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-drone']            = new Building('space-drone',
-                                                           ['space', 'gas_moon'],
-                                                           false, -1, 0);
-        buildings['space-oil_extractor']    = new PoweredBuilding('space-oil_extractor',
-                                                                  ['space', 'gas_moon', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-belt_mission']     = new Building('space-belt_mission',
-                                                           ['space', 'belt', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-space_station']    = new PoweredBuilding('space-space_station',
-                                                                  ['space', 'belt', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-elerium_ship']     = new PoweredBuilding('space-elerium_ship',
-                                                                  ['space', 'belt', 'power'],
-                                                                  false, -1, 1,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-iridium_ship']     = new PoweredBuilding('space-iridium_ship',
-                                                                  ['space', 'belt', 'power'],
-                                                                  false, -1, 2,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-iron_ship']        = new PoweredBuilding('space-iron_ship',
-                                                                  ['space', 'belt', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-dwarf_mission']    = new Building('space-dwarf_mission',
-                                                           ['space', 'dwarf', 'mission'],
-                                                           false, -1, 10);
-        buildings['space-elerium_contain']  = new Building('space-elerium_contain',
-                                                           ['space', 'dwarf', 'storage'],
-                                                           false, -1, 1);
-        buildings['space-e_reactor']        = new PoweredBuilding('space-e_reactor',
-                                                                  ['space', 'dwarf', 'power'],
-                                                                  false, -1, 0,
-                                                                  9,
-                                                                  [],
-                                                                  []);
-        buildings['space-world_collider']   = new Building('space-world_collider',
-                                                           ['space', 'dwarf'],
-                                                           false, 1859, 0);
-        buildings['space-world_controller'] = new PoweredBuilding('space-world_controller',
-                                                                  ['space', 'dwarf', 'power'],
-                                                                  false, 1, 0,
-                                                                  9,
-                                                                  [{res:'electricity',cost:20}],
-                                                                  []);
+        buildings['city-house']             = new Building(         'city-house',
+                                                                    ['city', 'citizen'],
+                                                                    false, -1, 1);
+        buildings['city-cottage']           = new Building(         'city-cottage',
+                                                                    ['city', 'citizen'],
+                                                                    false, -1, 0);
+        buildings['city-apartment']         = new PoweredBuilding(  'city-apartment',
+                                                                    ['city', 'citizen', 'power'],
+                                                                    false, -1, 5,
+                                                                    9,
+                                                                    [{res:'electricity',cost:1}],
+                                                                    []);
+        buildings['city-lodge']             = new Building(         'city-lodge',
+                                                                    ['city', 'citizen'],
+                                                                    false, -1, 1);
+        buildings['city-smokehouse']        = new Building(         'city-smokehouse',
+                                                                    ['city', 'food'],
+                                                                    false, -1, 1);
+        buildings['city-soul_well']         = new Building(         'city-soul_well',
+                                                                    ['city', 'food', 'evil'],
+                                                                    false, -1, 1);
+        buildings['city-slave_pen']         = new Building(         'city-slave_pen',
+                                                                    ['city', 'evil'],
+                                                                    false, -1, 1);
+        buildings['city-farm']              = new Building(         'city-farm',
+                                                                    ['city', 'food'],
+                                                                    false, -1, 1);
+        buildings['city-mill']              = new PoweredBuilding(  'city-mill',
+                                                                    ['city', 'food', 'power'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:resources.Food,cost:0.1}],
+                                                                    [{res:'electricity',cost:1}],
+                                                                    'tech-windturbine');
+        buildings['city-windmill']          = new PoweredBuilding(  'city-windmill',
+                                                                    ['city', 'power', 'evil'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [],
+                                                                    [{res:'electricity',cost:1}]);
+        buildings['city-silo']              = new Building(         'city-silo',
+                                                                    ['city', 'food'],
+                                                                    false, -1, 0);
+        buildings['city-garrison']          = new Building(         'city-garrison',
+                                                                    ['city', 'army'],
+                                                                    false, -1, 4);
+        buildings['city-hospital']          = new Building(         'city-hospital',
+                                                                    ['city', 'army'],
+                                                                    false, -1, 3);
+        buildings['city-boot_camp']         = new Building(         'city-boot_camp',
+                                                                    ['city', 'army'],
+                                                                    false, -1, 3);
+        buildings['city-shed']              = new Building(         'city-shed',
+                                                                    ['city', 'storage'],
+                                                                    false, -1, 2);
+        buildings['city-storage_yard']      = new Building(         'city-storage_yard',
+                                                                    ['city', 'storage'],
+                                                                    false, -1, 0);
+        buildings['city-warehouse']         = new Building(         'city-warehouse',
+                                                                    ['city', 'storage'],
+                                                                    false, -1, 0);
+        buildings['city-bank']              = new Building(         'city-bank',
+                                                                    ['city', 'money'],
+                                                                    false, -1, 5);
+        buildings['city-lumber_yard']       = new Building(         'city-lumber_yard',
+                                                                    ['city','lumber'],
+                                                                    false, -1, 1);
+        buildings['city-sawmill']           = new PoweredBuilding(  'city-sawmill',
+                                                                    ['city', 'power', 'lumber'],
+                                                                    false, -1, 1,
+                                                                    1,
+                                                                    [{res:'electricity',cost:1}],
+                                                                    [{res:resources.Lumber,cost:0}]); //TODO Create function to find Lumber
+        buildings['city-rock_quarry']       = new PoweredBuilding(  'city-rock_quarry',
+                                                                    ['city', 'power', 'stone', 'aluminium'],
+                                                                    false, -1, 1,
+                                                                    1,
+                                                                    [{res:'electricity',cost:1}],
+                                                                    [{res:resources.Stone,cost:0}], //TODO Create function to find Stone
+                                                                    'tech-mine_conveyor');
+        buildings['city-cement_plant']      = new PoweredBuilding(  'city-cement_plant',
+                                                                    ['city', 'power', 'cement'],
+                                                                    false, -1, 5,
+                                                                    3,
+                                                                    [{res:'electricity',cost:2}],
+                                                                    [{res:resources.Cement,cost:0}], //TODO Create function to find Cement
+                                                                    'tech-screw_conveyor');
+        buildings['city-foundry']           = new Building(         'city-foundry',
+                                                                    ['city', 'craftsman'],
+                                                                    false, -1, 5);
+        buildings['city-factory']           = new PoweredBuilding(  'city-factory',
+                                                                    ['city', 'power', 'money', 'alloy', 'polymer', 'nano_tube'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:3}],
+                                                                    []);
+        buildings['city-smelter']           = new Building(         'city-smelter',
+                                                                    ['city', 'iron', 'steel', 'titanium'],
+                                                                    false, -1, 1);
+        buildings['city-metal_refinery']    = new Building(         'city-metal_refinery',
+                                                                    ['city', 'aluminium'],
+                                                                    false, -1, 1);
+        buildings['city-mine']              = new PoweredBuilding(  'city-mine',
+                                                                    ['city', 'power', 'iron', 'copper'],
+                                                                    false, -1, 1,
+                                                                    2,
+                                                                    [{res:'electricity',cost:1}],
+                                                                    [],
+                                                                    'tech-mine_conveyor');
+        buildings['city-coal_mine']         = new PoweredBuilding(  'city-coal_mine',
+                                                                    ['city', 'power', 'coal', 'uranium'],
+                                                                    false, -1, 1,
+                                                                    2,
+                                                                    [{res:'electricity',cost:1}],
+                                                                    [],
+                                                                    'tech-mine_conveyor');
+        buildings['city-oil_well']          = new Building(         'city-oil_well',
+                                                                    ['city', 'oil'],
+                                                                    false, -1, 6);
+        buildings['city-oil_depot']         = new Building(         'city-oil_depot',
+                                                                    ['city', 'oil'],
+                                                                    false, -1, 2);
+        buildings['city-trade']             = new Building(         'city-trade',
+                                                                    ['city', 'trade'],
+                                                                    false, -1, 3);
+        buildings['city-wharf']             = new Building(         'city-wharf',
+                                                                    ['city', 'storage', 'trade'],
+                                                                    false, -1, 1);
+        buildings['city-tourist_center']    = new PoweredBuilding(  'city-tourist_center',
+                                                                    ['city', 'power', 'money'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:resources.Food,cost:50}],
+                                                                    [{res:resources.Money,cost:0}]); //TODO Create function to get money
+        buildings['city-amphitheatre']      = new Building(         'city-amphitheatre',
+                                                                    ['city', 'morale'],
+                                                                    false, -1, 6);
+        buildings['city-casino']            = new PoweredBuilding(  'city-casino',
+                                                                    ['city', 'power', 'money', 'morale'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:'electricity',cost:5}],
+                                                                    [{res:resources.Money,cost:0}]); //TODO Create function to get money
+        buildings['city-temple']            = new Building(         'city-temple',
+                                                                    ['city', 'trade'],
+                                                                    false, -1, 5);
+        buildings['city-university']        = new Building(         'city-university',
+                                                                    ['city', 'knowledge'],
+                                                                    false, -1, 8);
+        buildings['city-library']           = new Building(         'city-library',
+                                                                    ['city', 'knowledge'],
+                                                                    false, -1, 2);
+        buildings['city-wardenclyffe']      = new PoweredBuilding(  'city-wardenclyffe',
+                                                                    ['city', 'power', 'knowledge', 'morale'],
+                                                                    false, -1, 9,
+                                                                    9,
+                                                                    [{res:'electricity',cost:2}],
+                                                                    []);
+        buildings['city-biolab']            = new PoweredBuilding(  'city-biolab',
+                                                                    ['city', 'power', 'knowledge'],
+                                                                    false, -1, 6,
+                                                                    9,
+                                                                    [{res:'electricity',cost:2}],
+                                                                    []);
+        buildings['city-coal_power']        = new PoweredBuilding(  'city-coal_power',
+                                                                    ['city', 'power', 'coal'],
+                                                                    false, -1, 4,
+                                                                    9,
+                                                                    [{res:resources.Coal,cost:0.35}],
+                                                                    [{res:'electricity',cost:5}]);
+        buildings['city-oil_power']         = new PoweredBuilding(  'city-oil_power',
+                                                                    ['city', 'power', 'oil'],
+                                                                    false, -1, 4,
+                                                                    9,
+                                                                    [{res:resources.Oil,cost:0.65}],
+                                                                    [{res:'electricity',cost:6}]);
+        buildings['city-fission_power']     = new PoweredBuilding(  'city-fission_power',
+                                                                    ['city', 'power', 'uranium'],
+                                                                    false, -1, 5,
+                                                                    9,
+                                                                    [{res:resources.Uranium,cost:0.1}],
+                                                                    [{res:'electricity',cost:14}]);     //TODO Update to 18 kW after tech-breeder_reactor
+        buildings['city-mass_driver']       = new PoweredBuilding(  'city-mass_driver',
+                                                                    ['city', 'power', 'oil', 'helium_3'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:5}],
+                                                                    []);
+        buildings['space-test_launch']      = new Building(         'space-test_launch',
+                                                                    ['space', 'home', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-satellite']        = new Building(         'space-satellite',
+                                                                    ['space', 'home', 'knowledge'],
+                                                                    false, -1, 1);
+        buildings['space-gps']              = new Building(         'space-gps',
+                                                                    ['space', 'home', 'trade'],
+                                                                    false, -1, 0);
+        buildings['space-propellant_depot'] = new Building(         'space-propellant_depot',
+                                                                    ['space', 'home', 'oil', 'helium_3'],
+                                                                    false, -1, 1);
+        buildings['space-nav_beacon']       = new PoweredBuilding(  'space-nav_beacon',
+                                                                    ['space', 'home', 'power'],
+                                                                    false, -1, 2,
+                                                                    9,
+                                                                    [{res:'electricity',cost:2}],
+                                                                    [{res:'moon_support',cost:1}]);
+        buildings['space-moon_mission']     = new Building(         'space-moon_mission',
+                                                                    ['space', 'moon', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-moon_base']        = new PoweredBuilding(  'space-moon_base',
+                                                                    ['space', 'moon', 'power', 'oil'],
+                                                                    false, -1, 2,
+                                                                    9,
+                                                                    [{res:'electricity',cost:4},{res:resources.Oil,cost:2}],
+                                                                    [{res:'moon_support',cost:2}]);
+        buildings['space-iridium_mine']     = new PoweredBuilding(  'space-iridium_mine',
+                                                                    ['space', 'moon', 'power', 'iridium'],
+                                                                    false, -1, 3,
+                                                                    9,
+                                                                    [{res:'moon_support',cost:1}],
+                                                                    [{res:resources.Iridium,cost:0}]); //TODO create function for iridium
+        buildings['space-helium_mine']      = new PoweredBuilding(  'space-helium_mine',
+                                                                    ['space', 'moon', 'power', 'helium_3'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'moon_support',cost:1}],
+                                                                    [{res:resources.Helium_3,cost:0}]); //TODO create function for helium_3
+        buildings['space-observatory']      = new PoweredBuilding(  'space-observatory',
+                                                                    ['space', 'moon', 'knowledge', 'power'],
+                                                                    false, -1, 2,
+                                                                    9,
+                                                                    [{res:'moon_support',cost:1}],
+                                                                    []);
+        buildings['space-red_mission']      = new Building(         'space-red_mission',
+                                                                    ['space', 'red', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-spaceport']        = new PoweredBuilding(  'space-spaceport',
+                                                                    ['space', 'red', 'power', 'helium_3', 'food'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:5},{res:resources.Helium_3,cost:1.25},{res:resources.Food,cost:25}],
+                                                                    [{res:'red_support',cost:3}]);
+        buildings['space-red_tower']        = new PoweredBuilding(  'space-red_tower',
+                                                                    ['space', 'red', 'power'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:2}],
+                                                                    [{res:'red_support',cost:1}]);
+        buildings['space-living_quarters']  = new PoweredBuilding(  'space-living_quarters',
+                                                                    ['space', 'red', 'citizen', 'power'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'red_support',cost:1}],
+                                                                    []);
+        buildings['space-garage']           = new Building(         'space-garage',
+                                                                    ['space', 'red', 'storage'],
+                                                                    false, -1, 1);
+        buildings['space-red_mine']         = new PoweredBuilding(  'space-red_mine',
+                                                                    ['space', 'red', 'power', 'copper', 'titanium'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'red_support',cost:1}],
+                                                                    [{res:resources.Copper,cost:0},{res:resources.Titanium,cost:0}]); //TODO Create function to find copper/titanium
+        buildings['space-fabrication']      = new PoweredBuilding(  'space-fabrication',
+                                                                    ['space', 'red', 'power', 'craftsman'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'red_support',cost:1}],
+                                                                    []);
+        buildings['space-red_factory']      = new PoweredBuilding(  'space-red_factory',
+                                                                    ['space', 'red', 'power', 'money', 'alloy', 'polymer', 'nano_tube'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:3},{res:resources.Helium_3,cost:1}],
+                                                                    []);
+        buildings['space-biodome']          = new PoweredBuilding(  'space-biodome',
+                                                                    ['space', 'red', 'food', 'power'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:'red_support',cost:1}],
+                                                                    [{res:resources.Food,cost:0}]); //TODO Create function to find food
+        buildings['space-exotic_lab']       = new PoweredBuilding(  'space-exotic_lab',
+                                                                    ['space', 'red', 'knowledge', 'power', 'elerium'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:'red_support',cost:1}],
+                                                                    []);
+        buildings['space-ziggurat']         = new Building(         'space-ziggurat',
+                                                                    ['space', 'red'],
+                                                                    false, -1, 3);
+        buildings['space-space_barracks']   = new Building(         'space-space_barracks',
+                                                                    ['space', 'red', 'army'],
+                                                                    false, -1, 0);
+        buildings['space-hell_mission']     = new Building(         'space-hell_mission',
+                                                                    ['space', 'hell', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-geothermal']       = new PoweredBuilding(  'space-geothermal',
+                                                                    ['space', 'hell', 'power', 'oil'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:resources.Helium_3,cost:0.5}],
+                                                                    [{res:'electricity',cost:8}]);
+        buildings['space-swarm_plant']      = new Building(         'space-swarm_plant',
+                                                                    ['space', 'hell', 'swarm'],
+                                                                    false, -1, 0);
+        buildings['space-sun_mission']      = new Building(         'space-sun_mission',
+                                                                    ['space', 'sun', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-swarm_control']    = new PoweredBuilding(  'space-swarm_control',
+                                                                    ['space', 'sun', 'power', 'swarm'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [],
+                                                                    [{res:'swarm_support',cost:4}]); //TODO This changes to 6 after tech-swarm_control_ai
+        buildings['space-swarm_satellite']  = new PoweredBuilding(  'space-swarm_satellite',
+                                                                    ['space', 'sun', 'power', 'swarm'],
+                                                                    false, -1, 3,
+                                                                    9,
+                                                                    [{res:'swarm_support',cost:1}],
+                                                                    [{res:'electricity',cost:1}]);
+        buildings['space-gas_mission']      = new Building(         'space-gas_mission',
+                                                                    ['space', 'gas', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-gas_mining']       = new PoweredBuilding(  'space-gas_mining',
+                                                                    ['space', 'gas', 'power', 'helium_3'],
+                                                                    false, -1, 4,
+                                                                    9,
+                                                                    [{res:'electricity',cost:2}],
+                                                                    [{res:resources.Helium_3,cost:0.5}]); //TODO this changes to 0.65 after tech-helium_attractor
+        buildings['space-gas_storage']      = new Building(         'space-gas_storage',
+                                                                    ['space', 'gas', 'helium_3'],
+                                                                    false, -1, 2);
+        buildings['space-star_dock']        = new Building(         'space-star_dock',
+                                                                    ['space', 'gas'],
+                                                                    false, 1, 6);
+        buildings['space-gas_moon_mission'] = new Building(         'space-gas_moon_mission',
+                                                                    ['space', 'gas_moon', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-outpost']          = new PoweredBuilding(  'space-outpost',
+                                                                    ['space', 'gas_moon', 'power', 'oil'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:3},{res:resources.Oil,cost:2}],
+                                                                    [{res:resources.Neutronium,cost:0.025}]);
+        buildings['space-drone']            = new Building(         'space-drone',
+                                                                    ['space', 'gas_moon'],
+                                                                    false, -1, 0);
+        buildings['space-oil_extractor']    = new PoweredBuilding(  'space-oil_extractor',
+                                                                    ['space', 'gas_moon', 'power', 'oil'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:'electricity',cost:1}],
+                                                                    [{res:resources.Oil,cost:0.4}]); //TODO this changes by oil research
+        buildings['space-belt_mission']     = new Building(         'space-belt_mission',
+                                                                    ['space', 'belt', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-space_station']    = new PoweredBuilding(  'space-space_station',
+                                                                    ['space', 'belt', 'power', 'helium_3', 'food'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:3},{res:resources.Helium_3,cost:2.5},{res:resources.Food,cost:20}],
+                                                                    [{res:'belt_support',cost:3}]);
+        buildings['space-elerium_ship']     = new PoweredBuilding(  'space-elerium_ship',
+                                                                    ['space', 'belt', 'power', 'elerium'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'belt_support',cost:2}],
+                                                                    [{res:resources.Elerium,cost:0.005}]); //TODO this changes by tech-laser_mining to 0.0075
+        buildings['space-iridium_ship']     = new PoweredBuilding(  'space-iridium_ship',
+                                                                    ['space', 'belt', 'power', 'iridium'],
+                                                                    false, -1, 2,
+                                                                    9,
+                                                                    [{res:'belt_support',cost:1}],
+                                                                    [{res:resources.Iridium,cost:0.055}]); //TODO this changes by tech-laser_mining to 0.08
+        buildings['space-iron_ship']        = new PoweredBuilding(  'space-iron_ship',
+                                                                    ['space', 'belt', 'power', 'iron', 'swarm'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:'belt_support',cost:1}],
+                                                                    [{res:resources.Iron,cost:2}]); //TODO this changes by tech-laser_mining to 3
+        buildings['space-dwarf_mission']    = new Building(         'space-dwarf_mission',
+                                                                    ['space', 'dwarf', 'mission'],
+                                                                    false, -1, 10);
+        buildings['space-elerium_contain']  = new PoweredBuilding(  'space-elerium_contain',
+                                                                    ['space', 'dwarf', 'power', 'elerium'],
+                                                                    false, -1, 1,
+                                                                    9,
+                                                                    [{res:'electricity',cost:6}],
+                                                                    []);
+        buildings['space-e_reactor']        = new PoweredBuilding(  'space-e_reactor',
+                                                                    ['space', 'dwarf', 'power', 'elerium'],
+                                                                    false, -1, 0,
+                                                                    9,
+                                                                    [{res:resources.Elerium,cost:0.05}], //TODO This might be wierd but I don't know
+                                                                    [{res:'electricity',cost:25}]);
+        buildings['space-world_collider']   = new Building(         'space-world_collider',
+                                                                    ['space', 'dwarf'],
+                                                                    false, 1859, 0);
+        buildings['space-world_controller'] = new PoweredBuilding(  'space-world_controller',
+                                                                    ['space', 'dwarf', 'power', 'knowledge'],
+                                                                    false, 1, 0,
+                                                                    9,
+                                                                    [{res:'electricity',cost:20}],
+                                                                    []);
     }
 
     class Research extends Action {
@@ -1086,735 +1097,735 @@
     var researches = [];
     function loadResearches() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
-        researches['tech-club'] = new Research('tech-club',
-                                               ['food'],
-                                               1);
-        researches['tech-bone_tools'] = new Research('tech-bone_tools',
-                                                     ['stone'],
-                                                     1);
-        researches['tech-sundial'] = new Research('tech-sundial',
-                                                  ['knowledge'],
-                                                  5);
-        researches['tech-housing'] = new Research('tech-housing',
-                                                  ['citizen'],
-                                                  5);
-        researches['tech-cottage'] = new Research('tech-cottage',
-                                                  ['citizen'],
-                                                  0);
-        researches['tech-apartment'] = new Research('tech-apartment',
-                                                    ['citzen', 'power'],
-                                                    5);
-        researches['tech-steel_beams'] = new Research('tech-steel_beams',
-                                                      ['citizen'],
-                                                      1);
-        researches['tech-mythril_beams'] = new Research('tech-mythril_beams',
-                                                        ['citizen'],
-                                                        1);
-        researches['tech-neutronium_walls'] = new Research('tech-neutronium_walls',
-                                                           ['citizen'],
-                                                           1);
-        researches['tech-aphrodisiac'] = new Research('tech-aphrodisiac',
-                                                      ['citizen'],
-                                                      0);
-        researches['tech-smokehouse'] = new Research('tech-smokehouse',
-                                                     ['food'],
-                                                     1);
-        researches['tech-lodge'] = new Research('tech-lodge',
-                                                ['citizen'],
-                                                1);
-        researches['tech-soul_well'] = new Research('tech-soul_well',
-                                                    [],
-                                                    1);
-        researches['tech-agriculture'] = new Research('tech-agriculture',
-                                                      ['food'],
-                                                      0);
-        researches['tech-farm_house'] = new Research('tech-farm_house',
-                                                     ['food', 'citizen'],
-                                                     5);
-        researches['tech-irrigation'] = new Research('tech-irrigation',
-                                                     ['food'],
-                                                     1);
-        researches['tech-silo'] = new Research('tech-silo',
-                                               ['food'],
-                                               0);
-        researches['tech-mill'] = new Research('tech-mill',
-                                               ['food'],
-                                               1);
-        researches['tech-windmill'] = new Research('tech-windmill',
-                                                   ['food'],
-                                                   1);
-        researches['tech-windturbine'] = new Research('tech-windturbine',
-                                                      ['food', 'power'],
-                                                      5);
-        researches['tech-wind_plant'] = new Research('tech-wind_plant',
-                                                     ['food'],
-                                                     1);
-        researches['tech-evil_wind_plant'] = new Research('tech-evil_wind_plant',
-                                                          [],
-                                                          0);
-        researches['tech-gmfood'] = new Research('tech-gmfood',
-                                                 ['food'],
-                                                 0);
-        researches['tech-foundry'] = new Research('tech-foundry',
-                                                  ['craft'],
-                                                  7);
-        researches['tech-artisans'] = new Research('tech-artisans',
-                                                   ['craft'],
-                                                   4);
-        researches['tech-apprentices'] = new Research('tech-apprentices',
-                                                      ['craft'],
-                                                      4);
-        researches['tech-carpentry'] = new Research('tech-carpentry',
-                                                    ['craft'],
-                                                    4);
-        researches['tech-demonic_craftsman'] = new Research('tech-demonic_craftsman',
-                                                            ['craft'],
-                                                            4);
-        researches['tech-master_craftsman'] = new Research('tech-master_craftsman',
-                                                           ['craft'],
-                                                           4);
-        researches['tech-brickworks'] = new Research('tech-brickworks',
-                                                     ['craft'],
-                                                     4);
-        researches['tech-machinery'] = new Research('tech-machinery',
-                                                    ['factory'],
-                                                    4);
-        researches['tech-cnc_machine'] = new Research('tech-cnc_machine',
-                                                      ['craft'],
-                                                      4);
-        researches['tech-vocational_training'] = new Research('tech-vocational_training',
-                                                              ['craft'],
-                                                              4);
-        researches['tech-assembly_line'] = new Research('tech-assembly_line',
-                                                        ['factory'],
-                                                        4);
-        researches['tech-automation'] = new Research('tech-automation',
-                                                     ['factory'],
-                                                     4);
-        researches['tech-laser_cutters'] = new Research('tech-laser_cutters',
-                                                        ['craft'],
-                                                        3);
-        researches['tech-theatre'] = new Research('tech-theatre',
-                                                  ['morale'],
-                                                  7);
-        researches['tech-playwright'] = new Research('tech-playwright',
-                                                     ['morale'],
-                                                     6);
-        researches['tech-magic'] = new Research('tech-magic',
-                                                ['morale'],
-                                                7);
-        researches['tech-radio'] = new Research('tech-radio',
-                                                ['morale'],
-                                                7);
-        researches['tech-tv'] = new Research('tech-tv',
-                                             ['morale'],
-                                             7);
-        researches['tech-casino'] = new Research('tech-casino',
-                                                 ['casino', 'power'],
-                                                 0);
-        researches['tech-dazzle'] = new Research('tech-dazzle',
-                                                 ['casino'],
-                                                 0);
-        researches['tech-casino_vault'] = new Research('tech-casino_vault',
-                                                       ['casino'],
-                                                       0);
-        researches['tech-mining'] = new Research('tech-mining',
-                                                 ['mine'],
-                                                 7);
-        researches['tech-bayer_process'] = new Research('tech-bayer_process',
-                                                        ['aluminum'],
-                                                        10);
-        researches['tech-smelting'] = new Research('tech-smelting',
-                                                   ['mine'],
-                                                   2);
-        researches['tech-steel'] = new Research('tech-steel',
-                                                ['smelter', 'steel'],
-                                                8);
-        researches['tech-blast_furnace'] = new Research('tech-blast_furnace',
-                                                        ['smelter', 'iron'],
-                                                        2);
-        researches['tech-bessemer_process'] = new Research('tech-bessemer_process',
-                                                           ['smelter', 'steel'],
-                                                           2);
-        researches['tech-oxygen_converter'] = new Research('tech-oxygen_converter',
-                                                           ['smelter', 'steel'],
-                                                           2);
-        researches['tech-electric_arc_furnace'] = new Research('tech-electric_arc_furnace',
-                                                               ['copper'],
-                                                               2);
-        researches['tech-rotary_kiln'] = new Research('tech-rotary_kiln',
-                                                      ['copper'],
-                                                      2);
-        researches['tech-metal_working'] = new Research('tech-metal_working',
-                                                        ['copper'],
-                                                        7);
-        researches['tech-iron_mining'] = new Research('tech-iron_mining',
-                                                      ['iron'],
-                                                      7);
-        researches['tech-coal_mining'] = new Research('tech-coal_mining',
-                                                      ['coal'],
-                                                      7);
-        researches['tech-storage'] = new Research('tech-storage',
-                                                  ['storage'],
-                                                  5);
-        researches['tech-reinforced_shed'] = new Research('tech-reinforced_shed',
-                                                          ['storage'],
-                                                          5);
-        researches['tech-barns'] = new Research('tech-barns',
-                                                ['storage'],
-                                                5);
-        researches['tech-warehouse'] = new Research('tech-warehouse',
-                                                    ['storage'],
-                                                    5);
-        researches['tech-cameras'] = new Research('tech-cameras',
-                                                  ['storage'],
-                                                  5);
-        researches['tech-pocket_dimensions'] = new Research('tech-pocket_dimensions',
-                                                            ['storage'],
-                                                            5);
-        researches['tech-containerization'] = new Research('tech-containerization',
-                                                           ['storage', 'crate'],
-                                                           5);
-        researches['tech-reinforced_crates'] = new Research('tech-reinforced_crates',
-                                                            ['storage', 'crate'],
-                                                            5);
-        researches['tech-cranes'] = new Research('tech-cranes',
-                                                 ['storage', 'crate'],
-                                                 5);
-        researches['tech-titanium_crates'] = new Research('tech-titanium_crates',
-                                                          ['storage', 'crate'],
-                                                          5);
-        researches['tech-mythril_crates'] = new Research('tech-mythril_crates',
-                                                         ['storage', 'crate'],
-                                                         5);
-        researches['tech-steel_containers'] = new Research('tech-steel_containers',
-                                                           ['storage', 'container'],
-                                                           5);
-        researches['tech-gantry_crane'] = new Research('tech-gantry_crane',
-                                                       ['storage', 'container'],
-                                                       5);
-        researches['tech-alloy_containers'] = new Research('tech-alloy_containers',
-                                                           ['storage', 'container'],
-                                                           5);
-        researches['tech-mythril_containers'] = new Research('tech-mythril_containers',
-                                                             ['storage', 'container'],
-                                                             5);
-        researches['tech-currency'] = new Research('tech-currency',
-                                                   ['money'],
-                                                   10);
-        researches['tech-market'] = new Research('tech-market',
-                                                 ['money', 'market'],
-                                                 3);
-        researches['tech-tax_rates'] = new Research('tech-tax_rates',
-                                                    ['money', 'tax'],
-                                                    1);
-        researches['tech-large_trades'] = new Research('tech-large_trades',
-                                                       ['money', 'market'],
-                                                       0);
-        researches['tech-corruption'] = new Research('tech-corruption',
-                                                     ['money', 'tax'],
-                                                     1);
-        researches['tech-massive_trades'] = new Research('tech-massive_trades',
-                                                         ['money', 'market'],
-                                                         0);
-        researches['tech-trade'] = new Research('tech-trade',
-                                                ['trade'],
-                                                7);
-        researches['tech-diplomacy'] = new Research('tech-diplomacy',
-                                                    ['trade'],
-                                                    3);
-        researches['tech-freight'] = new Research('tech-freight',
-                                                  ['trade'],
-                                                  3);
-        researches['tech-wharf'] = new Research('tech-wharf',
-                                                ['trade', 'storage', 'crate', 'container'],
-                                                1);
-        researches['tech-banking'] = new Research('tech-banking',
-                                                  ['money'],
-                                                  1);
-        researches['tech-investing'] = new Research('tech-investing',
-                                                    ['money'],
-                                                    5);
-        researches['tech-vault'] = new Research('tech-vault',
-                                                ['money'],
-                                                2);
-        researches['tech-bonds'] = new Research('tech-bonds',
-                                                ['money'],
-                                                0);
-        researches['tech-steel_vault'] = new Research('tech-steel_vault',
-                                                      ['money'],
-                                                      0);
-        researches['tech-eebonds'] = new Research('tech-eebonds',
-                                                  ['money'],
-                                                  0);
-        researches['tech-swiss_banking'] = new Research('tech-swiss_banking',
-                                                        ['money'],
-                                                        0);
-        researches['tech-safety_deposit'] = new Research('tech-safety_deposit',
-                                                         ['money'],
-                                                         0);
-        researches['tech-stock_market'] = new Research('tech-stock_market',
-                                                       ['money'],
-                                                       0);
-        researches['tech-hedge_funds'] = new Research('tech-hedge_funds',
-                                                      ['money'],
-                                                      0);
-        researches['tech-four_oh_one'] = new Research('tech-four_oh_one',
-                                                      ['money'],
-                                                      0);
-        researches['tech-mythril_vault'] = new Research('tech-mythril_vault',
-                                                        ['money'],
-                                                        0);
-        researches['tech-neutronium_vault'] = new Research('tech-neutronium_vault',
-                                                           ['money'],
-                                                           0);
-        researches['tech-home_safe'] = new Research('tech-home_safe',
-                                                    ['money'],
-                                                    0);
-        researches['tech-fire_proof_safe'] = new Research('tech-fire_proof_safe',
-                                                          ['money'],
-                                                          0);
-        researches['tech-monument'] = new Research('tech-monument',
-                                                   ['morale'],
-                                                   0);
-        researches['tech-tourism'] = new Research('tech-tourism',
-                                                  ['money'],
-                                                  0);
-        researches['tech-science'] = new Research('tech-science',
-                                                  ['knowledge'],
-                                                  10);
-        researches['tech-library'] = new Research('tech-library',
-                                                  ['knowledge'],
-                                                  10);
-        researches['tech-thesis'] = new Research('tech-thesis',
-                                                 ['knowledge'],
-                                                 9);
-        researches['tech-research_grant'] = new Research('tech-research_grant',
-                                                         ['knowledge'],
-                                                         9);
-        researches['tech-scientific_journal'] = new Research('tech-scientific_journal',
-                                                             ['knowledge'],
-                                                             9);
-        researches['tech-adjunct_professor'] = new Research('tech-adjunct_professor',
-                                                            ['knowledge'],
-                                                            10);
-        researches['tech-tesla_coil'] = new Research('tech-tesla_coil',
-                                                     ['knowledge'],
-                                                     10);
-        researches['tech-internet'] = new Research('tech-internet',
-                                                   ['knowledge'],
-                                                   10);
-        researches['tech-observatory'] = new Research('tech-observatory',
-                                                      ['knowledge'],
-                                                      8);
-        researches['tech-world_collider'] = new Research('tech-world_collider',
-                                                         [],
-                                                         5);
-        researches['tech-bioscience'] = new Research('tech-bioscience',
-                                                     ['knowledge'],
-                                                     10);
-        researches['tech-genetics'] = new Research('tech-genetics',
-                                                   ['gene'],
-                                                   0);
-        researches['tech-crispr'] = new Research('tech-crispr',
-                                                 ['gene'],
-                                                 0);
-        researches['tech-shotgun_sequencing'] = new Research('tech-shotgun_sequencing',
-                                                             ['gene'],
-                                                             0);
-        researches['tech-de_novo_sequencing'] = new Research('tech-de_novo_sequencing',
-                                                             ['gene'],
-                                                             0);
-        researches['tech-dna_sequencer'] = new Research('tech-dna_sequencer',
-                                                        ['gene'],
-                                                        0);
-        researches['tech-mad_science'] = new Research('tech-mad_science',
-                                                      ['knowledge'],
-                                                      10);
-        researches['tech-electricity'] = new Research('tech-electricity',
-                                                      ['power'],
-                                                      9);
-        researches['tech-industrialization'] = new Research('tech-industrialization',
-                                                            [],
-                                                            9);
-        researches['tech-electronics'] = new Research('tech-electronics',
-                                                      ['power'],
-                                                      9);
-        researches['tech-fission'] = new Research('tech-fission',
-                                                  ['power', 'uranium'],
-                                                  7);
-        researches['tech-arpa'] = new Research('tech-arpa',
-                                               [],
-                                               5);
-        researches['tech-rocketry'] = new Research('tech-rocketry',
-                                                   [],
-                                                   9);
-        researches['tech-robotics'] = new Research('tech-robotics',
-                                                   [],
-                                                   9);
-        researches['tech-lasers'] = new Research('tech-lasers',
-                                                 [],
-                                                 9);
-        researches['tech-artifical_intelligence'] = new Research('tech-artifical_intelligence',
-                                                                 [],
-                                                                 9);
-        researches['tech-quantum_computing'] = new Research('tech-quantum_computing',
-                                                            [],
-                                                            9);
-        researches['tech-thermomechanics'] = new Research('tech-thermomechanics',
-                                                          ['factory', 'alloy'],
-                                                          5);
-        researches['tech-quantum_manufacturing'] = new Research('tech-quantum_manufacturing',
-                                                                ['factory'],
-                                                                5);
-        researches['tech-worker_drone'] = new Research('tech-worker_drone',
-                                                       ['neutronium'],
-                                                       10);
-        researches['tech-uranium'] = new Research('tech-uranium',
-                                                  ['uranium'],
-                                                  7);
-        researches['tech-uranium_storage'] = new Research('tech-uranium_storage',
-                                                          ['uranium'],
-                                                          6);
-        researches['tech-uranium_ash'] = new Research('tech-uranium_ash',
-                                                      ['uranium'],
-                                                      6);
-        researches['tech-breeder_reactor'] = new Research('tech-breeder_reactor',
-                                                          ['power'],
-                                                          4);
-        researches['tech-mine_conveyor'] = new Research('tech-mine_conveyor',
-                                                        ['mine', 'power'],
-                                                        4);
-        researches['tech-oil_well'] = new Research('tech-oil_well',
-                                                   ['oil'],
-                                                   5);
-        researches['tech-oil_depot'] = new Research('tech-oil_depot',
-                                                    ['oil'],
-                                                    5);
-        researches['tech-oil_power'] = new Research('tech-oil_power',
-                                                    ['oil', 'power'],
-                                                    7);
-        researches['tech-titanium_drills'] = new Research('tech-titanium_drills',
-                                                          ['oil'],
-                                                          5);
-        researches['tech-alloy_drills'] = new Research('tech-alloy_drills',
-                                                       ['oil'],
-                                                       4);
-        researches['tech-fracking'] = new Research('tech-fracking',
-                                                   ['oil'],
-                                                   4);
-        researches['tech-mythril_drills'] = new Research('tech-mythril_drills',
-                                                         ['oil'],
-                                                         2);
-        researches['tech-mass_driver'] = new Research('tech-mass_driver',
-                                                      ['power'],
-                                                      0);
-        researches['tech-polymer'] = new Research('tech-polymer',
-                                                  ['factory', 'polymer'],
-                                                  10);
-        researches['tech-fluidized_bed_reactor'] = new Research('tech-fluidized_bed_reactor',
-                                                                ['factory', 'polymer'],
-                                                                4);
-        researches['tech-nano_tubes'] = new Research('tech-nano_tubes',
-                                                     ['factory', 'nano_tubes'],
-                                                     5);
-        researches['tech-stone_axe'] = new Research('tech-stone_axe',
-                                                    ['lumber'],
-                                                    1);
-        researches['tech-copper_axes'] = new Research('tech-copper_axes',
-                                                      ['lumber'],
-                                                      1);
-        researches['tech-iron_saw'] = new Research('tech-iron_saw',
-                                                   ['lumber'],
-                                                   1);
-        researches['tech-steel_saw'] = new Research('tech-steel_saw',
-                                                    ['lumber'],
-                                                    1);
-        researches['tech-iron_axes'] = new Research('tech-iron_axes',
-                                                    ['lumber'],
-                                                    1);
-        researches['tech-steel_axes'] = new Research('tech-steel_axes',
-                                                     ['lumber'],
-                                                     1);
-        researches['tech-titanium_axes'] = new Research('tech-titanium_axes',
-                                                        ['lumber'],
-                                                        1);
-        researches['tech-copper_sledgehammer'] = new Research('tech-copper_sledgehammer',
-                                                              ['stone'],
-                                                              1);
-        researches['tech-iron_sledgehammer'] = new Research('tech-iron_sledgehammer',
-                                                            ['stone'],
-                                                            1);
-        researches['tech-steel_sledgehammer'] = new Research('tech-steel_sledgehammer',
-                                                             ['stone'],
-                                                             1);
-        researches['tech-titanium_sledgehammer'] = new Research('tech-titanium_sledgehammer',
-                                                                ['stone'],
-                                                                1);
-        researches['tech-copper_pickaxe'] = new Research('tech-copper_pickaxe',
-                                                         ['mine'],
-                                                         2);
-        researches['tech-iron_pickaxe'] = new Research('tech-iron_pickaxe',
-                                                       ['mine'],
-                                                       2);
-        researches['tech-steel_pickaxe'] = new Research('tech-steel_pickaxe',
-                                                        ['mine'],
-                                                        2);
-        researches['tech-jackhammer'] = new Research('tech-jackhammer',
-                                                     ['mine'],
-                                                     2);
-        researches['tech-jackhammer_mk2'] = new Research('tech-jackhammer_mk2',
-                                                         ['mine'],
-                                                         2);
-        researches['tech-copper_hoe'] = new Research('tech-copper_hoe',
-                                                     ['food'],
-                                                     2);
-        researches['tech-iron_hoe'] = new Research('tech-iron_hoe',
-                                                   ['food'],
-                                                   2);
-        researches['tech-steel_hoe'] = new Research('tech-steel_hoe',
-                                                    ['food'],
-                                                    2);
-        researches['tech-titanium_hoe'] = new Research('tech-titanium_hoe',
-                                                       ['food'],
-                                                       2);
-        researches['tech-slave_pens'] = new Research('tech-slave_pens',
-                                                     ['slave'],
-                                                     5);
-        researches['tech-garrison'] = new Research('tech-garrison',
-                                                   ['army'],
-                                                   9);
-        researches['tech-mercs'] = new Research('tech-mercs',
-                                                ['army', 'money'],
-                                                0);
-        researches['tech-signing_bonus'] = new Research('tech-signing_bonus',
-                                                        ['army', 'money'],
-                                                        0);
-        researches['tech-hospital'] = new Research('tech-hospital',
-                                                   ['army'],
-                                                   9);
-        researches['tech-boot_camp'] = new Research('tech-boot_camp',
-                                                    ['army'],
-                                                    7);
-        researches['tech-bows'] = new Research('tech-bows',
-                                               ['army'],
-                                               2);
-        researches['tech-flintlock_rifle'] = new Research('tech-flintlock_rifle',
-                                                          ['army'],
-                                                          2);
-        researches['tech-machine_gun'] = new Research('tech-machine_gun',
-                                                      ['army'],
-                                                      2);
-        researches['tech-bunk_beds'] = new Research('tech-bunk_beds',
-                                                    ['army'],
-                                                    10);
-        researches['tech-rail_guns'] = new Research('tech-rail_guns',
-                                                    ['army'],
-                                                    1);
-        researches['tech-laser_rifles'] = new Research('tech-laser_rifles',
-                                                       ['army'],
-                                                       1);
-        researches['tech-space_marines'] = new Research('tech-space_marines',
-                                                        ['army'],
-                                                        0);
-        researches['tech-armor'] = new Research('tech-armor',
-                                                ['army'],
-                                                2);
-        researches['tech-plate_armor'] = new Research('tech-plate_armor',
-                                                      ['army'],
-                                                      2);
-        researches['tech-kevlar'] = new Research('tech-kevlar',
-                                                 ['army'],
-                                                 2);
-        researches['tech-black_powder'] = new Research('tech-black_powder',
-                                                       [],
-                                                       0);
-        researches['tech-dynamite'] = new Research('tech-dynamite',
-                                                   ['mine'],
-                                                   3);
-        researches['tech-anfo'] = new Research('tech-anfo',
-                                               ['mine'],
-                                               3);
-        researches['tech-mad'] = new Research('tech-mad',
-                                              [],
-                                              10);
-        researches['tech-cement'] = new Research('tech-cement',
-                                                 ['cement'],
-                                                 5);
-        researches['tech-rebar'] = new Research('tech-rebar',
-                                                ['cement'],
-                                                4);
-        researches['tech-steel_rebar'] = new Research('tech-steel_rebar',
-                                                      ['cement'],
-                                                      4);
-        researches['tech-portland_cement'] = new Research('tech-portland_cement',
-                                                          ['cement'],
-                                                          4);
-        researches['tech-screw_conveyor'] = new Research('tech-screw_conveyor',
-                                                         ['cement', 'power'],
-                                                         4);
-        researches['tech-hunter_process'] = new Research('tech-hunter_process',
-                                                         ['smelter', 'titanium'],
-                                                         9);
-        researches['tech-kroll_process'] = new Research('tech-kroll_process',
-                                                        ['smelter', 'titanium'],
-                                                        3);
-        researches['tech-cambridge_process'] = new Research('tech-cambridge_process',
-                                                            ['smelter', 'titanium'],
-                                                            9);
-        researches['tech-pynn_partical'] = new Research('tech-pynn_partical',
-                                                        ['storage'],
-                                                        8);
-        researches['tech-matter_compression'] = new Research('tech-matter_compression',
-                                                             ['storage', 'container'],
-                                                             7);
-        researches['tech-higgs_boson'] = new Research('tech-higgs_boson',
-                                                      ['storage'],
-                                                      7);
-        researches['tech-dimensional_compression'] = new Research('tech-dimensional_compression',
-                                                                  ['storage', 'garage'],
-                                                                  5);
-        researches['tech-theology'] = new Research('tech-theology',
-                                                   ['religion'],
-                                                   4);
-        researches['tech-fanaticism'] = new Research('tech-fanaticism',
-                                                     ['religion'],
-                                                     4);
-        researches['tech-ancient_theology'] = new Research('tech-ancient_theology',
-                                                           ['religion'],
-                                                           4);
-        researches['tech-study'] = new Research('tech-study',
-                                                ['religion'],
-                                                4);
-        researches['tech-deify'] = new Research('tech-deify',
-                                                ['religion'],
-                                                4);
-        researches['tech-indoctrination'] = new Research('tech-indoctrination',
-                                                         ['religion', 'knowledge'],
-                                                         4);
-        researches['tech-missionary'] = new Research('tech-missionary',
-                                                     ['religion', 'trade'],
-                                                     4);
-        researches['tech-zealotry'] = new Research('tech-zealotry',
-                                                   ['religion', 'army'],
-                                                   4);
-        researches['tech-anthropology'] = new Research('tech-anthropology',
-                                                       ['religion'],
-                                                       4);
-        researches['tech-mythology'] = new Research('tech-mythology',
-                                                    ['religion', 'knowledge'],
-                                                    4);
-        researches['tech-archaeology'] = new Research('tech-archaeology',
-                                                      ['religion', 'knowledge'],
-                                                      4);
-        researches['tech-merchandising'] = new Research('tech-merchandising',
-                                                        ['religion', 'money', 'tax'],
-                                                        0);
-        researches['tech-astrophysics'] = new Research('tech-astrophysics',
-                                                       ['space'],
-                                                       5);
-        researches['tech-rover'] = new Research('tech-rover',
-                                                ['space'],
-                                                10);
-        researches['tech-probes'] = new Research('tech-probes',
-                                                 ['space'],
-                                                 10);
-        researches['tech-starcharts'] = new Research('tech-starcharts',
-                                                     ['space'],
-                                                     5);
-        researches['tech-colonization'] = new Research('tech-colonization',
-                                                       ['space'],
-                                                       10);
-        researches['tech-red_tower'] = new Research('tech-red_tower',
-                                                    ['space', 'power'],
-                                                    3);
-        researches['tech-space_manufacturing'] = new Research('tech-space_manufacturing',
-                                                              ['space', 'factory'],
-                                                              3);
-        researches['tech-energy_lab'] = new Research('tech-energy_lab',
-                                                     ['space', 'knowledge', 'power'],
-                                                     0);
-        researches['tech-dyson_sphere'] = new Research('tech-dyson_sphere',
-                                                       ['space', 'power', 'swarm'],
-                                                       0);
-        researches['tech-dyson_swarm'] = new Research('tech-dyson_swarm',
-                                                      ['space', 'power', 'swarm'],
-                                                      0);
-        researches['tech-swarm_plant'] = new Research('tech-swarm_plant',
-                                                      ['space', 'power', 'swarm'],
-                                                      0);
-        researches['tech-space_sourced'] = new Research('tech-space_sourced',
-                                                        ['space', 'swarm', 'iron'],
-                                                        0);
-        researches['tech-swarm_plant_ai'] = new Research('tech-swarm_plant_ai',
-                                                         ['space', 'power', 'swarm'],
-                                                         0);
-        researches['tech-swarm_control_ai'] = new Research('tech-swarm_control_ai',
-                                                           ['space', 'swarm', 'power'],
-                                                           0);
-        researches['tech-quantum_swarm'] = new Research('tech-quantum_swarm',
-                                                        ['space', 'swarm', 'power'],
-                                                        0);
-        researches['tech-gps'] = new Research('tech-gps',
-                                              ['space',' trade'],
-                                              0);
-        researches['tech-nav_beacon'] = new Research('tech-nav_beacon',
-                                                     ['space', 'power'],
-                                                     3);
-        researches['tech-atmospheric_mining'] = new Research('tech-atmospheric_mining',
-                                                             ['space', 'mine', 'helium_3'],
-                                                             7);
-        researches['tech-helium_attractor'] = new Research('tech-helium_attractor',
-                                                           ['space', 'helium_3'],
-                                                           7);
-        researches['tech-zero_g_mining'] = new Research('tech-zero_g_mining',
-                                                        ['space', 'mine'],
-                                                        0);
-        researches['tech-elerium_mining'] = new Research('tech-elerium_mining',
-                                                         ['space', 'elerium'],
-                                                         10);
-        researches['tech-laser_mining'] = new Research('tech-laser_mining',
-                                                       ['space', 'mine'],
-                                                       4);
-        researches['tech-elerium_tech'] = new Research('tech-elerium_tech',
-                                                       ['space', 'elerium'],
-                                                       10);
-        researches['tech-elerium_reactor'] = new Research('tech-elerium_reactor',
-                                                          ['space', 'elerium', 'power'],
-                                                          0);
-        researches['tech-neutronium_housing'] = new Research('tech-neutronium_housing',
-                                                             ['space', 'citizen'],
-                                                             0);
-        researches['tech-unification'] = new Research('tech-unification',
-                                                      ['unification'],
-                                                      10);
-        researches['tech-wc_conquest'] = new Research('tech-wc_conquest',
-                                                      ['unification'],
-                                                      10);
-        researches['tech-wc_morale'] = new Research('tech-wc_morale',
-                                                    ['unification'],
-                                                    10);
-        researches['tech-wc_money'] = new Research('tech-wc_money',
-                                                   ['unification'],
-                                                   10);
-        researches['tech-wc_reject'] = new Research('tech-wc_reject',
-                                                    ['unification'],
-                                                    10);
-        researches['tech-genesis'] = new Research('tech-genesis',
-                                                  ['space'],
-                                                  10);
-        researches['tech-star_dock'] = new Research('tech-star_dock',
-                                                    ['space'],
-                                                    10);
-        researches['tech-interstellar'] = new Research('tech-interstellar',
-                                                       ['space'],
-                                                       5);
-        researches['tech-genesis_ship'] = new Research('tech-genesis_ship',
-                                                       ['space'],
-                                                       10);
-        researches['tech-genetic_decay'] = new Research('tech-genetic_decay',
-                                                        ['gene'],
-                                                        10);
+        researches['tech-club']                         = new Research(     'tech-club',
+                                                                            ['food'],
+                                                                            1);
+        researches['tech-bone_tools']                   = new Research(     'tech-bone_tools',
+                                                                            ['stone'],
+                                                                            1);
+        researches['tech-sundial']                      = new Research(     'tech-sundial',
+                                                                            ['knowledge'],
+                                                                            5);
+        researches['tech-housing']                      = new Research(     'tech-housing',
+                                                                            ['citizen'],
+                                                                            5);
+        researches['tech-cottage']                      = new Research(     'tech-cottage',
+                                                                            ['citizen'],
+                                                                            0);
+        researches['tech-apartment']                    = new Research(     'tech-apartment',
+                                                                            ['citzen', 'power'],
+                                                                            5);
+        researches['tech-steel_beams']                  = new Research(     'tech-steel_beams',
+                                                                            ['citizen'],
+                                                                            1);
+        researches['tech-mythril_beams']                = new Research(     'tech-mythril_beams',
+                                                                            ['citizen'],
+                                                                            1);
+        researches['tech-neutronium_walls']             = new Research(     'tech-neutronium_walls',
+                                                                            ['citizen'],
+                                                                            1);
+        researches['tech-aphrodisiac']                  = new Research(     'tech-aphrodisiac',
+                                                                            ['citizen'],
+                                                                            0);
+        researches['tech-smokehouse']                   = new Research(     'tech-smokehouse',
+                                                                            ['food'],
+                                                                            1);
+        researches['tech-lodge']                        = new Research(     'tech-lodge',
+                                                                            ['citizen'],
+                                                                            1);
+        researches['tech-soul_well']                    = new Research(     'tech-soul_well',
+                                                                            [],
+                                                                            1);
+        researches['tech-agriculture']                  = new Research(     'tech-agriculture',
+                                                                            ['food'],
+                                                                            0);
+        researches['tech-farm_house']                   = new Research(     'tech-farm_house',
+                                                                            ['food', 'citizen'],
+                                                                            5);
+        researches['tech-irrigation']                   = new Research(     'tech-irrigation',
+                                                                            ['food'],
+                                                                            1);
+        researches['tech-silo']                         = new Research(     'tech-silo',
+                                                                            ['food'],
+                                                                            0);
+        researches['tech-mill']                         = new Research(     'tech-mill',
+                                                                            ['food'],
+                                                                            1);
+        researches['tech-windmill']                     = new Research(     'tech-windmill',
+                                                                            ['food'],
+                                                                            1);
+        researches['tech-windturbine']                  = new Research(     'tech-windturbine',
+                                                                            ['food', 'power'],
+                                                                            5);
+        researches['tech-wind_plant']                   = new Research(     'tech-wind_plant',
+                                                                            ['food'],
+                                                                            1);
+        researches['tech-evil_wind_plant']              = new Research(     'tech-evil_wind_plant',
+                                                                            [],
+                                                                            0);
+        researches['tech-gmfood']                       = new Research(     'tech-gmfood',
+                                                                            ['food'],
+                                                                            0);
+        researches['tech-foundry']                      = new Research(     'tech-foundry',
+                                                                            ['craft'],
+                                                                            7);
+        researches['tech-artisans']                     = new Research(     'tech-artisans',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-apprentices']                  = new Research(     'tech-apprentices',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-carpentry']                    = new Research(     'tech-carpentry',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-demonic_craftsman']            = new Research(     'tech-demonic_craftsman',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-master_craftsman']             = new Research(     'tech-master_craftsman',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-brickworks']                   = new Research(     'tech-brickworks',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-machinery']                    = new Research(     'tech-machinery',
+                                                                            ['factory'],
+                                                                            4);
+        researches['tech-cnc_machine']                  = new Research(     'tech-cnc_machine',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-vocational_training']          = new Research(     'tech-vocational_training',
+                                                                            ['craft'],
+                                                                            4);
+        researches['tech-assembly_line']                = new Research(     'tech-assembly_line',
+                                                                            ['factory'],
+                                                                            4);
+        researches['tech-automation']                   = new Research(     'tech-automation',
+                                                                            ['factory'],
+                                                                            4);
+        researches['tech-laser_cutters']                = new Research(     'tech-laser_cutters',
+                                                                            ['craft'],
+                                                                            3);
+        researches['tech-theatre']                      = new Research(     'tech-theatre',
+                                                                            ['morale'],
+                                                                            7);
+        researches['tech-playwright']                   = new Research(     'tech-playwright',
+                                                                            ['morale'],
+                                                                            6);
+        researches['tech-magic']                        = new Research(     'tech-magic',
+                                                                            ['morale'],
+                                                                            7);
+        researches['tech-radio']                        = new Research(     'tech-radio',
+                                                                            ['morale'],
+                                                                            7);
+        researches['tech-tv']                           = new Research(     'tech-tv',
+                                                                            ['morale'],
+                                                                            7);
+        researches['tech-casino']                       = new Research(     'tech-casino',
+                                                                            ['casino', 'power'],
+                                                                            0);
+        researches['tech-dazzle']                       = new Research(     'tech-dazzle',
+                                                                            ['casino'],
+                                                                            0);
+        researches['tech-casino_vault']                 = new Research(     'tech-casino_vault',
+                                                                            ['casino'],
+                                                                            0);
+        researches['tech-mining']                       = new Research(     'tech-mining',
+                                                                            ['mine'],
+                                                                            7);
+        researches['tech-bayer_process']                = new Research(     'tech-bayer_process',
+                                                                            ['aluminum'],
+                                                                            10);
+        researches['tech-smelting']                     = new Research(     'tech-smelting',
+                                                                            ['mine'],
+                                                                            2);
+        researches['tech-steel']                        = new Research(     'tech-steel',
+                                                                            ['smelter', 'steel'],
+                                                                            8);
+        researches['tech-blast_furnace']                = new Research(     'tech-blast_furnace',
+                                                                            ['smelter', 'iron'],
+                                                                            2);
+        researches['tech-bessemer_process']             = new Research(     'tech-bessemer_process',
+                                                                            ['smelter', 'steel'],
+                                                                            2);
+        researches['tech-oxygen_converter']             = new Research(     'tech-oxygen_converter',
+                                                                            ['smelter', 'steel'],
+                                                                            2);
+        researches['tech-electric_arc_furnace']         = new Research(     'tech-electric_arc_furnace',
+                                                                            ['copper'],
+                                                                            2);
+        researches['tech-rotary_kiln']                  = new Research(     'tech-rotary_kiln',
+                                                                            ['copper'],
+                                                                            2);
+        researches['tech-metal_working']                = new Research(     'tech-metal_working',
+                                                                            ['copper'],
+                                                                            7);
+        researches['tech-iron_mining']                  = new Research(     'tech-iron_mining',
+                                                                            ['iron'],
+                                                                            7);
+        researches['tech-coal_mining']                  = new Research(     'tech-coal_mining',
+                                                                            ['coal'],
+                                                                            7);
+        researches['tech-storage']                      = new Research(     'tech-storage',
+                                                                            ['storage'],
+                                                                            5);
+        researches['tech-reinforced_shed']              = new Research(     'tech-reinforced_shed',
+                                                                            ['storage'],
+                                                                            5);
+        researches['tech-barns']                        = new Research(     'tech-barns',
+                                                                            ['storage'],
+                                                                            5);
+        researches['tech-warehouse']                    = new Research(     'tech-warehouse',
+                                                                            ['storage'],
+                                                                            5);
+        researches['tech-cameras']                      = new Research(     'tech-cameras',
+                                                                            ['storage'],
+                                                                            5);
+        researches['tech-pocket_dimensions']            = new Research(     'tech-pocket_dimensions',
+                                                                            ['storage'],
+                                                                            5);
+        researches['tech-containerization']             = new Research(     'tech-containerization',
+                                                                            ['storage', 'crate'],
+                                                                            5);
+        researches['tech-reinforced_crates']            = new Research(     'tech-reinforced_crates',
+                                                                            ['storage', 'crate'],
+                                                                            5);
+        researches['tech-cranes']                       = new Research(     'tech-cranes',
+                                                                            ['storage', 'crate'],
+                                                                            5);
+        researches['tech-titanium_crates']              = new Research(     'tech-titanium_crates',
+                                                                            ['storage', 'crate'],
+                                                                            5);
+        researches['tech-mythril_crates']               = new Research(     'tech-mythril_crates',
+                                                                            ['storage', 'crate'],
+                                                                            5);
+        researches['tech-steel_containers']             = new Research(     'tech-steel_containers',
+                                                                            ['storage', 'container'],
+                                                                            5);
+        researches['tech-gantry_crane']                 = new Research(     'tech-gantry_crane',
+                                                                            ['storage', 'container'],
+                                                                            5);
+        researches['tech-alloy_containers']             = new Research(     'tech-alloy_containers',
+                                                                            ['storage', 'container'],
+                                                                            5);
+        researches['tech-mythril_containers']           = new Research(     'tech-mythril_containers',
+                                                                            ['storage', 'container'],
+                                                                            5);
+        researches['tech-currency']                     = new Research(     'tech-currency',
+                                                                            ['money'],
+                                                                            10);
+        researches['tech-market']                       = new Research(     'tech-market',
+                                                                            ['money', 'market'],
+                                                                            3);
+        researches['tech-tax_rates']                    = new Research(     'tech-tax_rates',
+                                                                            ['money', 'tax'],
+                                                                            1);
+        researches['tech-large_trades']                 = new Research(     'tech-large_trades',
+                                                                            ['money', 'market'],
+                                                                            0);
+        researches['tech-corruption']                   = new Research(     'tech-corruption',
+                                                                            ['money', 'tax'],
+                                                                            1);
+        researches['tech-massive_trades']               = new Research(     'tech-massive_trades',
+                                                                            ['money', 'market'],
+                                                                            0);
+        researches['tech-trade']                        = new Research(     'tech-trade',
+                                                                            ['trade'],
+                                                                            7);
+        researches['tech-diplomacy']                    = new Research(     'tech-diplomacy',
+                                                                            ['trade'],
+                                                                            3);
+        researches['tech-freight']                      = new Research(     'tech-freight',
+                                                                            ['trade'],
+                                                                            3);
+        researches['tech-wharf']                        = new Research(     'tech-wharf',
+                                                                            ['trade', 'storage', 'crate', 'container'],
+                                                                            1);
+        researches['tech-banking']                      = new Research(     'tech-banking',
+                                                                            ['money'],
+                                                                            1);
+        researches['tech-investing']                    = new Research(     'tech-investing',
+                                                                            ['money'],
+                                                                            5);
+        researches['tech-vault']                        = new Research(     'tech-vault',
+                                                                            ['money'],
+                                                                            2);
+        researches['tech-bonds']                        = new Research(     'tech-bonds',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-steel_vault']                  = new Research(     'tech-steel_vault',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-eebonds']                      = new Research(     'tech-eebonds',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-swiss_banking']                = new Research(     'tech-swiss_banking',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-safety_deposit']               = new Research(     'tech-safety_deposit',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-stock_market']                 = new Research(     'tech-stock_market',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-hedge_funds']                  = new Research(     'tech-hedge_funds',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-four_oh_one']                  = new Research(     'tech-four_oh_one',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-mythril_vault']                = new Research(     'tech-mythril_vault',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-neutronium_vault']             = new Research(     'tech-neutronium_vault',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-home_safe']                    = new Research(     'tech-home_safe',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-fire_proof_safe']              = new Research(     'tech-fire_proof_safe',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-monument']                     = new Research(     'tech-monument',
+                                                                            ['morale'],
+                                                                            0);
+        researches['tech-tourism']                      = new Research(     'tech-tourism',
+                                                                            ['money'],
+                                                                            0);
+        researches['tech-science']                      = new Research(     'tech-science',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-library']                      = new Research(     'tech-library',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-thesis']                       = new Research(     'tech-thesis',
+                                                                            ['knowledge'],
+                                                                            9);
+        researches['tech-research_grant']               = new Research(     'tech-research_grant',
+                                                                            ['knowledge'],
+                                                                            9);
+        researches['tech-scientific_journal']           = new Research(     'tech-scientific_journal',
+                                                                            ['knowledge'],
+                                                                            9);
+        researches['tech-adjunct_professor']            = new Research(     'tech-adjunct_professor',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-tesla_coil']                   = new Research(     'tech-tesla_coil',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-internet']                     = new Research(     'tech-internet',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-observatory']                  = new Research(     'tech-observatory',
+                                                                            ['knowledge'],
+                                                                            8);
+        researches['tech-world_collider']               = new Research(     'tech-world_collider',
+                                                                            [],
+                                                                            5);
+        researches['tech-bioscience']                   = new Research(     'tech-bioscience',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-genetics']                     = new Research(     'tech-genetics',
+                                                                            ['gene'],
+                                                                            0);
+        researches['tech-crispr']                       = new Research(     'tech-crispr',
+                                                                            ['gene'],
+                                                                            0);
+        researches['tech-shotgun_sequencing']           = new Research(     'tech-shotgun_sequencing',
+                                                                            ['gene'],
+                                                                            0);
+        researches['tech-de_novo_sequencing']           = new Research(     'tech-de_novo_sequencing',
+                                                                            ['gene'],
+                                                                            0);
+        researches['tech-dna_sequencer']                = new Research(     'tech-dna_sequencer',
+                                                                            ['gene'],
+                                                                            0);
+        researches['tech-mad_science']                  = new Research(     'tech-mad_science',
+                                                                            ['knowledge'],
+                                                                            10);
+        researches['tech-electricity']                  = new Research(     'tech-electricity',
+                                                                            ['power'],
+                                                                            9);
+        researches['tech-industrialization']            = new Research(     'tech-industrialization',
+                                                                            [],
+                                                                            9);
+        researches['tech-electronics']                  = new Research(     'tech-electronics',
+                                                                            ['power'],
+                                                                            9);
+        researches['tech-fission']                      = new Research(     'tech-fission',
+                                                                            ['power', 'uranium'],
+                                                                            7);
+        researches['tech-arpa']                         = new Research(     'tech-arpa',
+                                                                            [],
+                                                                            5);
+        researches['tech-rocketry']                     = new Research(     'tech-rocketry',
+                                                                            [],
+                                                                            9);
+        researches['tech-robotics']                     = new Research(     'tech-robotics',
+                                                                            [],
+                                                                            9);
+        researches['tech-lasers']                       = new Research(     'tech-lasers',
+                                                                            [],
+                                                                            9);
+        researches['tech-artifical_intelligence']       = new Research(     'tech-artifical_intelligence',
+                                                                            [],
+                                                                            9);
+        researches['tech-quantum_computing']            = new Research(     'tech-quantum_computing',
+                                                                            [],
+                                                                            9);
+        researches['tech-thermomechanics']              = new Research(     'tech-thermomechanics',
+                                                                            ['factory', 'alloy'],
+                                                                            5);
+        researches['tech-quantum_manufacturing']        = new Research(     'tech-quantum_manufacturing',
+                                                                            ['factory'],
+                                                                            5);
+        researches['tech-worker_drone']                 = new Research(     'tech-worker_drone',
+                                                                            ['neutronium'],
+                                                                            10);
+        researches['tech-uranium']                      = new Research(     'tech-uranium',
+                                                                            ['uranium'],
+                                                                            7);
+        researches['tech-uranium_storage']              = new Research(     'tech-uranium_storage',
+                                                                            ['uranium'],
+                                                                            6);
+        researches['tech-uranium_ash']                  = new Research(     'tech-uranium_ash',
+                                                                            ['uranium'],
+                                                                            6);
+        researches['tech-breeder_reactor']              = new Research(     'tech-breeder_reactor',
+                                                                            ['power'],
+                                                                            4);
+        researches['tech-mine_conveyor']                = new Research(     'tech-mine_conveyor',
+                                                                            ['mine', 'power'],
+                                                                            4);
+        researches['tech-oil_well']                     = new Research(     'tech-oil_well',
+                                                                            ['oil'],
+                                                                            5);
+        researches['tech-oil_depot']                    = new Research(     'tech-oil_depot',
+                                                                            ['oil'],
+                                                                            5);
+        researches['tech-oil_power']                    = new Research(     'tech-oil_power',
+                                                                            ['oil', 'power'],
+                                                                            7);
+        researches['tech-titanium_drills']              = new Research(     'tech-titanium_drills',
+                                                                            ['oil'],
+                                                                            5);
+        researches['tech-alloy_drills']                 = new Research(     'tech-alloy_drills',
+                                                                            ['oil'],
+                                                                            4);
+        researches['tech-fracking']                     = new Research(     'tech-fracking',
+                                                                            ['oil'],
+                                                                            4);
+        researches['tech-mythril_drills']               = new Research(     'tech-mythril_drills',
+                                                                            ['oil'],
+                                                                            2);
+        researches['tech-mass_driver']                  = new Research(     'tech-mass_driver',
+                                                                            ['power'],
+                                                                            0);
+        researches['tech-polymer']                      = new Research(     'tech-polymer',
+                                                                            ['factory', 'polymer'],
+                                                                            10);
+        researches['tech-fluidized_bed_reactor']        = new Research(     'tech-fluidized_bed_reactor',
+                                                                            ['factory', 'polymer'],
+                                                                            4);
+        researches['tech-nano_tubes']                   = new Research(     'tech-nano_tubes',
+                                                                            ['factory', 'nano_tubes'],
+                                                                            5);
+        researches['tech-stone_axe']                    = new Research(     'tech-stone_axe',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-copper_axes']                  = new Research(     'tech-copper_axes',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-iron_saw']                     = new Research(     'tech-iron_saw',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-steel_saw']                    = new Research(     'tech-steel_saw',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-iron_axes']                    = new Research(     'tech-iron_axes',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-steel_axes']                   = new Research(     'tech-steel_axes',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-titanium_axes']                = new Research(     'tech-titanium_axes',
+                                                                            ['lumber'],
+                                                                            1);
+        researches['tech-copper_sledgehammer']          = new Research(     'tech-copper_sledgehammer',
+                                                                            ['stone'],
+                                                                            1);
+        researches['tech-iron_sledgehammer']            = new Research(     'tech-iron_sledgehammer',
+                                                                            ['stone'],
+                                                                            1);
+        researches['tech-steel_sledgehammer']           = new Research(     'tech-steel_sledgehammer',
+                                                                            ['stone'],
+                                                                            1);
+        researches['tech-titanium_sledgehammer']        = new Research(     'tech-titanium_sledgehammer',
+                                                                            ['stone'],
+                                                                            1);
+        researches['tech-copper_pickaxe']               = new Research(     'tech-copper_pickaxe',
+                                                                            ['mine'],
+                                                                            2);
+        researches['tech-iron_pickaxe']                 = new Research(     'tech-iron_pickaxe',
+                                                                            ['mine'],
+                                                                            2);
+        researches['tech-steel_pickaxe']                = new Research(     'tech-steel_pickaxe',
+                                                                            ['mine'],
+                                                                            2);
+        researches['tech-jackhammer']                   = new Research(     'tech-jackhammer',
+                                                                            ['mine'],
+                                                                            2);
+        researches['tech-jackhammer_mk2']               = new Research(     'tech-jackhammer_mk2',
+                                                                            ['mine'],
+                                                                            2);
+        researches['tech-copper_hoe']                   = new Research(     'tech-copper_hoe',
+                                                                            ['food'],
+                                                                            2);
+        researches['tech-iron_hoe']                     = new Research(     'tech-iron_hoe',
+                                                                            ['food'],
+                                                                            2);
+        researches['tech-steel_hoe']                    = new Research(     'tech-steel_hoe',
+                                                                            ['food'],
+                                                                            2);
+        researches['tech-titanium_hoe']                 = new Research(     'tech-titanium_hoe',
+                                                                            ['food'],
+                                                                            2);
+        researches['tech-slave_pens']                   = new Research(     'tech-slave_pens',
+                                                                            ['slave'],
+                                                                            5);
+        researches['tech-garrison']                     = new Research(     'tech-garrison',
+                                                                            ['army'],
+                                                                            9);
+        researches['tech-mercs']                        = new Research(     'tech-mercs',
+                                                                            ['army', 'money'],
+                                                                            0);
+        researches['tech-signing_bonus']                = new Research(     'tech-signing_bonus',
+                                                                            ['army', 'money'],
+                                                                            0);
+        researches['tech-hospital']                     = new Research(     'tech-hospital',
+                                                                            ['army'],
+                                                                            9);
+        researches['tech-boot_camp']                    = new Research(     'tech-boot_camp',
+                                                                            ['army'],
+                                                                            7);
+        researches['tech-bows']                         = new Research(     'tech-bows',
+                                                                            ['army'],
+                                                                            2);
+        researches['tech-flintlock_rifle']              = new Research(     'tech-flintlock_rifle',
+                                                                            ['army'],
+                                                                            2);
+        researches['tech-machine_gun']                  = new Research(     'tech-machine_gun',
+                                                                            ['army'],
+                                                                            2);
+        researches['tech-bunk_beds']                    = new Research(     'tech-bunk_beds',
+                                                                            ['army'],
+                                                                            10);
+        researches['tech-rail_guns']                    = new Research(     'tech-rail_guns',
+                                                                            ['army'],
+                                                                            1);
+        researches['tech-laser_rifles']                 = new Research(     'tech-laser_rifles',
+                                                                            ['army'],
+                                                                            1);
+        researches['tech-space_marines']                = new Research(     'tech-space_marines',
+                                                                            ['army'],
+                                                                            0);
+        researches['tech-armor']                        = new Research(     'tech-armor',
+                                                                            ['army'],
+                                                                            2);
+        researches['tech-plate_armor']                  = new Research(     'tech-plate_armor',
+                                                                            ['army'],
+                                                                            2);
+        researches['tech-kevlar']                       = new Research(     'tech-kevlar',
+                                                                            ['army'],
+                                                                            2);
+        researches['tech-black_powder']                 = new Research(     'tech-black_powder',
+                                                                            [],
+                                                                            0);
+        researches['tech-dynamite']                     = new Research(     'tech-dynamite',
+                                                                            ['mine'],
+                                                                            3);
+        researches['tech-anfo']                         = new Research(     'tech-anfo',
+                                                                            ['mine'],
+                                                                            3);
+        researches['tech-mad']                          = new Research(     'tech-mad',
+                                                                            [],
+                                                                            10);
+        researches['tech-cement']                       = new Research(     'tech-cement',
+                                                                            ['cement'],
+                                                                            5);
+        researches['tech-rebar']                        = new Research(     'tech-rebar',
+                                                                            ['cement'],
+                                                                            4);
+        researches['tech-steel_rebar']                  = new Research(     'tech-steel_rebar',
+                                                                            ['cement'],
+                                                                            4);
+        researches['tech-portland_cement']              = new Research(     'tech-portland_cement',
+                                                                            ['cement'],
+                                                                            4);
+        researches['tech-screw_conveyor']               = new Research(     'tech-screw_conveyor',
+                                                                            ['cement', 'power'],
+                                                                            4);
+        researches['tech-hunter_process']               = new Research(     'tech-hunter_process',
+                                                                            ['smelter', 'titanium'],
+                                                                            9);
+        researches['tech-kroll_process']                = new Research(     'tech-kroll_process',
+                                                                            ['smelter', 'titanium'],
+                                                                            3);
+        researches['tech-cambridge_process']            = new Research(     'tech-cambridge_process',
+                                                                            ['smelter', 'titanium'],
+                                                                            9);
+        researches['tech-pynn_partical']                = new Research(     'tech-pynn_partical',
+                                                                            ['storage'],
+                                                                            8);
+        researches['tech-matter_compression']           = new Research(     'tech-matter_compression',
+                                                                            ['storage', 'container'],
+                                                                            7);
+        researches['tech-higgs_boson']                  = new Research(     'tech-higgs_boson',
+                                                                            ['storage'],
+                                                                            7);
+        researches['tech-dimensional_compression']      = new Research(     'tech-dimensional_compression',
+                                                                            ['storage', 'garage'],
+                                                                            5);
+        researches['tech-theology']                     = new Research(     'tech-theology',
+                                                                            ['religion'],
+                                                                            4);
+        researches['tech-fanaticism']                   = new Research(     'tech-fanaticism',
+                                                                            ['religion'],
+                                                                            4);
+        researches['tech-ancient_theology']             = new Research(     'tech-ancient_theology',
+                                                                            ['religion'],
+                                                                            4);
+        researches['tech-study']                        = new Research(     'tech-study',
+                                                                            ['religion'],
+                                                                            4);
+        researches['tech-deify']                        = new Research(     'tech-deify',
+                                                                            ['religion'],
+                                                                            4);
+        researches['tech-indoctrination']               = new Research(     'tech-indoctrination',
+                                                                            ['religion', 'knowledge'],
+                                                                            4);
+        researches['tech-missionary']                   = new Research(     'tech-missionary',
+                                                                            ['religion', 'trade'],
+                                                                            4);
+        researches['tech-zealotry']                     = new Research(     'tech-zealotry',
+                                                                            ['religion', 'army'],
+                                                                            4);
+        researches['tech-anthropology']                 = new Research(     'tech-anthropology',
+                                                                            ['religion'],
+                                                                            4);
+        researches['tech-mythology']                    = new Research(     'tech-mythology',
+                                                                            ['religion', 'knowledge'],
+                                                                            4);
+        researches['tech-archaeology']                  = new Research(     'tech-archaeology',
+                                                                            ['religion', 'knowledge'],
+                                                                            4);
+        researches['tech-merchandising']                = new Research(     'tech-merchandising',
+                                                                            ['religion', 'money', 'tax'],
+                                                                            0);
+        researches['tech-astrophysics']                 = new Research(     'tech-astrophysics',
+                                                                            ['space'],
+                                                                            5);
+        researches['tech-rover']                        = new Research(     'tech-rover',
+                                                                            ['space'],
+                                                                            10);
+        researches['tech-probes']                       = new Research(     'tech-probes',
+                                                                            ['space'],
+                                                                            10);
+        researches['tech-starcharts']                   = new Research(     'tech-starcharts',
+                                                                            ['space'],
+                                                                            5);
+        researches['tech-colonization']                 = new Research(     'tech-colonization',
+                                                                            ['space'],
+                                                                            10);
+        researches['tech-red_tower']                    = new Research(     'tech-red_tower',
+                                                                            ['space', 'power'],
+                                                                            3);
+        researches['tech-space_manufacturing']          = new Research(     'tech-space_manufacturing',
+                                                                            ['space', 'factory'],
+                                                                            3);
+        researches['tech-energy_lab']                   = new Research(     'tech-energy_lab',
+                                                                            ['space', 'knowledge', 'power'],
+                                                                            0);
+        researches['tech-dyson_sphere']                 = new Research(     'tech-dyson_sphere',
+                                                                            ['space', 'power', 'swarm'],
+                                                                            0);
+        researches['tech-dyson_swarm']                  = new Research(     'tech-dyson_swarm',
+                                                                            ['space', 'power', 'swarm'],
+                                                                            0);
+        researches['tech-swarm_plant']                  = new Research(     'tech-swarm_plant',
+                                                                            ['space', 'power', 'swarm'],
+                                                                            0);
+        researches['tech-space_sourced']                = new Research(     'tech-space_sourced',
+                                                                            ['space', 'swarm', 'iron'],
+                                                                            0);
+        researches['tech-swarm_plant_ai']               = new Research(     'tech-swarm_plant_ai',
+                                                                            ['space', 'power', 'swarm'],
+                                                                            0);
+        researches['tech-swarm_control_ai']             = new Research(     'tech-swarm_control_ai',
+                                                                            ['space', 'swarm', 'power'],
+                                                                            0);
+        researches['tech-quantum_swarm']                = new Research(     'tech-quantum_swarm',
+                                                                            ['space', 'swarm', 'power'],
+                                                                            0);
+        researches['tech-gps']                          = new Research(     'tech-gps',
+                                                                            ['space',' trade'],
+                                                                            0);
+        researches['tech-nav_beacon']                   = new Research(     'tech-nav_beacon',
+                                                                            ['space', 'power'],
+                                                                            3);
+        researches['tech-atmospheric_mining']           = new Research(     'tech-atmospheric_mining',
+                                                                            ['space', 'mine', 'helium_3'],
+                                                                            7);
+        researches['tech-helium_attractor']             = new Research(     'tech-helium_attractor',
+                                                                            ['space', 'helium_3'],
+                                                                            7);
+        researches['tech-zero_g_mining']                = new Research(     'tech-zero_g_mining',
+                                                                            ['space', 'mine'],
+                                                                            0);
+        researches['tech-elerium_mining']               = new Research(     'tech-elerium_mining',
+                                                                            ['space', 'elerium'],
+                                                                            10);
+        researches['tech-laser_mining']                 = new Research(     'tech-laser_mining',
+                                                                            ['space', 'mine'],
+                                                                            4);
+        researches['tech-elerium_tech']                 = new Research(     'tech-elerium_tech',
+                                                                            ['space', 'elerium'],
+                                                                            10);
+        researches['tech-elerium_reactor']              = new Research(     'tech-elerium_reactor',
+                                                                            ['space', 'elerium', 'power'],
+                                                                            0);
+        researches['tech-neutronium_housing']           = new Research(     'tech-neutronium_housing',
+                                                                            ['space', 'citizen'],
+                                                                            0);
+        researches['tech-unification']                  = new Research(     'tech-unification',
+                                                                            ['unification'],
+                                                                            10);
+        researches['tech-wc_conquest']                  = new Research(     'tech-wc_conquest',
+                                                                            ['unification'],
+                                                                            10);
+        researches['tech-wc_morale']                    = new Research(     'tech-wc_morale',
+                                                                            ['unification'],
+                                                                            10);
+        researches['tech-wc_money']                     = new Research(     'tech-wc_money',
+                                                                            ['unification'],
+                                                                            10);
+        researches['tech-wc_reject']                    = new Research(     'tech-wc_reject',
+                                                                            ['unification'],
+                                                                            10);
+        researches['tech-genesis']                      = new Research(     'tech-genesis',
+                                                                            ['space'],
+                                                                            10);
+        researches['tech-star_dock']                    = new Research(     'tech-star_dock',
+                                                                            ['space'],
+                                                                            10);
+        researches['tech-interstellar']                 = new Research(     'tech-interstellar',
+                                                                            ['space'],
+                                                                            5);
+        researches['tech-genesis_ship']                 = new Research(     'tech-genesis_ship',
+                                                                            ['space'],
+                                                                            10);
+        researches['tech-genetic_decay']                = new Research(     'tech-genetic_decay',
+                                                                            ['gene'],
+                                                                            10);
     }
 
     class ArpaAction extends Action {
@@ -3942,9 +3953,9 @@
                 if (clicked) {
                     if (settings.autoPrint) {
                         messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
-                        if (action.id == 'tech-mad') {
-                            settings.log.push(getTotalGameDays());
-                        }
+                        //if (action.id == 'tech-mad') {
+                        //    settings.log.push(getTotalGameDays());
+                        //}
                     }
                     break;
                 }
@@ -3953,9 +3964,11 @@
 
         if (settings.autoSmelter && (count % 20 == 0)) {
             autoSmelter(limits);
+            return {limits:limits,PQs:PQs}
         }
         if (settings.autoFactory && (count % 23 == 0)) {
             autoFactory(limits);
+            return {limits:limits,PQs:PQs}
         }
 
         // Determining rate priorities
