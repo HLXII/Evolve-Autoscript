@@ -3053,9 +3053,6 @@
         if (!researched('tech-steel')) {return;}
         // Checking if modal already open
         if ($('.modal').length != 0) {
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
             return;
         }
         // Ensuring no modal conflicts
@@ -3249,9 +3246,6 @@
         if (!researched('tech-industrialization')) {return;}
         // Checking if modal already open
         if ($('.modal').length != 0) {
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
             return;
         }
         // Ensuring no modal conflicts
