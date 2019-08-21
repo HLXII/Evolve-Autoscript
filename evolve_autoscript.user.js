@@ -586,9 +586,10 @@
         return value * scale;
     }
     class Action {
-        constructor(id, tags, priority) {
+        constructor(id, tags, priority, onBuy) {
             this.id = id;
             this.tags = tags;
+            this.onBuy = onBuy;
             if (!settings.actions.hasOwnProperty(this.id)) {settings.actions[this.id] = {};}
             if (!settings.actions[this.id].hasOwnProperty('priority')) {settings.actions[this.id].priority = priority;}
             this.res = {};
@@ -631,7 +632,6 @@
 
         getResDep(resid) {
             try {
-                // Loading res
                 this.res = {};
                 let data = $('#' + this.id + ' > a')[0];
                 for (let i = 0;i < data.attributes.length;i++) {
@@ -652,6 +652,9 @@
             if (this.btn !== null) {
                 if (this.btn.className.indexOf('cna') < 0) {
                     this.btn.getElementsByTagName("a")[0].click();
+                    if (this.onBuy !== undefined) {
+                        this.onBuy();
+                    }
                     return true;
                 }
                 return false;
@@ -662,8 +665,8 @@
     }
 
     class Building extends Action {
-        constructor(id, tags, enabled, limit, priority) {
-            super(id, tags, priority);
+        constructor(id, tags, enabled, limit, priority, onBuy) {
+            super(id, tags, priority, onBuy);
             if (!settings.actions[this.id].hasOwnProperty('enabled')) {settings.actions[this.id].enabled = enabled;}
             if (!settings.actions[this.id].hasOwnProperty('limit')) {settings.actions[this.id].limit = limit;}
             if (!settings.actions[this.id].hasOwnProperty('softCap')) {settings.actions[this.id].softCap = -1;}
@@ -695,7 +698,6 @@
             console.log("Decrementing Limit", this.id, this.limit);
         }
         incLimit() {
-            if (this.limit == 99) {return;}
             this.limit += 1;
             updateSettings();
             console.log("Incrementing Limit", this.id, this.limit);
@@ -708,7 +710,6 @@
             console.log("Decrementing SoftCap", this.id, this.softCap);
         }
         incSoftCap() {
-            if (this.softCap == 99) {return;}
             this.softCap += 1;
             updateSettings();
             console.log("Incrementing SoftCap", this.id, this.softCap);
@@ -716,8 +717,8 @@
 
     }
     class PoweredBuilding extends Building {
-        constructor(id, tags, enabled, limit, priority, powerPriority, consume, produce, unlockResearch) {
-            super(id, tags, enabled, limit, priority);
+        constructor(id, tags, enabled, limit, priority, onBuy, powerPriority, consume, produce, unlockResearch) {
+            super(id, tags, enabled, limit, priority, onBuy);
             this.produce = produce;
             this.consume = consume;
             if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = powerPriority;}
@@ -774,6 +775,100 @@
             updateSettings();
             console.log("Incrementing Priority", this.id, this.powerPriority);
         }
+    }
+    class SpaceDockBuilding extends Building {
+        constructor(id, tags, enabled, limit, priority, onBuy) {
+            super(id, tags, enabled, limit, priority, onBuy);
+            this.num = 0;
+        }
+
+        get btn() {
+            console.log("WTF");
+            return document.getElementById(this.id);
+        }
+
+        get unlocked() {
+            return buildings['space-star_dock'].numTotal > 0;
+        }
+
+        get numTotal() {
+            return this.num;
+        }
+
+        loadRes() {
+            let data = $('#' + this.id + ' > a')[0];
+            for (let i = 0;i < data.attributes.length;i++) {
+                let name = data.attributes[i].name;
+                let cost = data.attributes[i].value;
+                if (name.indexOf('data-') >= 0) {
+                    this.res[name.substr(5, name.length)] = parseInt(cost);
+                }
+            }
+            console.log(this);
+        }
+
+        getResDep(resid) {
+            return this.res[resid.toLowerCase()];
+        }
+
+        click() {
+            console.log(this.id);
+            if (buildings['space-star_dock'].numTotal < 1) {return false;}
+            // Checking if modal already open
+            if ($('.modal').length != 0) {
+                return;
+            }
+            // Ensuring no modal conflicts
+            if (modal) {return;}
+            modal = true;
+
+            // Opening modal
+            $('#space-star_dock > .special').click();
+            // Delaying for modal animation
+            let tempID = this.id;
+            setTimeout(function() {
+                // Getting info
+                buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
+                buildings['spcdock-probes'].loadRes();
+                buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
+                buildings['spcdock-seeder'].loadRes();
+                let build = buildings[tempID];
+                // Buying
+                if (build.btn !== null) {
+                    build.btn.getElementsByTagName("a")[0].click();
+                }
+                // Closing modal
+                let closeBtn = $('.modal-close')[0];
+                if (closeBtn !== undefined) {closeBtn.click();}
+                modal = false;
+            }, 100);
+        }
+    }
+    function loadSpaceDockBuildings() {
+        if (buildings['space-star_dock'].numTotal < 1) {return;}
+        // Checking if modal already open
+        if ($('.modal').length != 0) {
+            return;
+        }
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+
+        // Opening modal
+        $('#space-star_dock > .special').click();
+        // Delaying for modal animation
+        setTimeout(function() {
+            // Getting info
+            buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
+            buildings['spcdock-probes'].loadRes();
+            buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
+            buildings['spcdock-seeder'].loadRes();
+            console.log(buildings['spcdock-seeder'].res,buildings['spcdock-probes'].res);
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
+        }, 100);
     }
     var buildings = {};
     function loadBuildings() {
@@ -1112,7 +1207,14 @@
                                                                     false, -1, 2);
         buildings['space-star_dock']        = new Building(         'space-star_dock',
                                                                     ['space', 'gas'],
-                                                                    false, 1, 6);
+                                                                    false, 1, 6,
+                                                                    loadSpaceDockBuildings);
+        buildings['spcdock-probes']         = new SpaceDockBuilding('spcdock-probes',
+                                                                    ['space', 'spcdock'],
+                                                                    false, 10, 5);
+        buildings['spcdock-seeder']         = new SpaceDockBuilding('spcdock-seeder',
+                                                                    ['space', 'spcdock'],
+                                                                    false, 100, 30);
         buildings['space-gas_moon_mission'] = new Building(         'space-gas_moon_mission',
                                                                     ['space', 'gas_moon', 'mission'],
                                                                     false, -1, 10);
@@ -2499,6 +2601,7 @@
         loadCraftableResources();
         // Buildings
         loadBuildings();
+        loadSpaceDockBuildings();
         // Support
         loadElecProducers();
         loadElecConsumers();
@@ -3557,6 +3660,8 @@
             if (buildings[x].limit != -1 && buildings[x].numTotal >= buildings[x].limit) {continue;}
             // Don't check buildings that can't be bought
             let btn = document.getElementById(buildings[x].id);
+            // If button doesn't exist but it's a space dock building, bring it anyways
+            if (btn === null && (x=='spcdock-probes'||x=='spcdock-seeder')) {build.push(buildings[x]);continue;}
             if (btn.className.indexOf('cnam') >= 0) {continue;}
             build.push(buildings[x]);
         }
@@ -3866,9 +3971,7 @@
             // Excluding craftable resources
             if (!(x in resources)) {continue;}
             // Excluding untradeable resources
-            if (x == 'Knowledge') {continue;}
-            if (x == 'Nano_Tube') {continue;}
-            if (x == 'Elerium') {continue;}  //TODO: Make a tradeable property so I don't have to do this
+            if (!(resources[x] instanceof TradeableResource) && x != 'Money') {continue;}
             // Excluding actions whose resource is already filled
             if (limits[x].completion[x] == true) {continue;}
             if (buyRes === null) {
@@ -4019,7 +4122,6 @@
         console.clear();
         console.log(count);
         updateUI();
-        loadSettings();
         updateSettings();
         autoFarm();
         if (inEvolution()) {
@@ -4067,16 +4169,7 @@
         }
         count += 1;
     }
-    setInterval(fastAutomate, 1000);
-
-    function midAutomate() {
-        if (!inEvolution()) {
-            if (settings.autoStorage) {
-                autoStorage();
-            }
-        }
-    }
-    setInterval(midAutomate, 100000);
+        setInterval(fastAutomate, 1000);
 
     //Temporary
     let stardockBtn = $('#space-star_dock > .special');
