@@ -274,7 +274,7 @@
             }
         }
         get crateIncBtn() {
-            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 0) {
                 return storageDiv[0].children[3]
             } else {
@@ -282,7 +282,7 @@
             }
         }
         get crateSpan() {
-            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 0) {
                 return storageDiv[0].children[2]
             } else {
@@ -290,7 +290,7 @@
             }
         }
         get crateDecBtn() {
-            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 0) {
                 return storageDiv[0].children[1]
             } else {
@@ -298,7 +298,7 @@
             }
         }
         get containerIncBtn() {
-            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 1) {
                 return storageDiv[1].children[3]
             } else {
@@ -306,7 +306,7 @@
             }
         }
         get containerSpan() {
-            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 1) {
                 return storageDiv[1].children[2]
             } else {
@@ -314,7 +314,7 @@
             }
         }
         get containerDecBtn() {
-            let storageDiv = document.querySelectorAll('#stack-Food > .trade')
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 1) {
                 return storageDiv[1].children[1]
             } else {
@@ -380,33 +380,45 @@
             }
         }
 
-        crateInc() {
-            if (this.crateIncBtn !== null) {
-                this.crateIncBtn.click();
+        crateInc(num) {
+            let crateIncBtn = this.crateIncBtn;
+            if (crateIncBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    crateIncBtn.click();
+                }
                 return true;
             } else {
                 return false;
             }
         }
-        crateDec() {
-            if (this.crateDecBtn !== null) {
-                this.crateDecBtn.click();
+        crateDec(num) {
+            let crateDecBtn = this.crateDecBtn;
+            if (crateDecBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    crateDecBtn.click();
+                }
                 return true;
             } else {
                 return false;
             }
         }
-        containerInc() {
-            if (this.containerIncBtn !== null) {
-                this.containerIncBtn.click();
+        containerInc(num) {
+            let containerIncBtn = this.containerIncBtn;
+            if (containerIncBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    containerIncBtn.click();
+                }
                 return true;
             } else {
                 return false;
             }
         }
-        containerDec() {
-            if (this.containerDecBtn !== null) {
-                this.containerDecBtn.click();
+        containerDec(num) {
+            let containerDecBtn = this.containerDecBtn;
+            if (containerDecBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    containerDecBtn.click();
+                }
                 return true;
             } else {
                 return false;
@@ -2035,6 +2047,11 @@
         get countLabel() {
             return document.querySelector('#cnt'+this.name+'s');
         }
+        get btn() {
+            let div = document.querySelector('.'+this.id);
+            if (div === null) {return null;}
+            return div.children[0];
+        }
 
         get unlocked() {
             if (this.id == 'crate') {
@@ -2066,34 +2083,11 @@
         }
 
         click() {
-            // Ensuring no modal conflicts
-            console.log(this);
-            if (modal) {
-                return false;
+            let btn = this.btn;
+            if (btn === null) {return false;}
+            for (let i = 0;i < 10;i++) {
+                btn.click();
             }
-            modal = true;
-            // Checking if modal already open
-            if ($('.modal').length != 0) {
-                // Closing modal
-                let closeBtn = $('.modal-close')[0];
-                if (closeBtn !== undefined) {closeBtn.click();}
-            }
-            // Opening modal
-            resources.Stone.openStorage();
-            let temp = this.name;
-            // Delaying for modal animation
-            setTimeout(function() {
-                let addBtn = $('#modal'+temp+'s > span:nth-child(2) > button');
-                for (let i = 0;i < 10;i++) {
-                    addBtn.click();
-                    //console.log(this.id, i, addBtn, '#modal'+this.name+'s > span:nth-child(2) > button');
-                }
-                // Closing modal
-                let closeBtn = $('.modal-close')[0];
-                if (closeBtn !== undefined) {closeBtn.click();}
-                // Ensuring no modal conflicts
-                modal = false;
-            }, 100);
             return true;
         }
     }
@@ -2688,67 +2682,11 @@
         }
     }
 
-    function getMaxCrates() {
-        let crateMax = 0;
-        // Freight Yards
-        if (buildings['city-storage_yard'].unlocked) {
-            let size = researched('tech-cranes') ? 20 : 10;
-            if (researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject')) {
-                size += 10;
-            }
-            if (researched('tech-matter_compression')){
-                size *= 2;
-            }
-            crateMax += (buildings['city-storage_yard'].numTotal * size);
-        }
-        // Wharfs
-        if (buildings['city-wharf'].unlocked) {
-            let vol = (researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject')) ? 15 : 10
-            if (researched('tech-matter_compression')){
-                vol *= 2;
-            }
-            crateMax += (buildings['city-wharf'].numTotal * vol);
-        }
-        return crateMax;
-    }
-    function getMaxContainers() {
-        let containerMax = 0;
-        // Container Ports
-        if (buildings['city-warehouse'].unlocked) {
-            let size = researched('tech-gantry_crane') ? 20 : 10;
-            if (researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject')) {
-                size += 10;
-            }
-            if (researched('tech-matter_compression')){
-                size *= 2;
-            }
-            containerMax += (buildings['city-warehouse'].numTotal * size);
-        }
-        // Wharfs
-        if (buildings['city-wharf'].unlocked) {
-            let vol = (researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject')) ? 15 : 10
-            if (researched('tech-matter_compression')){
-                vol *= 2;
-            }
-            containerMax += (buildings['city-wharf'].numTotal * vol);
-        }
-        // Garages
-        if (buildings['space-garage'].unlocked) {
-            let g_vol = researched('tech-dimensional_compression') ? 20 + arpas['lhc'].rank : 20;
-            if (researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject')) {
-                g_vol += 10;
-            }
-            containerMax += (buildings['space-garage'].numTotal * g_vol);
-        }
-        return containerMax;
-    }
     function autoStorage() {
         // Don't do autoStorage if haven't unlocked storage
         if (!researched('tech-containerization')) {return;}
         // Finding values
-        let crateMax = getMaxCrates();
         let totalCrates = parseInt($('#cntCrates')[0].innerText.split(' / ')[0]);
-        let containerMax = getMaxContainers();
         let totalContainers = parseInt($('#cntContainers')[0].innerText.split(' / ')[0]);
         // Creating crateable object
         let storage = {}
@@ -2760,10 +2698,8 @@
             totalContainers += storage[x].containerNum;
         }
 
-        console.log("Current Crate Usage", totalCrates);
-        console.log("Max Crates", crateMax);
-        console.log("Current Container Usage", totalContainers);
-        console.log("Max Containers", containerMax);
+        //console.log("Current Crate Usage", totalCrates);
+        //console.log("Current Container Usage", totalContainers);
 
         // Getting total priority
         let totalPriority = 0;
@@ -2775,32 +2711,24 @@
             storage[x].needed_crates = storage[x].wanted_crates - storage[x].crateNum;
             storage[x].wanted_containers = Math.round(totalContainers * storage[x].storePriority / totalPriority);
             storage[x].needed_containers = storage[x].wanted_containers - storage[x].containerNum;
-            console.log(x, "CR_WANT", storage[x].wanted_crates, "CR_NEED", storage[x].needed_crates, "CO_WANT", storage[x].wanted_containers, "CO_NEED", storage[x].needed_containers);
+            //console.log(x, "CR_WANT", storage[x].wanted_crates, "CR_NEED", storage[x].needed_crates, "CO_WANT", storage[x].wanted_containers, "CO_NEED", storage[x].needed_containers);
         }
         // Removing extra storage
         let excessStorage = [];
         for (x in storage) {
             if (storage[x].needed_crates < 0) {
-                for (let i = 0;i < -storage[x].needed_crates;i++) {
-                    storage[x].crateDec();
-                }
+                storage[x].crateDec(-storage[x].needed_crates);
             }
             if (researched('tech-steel_containers') && storage[x].needed_containers < 0) {
-                for (let i = 0;i < -storage[x].needed_containers;i++) {
-                    storage[x].containerDec();
-                }
+                storage[x].containerDec(-storage[x].needed_containers);
             }
         }
         for (x in storage) {
             if (storage[x].needed_crates > 0) {
-                for (let i = 0;i < storage[x].needed_crates;i++) {
-                    storage[x].crateInc();
-                }
+                storage[x].crateInc(storage[x].needed_crates);
             }
             if (researched('tech-steel_containers') && storage[x].needed_containers > 0) {
-                for (let i = 0;i < storage[x].needed_containers;i++) {
-                    storage[x].containerInc();
-                }
+                storage[x].containerInc(storage[x].needed_containers);
             }
         }
     }
@@ -4002,7 +3930,7 @@
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
                 wantedRatio[focusList[i].res] = prioMultiplier[focusList[i].res] * focusList[i].action.priority / totalPriority;
-                //console.log(focusList[i].res, focusList[i].action.priority , prioMultiplier[focusList[i].res], wantedRatio[focusList[i].res], totalPriority);
+                console.log(focusList[i].res, focusList[i].action.priority , prioMultiplier[focusList[i].res], wantedRatio[focusList[i].res], totalPriority);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
@@ -4138,6 +4066,9 @@
             }
             if(settings.autoARPA && !settings.autoPrioritize){
                 autoArpa();
+            }
+            if (settings.autoStorage) {
+                autoStorage();
             }
         }
         count += 1;
