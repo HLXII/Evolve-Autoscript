@@ -4092,7 +4092,7 @@
 
     let count = 1;
     function fastAutomate() {
-        console.clear();
+        //console.clear();
         console.log(count);
         updateUI();
         loadSettings();
@@ -4380,8 +4380,8 @@
     }
 
     function createAutoSettings() {
-        let parent = $('#settings');
-        parent.append($('<br></br>'));
+        let parent = getTab("Settings");
+        parent.append($('<br></br>')[0]);
         let mainDiv = $('<div id="autoSettings"></div>');
         let label = $('<label class="label">Import/Export Auto Settings</label>');
         let ctrlDiv = $('<div class="control is-clearfix"></div>');
@@ -4400,7 +4400,7 @@
             exportSettings();
         });
         mainDiv.append(control).append(importBtn).append(exportBtn);
-        parent.append(mainDiv);
+        parent.append(mainDiv[0]);
     }
 
     function createEvolutionToggle(name) {
@@ -4475,14 +4475,14 @@
         if (!resources[id].unlocked) {return;}
         if (!resources[id].crateable) {return;}
         let resourceSpan = $('#stack-'+resources[id].id);
-        let prioritySub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Priority" class="sub has-text-danger ea-storage-settings">«</span>');
+        let prioritySub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Priority" class="sub ea-storage-settings">«</span>');
         prioritySub.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].decStorePriority();
             priorityLabel[0].removeChild(priorityLabel[0].firstChild);
             priorityLabel[0].appendChild(document.createTextNode(resources[id].storePriority));
         });
-        let priorityAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Priority" class="add has-text-success ea-storage-settings">»</span>');
+        let priorityAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Priority" class="add ea-storage-settings">»</span>');
         priorityAdd.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].incStorePriority();
@@ -4493,14 +4493,14 @@
         let priorityControls = $('<div class="trade controls ea-storage-settings" style="min-width:0;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
         resourceSpan.append(priorityControls)
 
-        let minSub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Minimum" class="sub has-text-danger ea-storage-settings">«</span>');
+        let minSub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Minimum" class="sub ea-storage-settings">«</span>');
         minSub.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].decStoreMin();
             minLabel[0].removeChild(minLabel[0].firstChild);
             minLabel[0].appendChild(document.createTextNode(resources[id].storeMin));
         });
-        let minAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Minimum" class="add has-text-success ea-storage-settings">»</span>');
+        let minAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Minimum" class="add ea-storage-settings">»</span>');
         minAdd.on('mouseup', function(e) {
             if (e.which != 1) {return;}
             resources[id].incStoreMin();
@@ -4801,9 +4801,9 @@
             let building = shownBuildings[i];
             var buildingDiv;
             if (i % 2) {
-                buildingDiv = $('<div style="display:flex"></div>');
+                buildingDiv = $('<div style="display:flex" class="market-item"></div>');
             } else {
-                buildingDiv = $('<div style="display:flex" class="resource alt"></div>');
+                buildingDiv = $('<div style="display:flex" class="resource alt market-item"></div>');
             }
             buildingList.appendChild(buildingDiv[0]);
 
@@ -4831,7 +4831,7 @@
                 count.appendChild(document.createTextNode(buildings[building.id].limit));
             });
             let limLabel = $('<span class="count current" id="'+building.id+'-limit" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].limit+'</span>');
-            let limControls = $('<div class="controls ea-buildings-tab" style="width:20%;text-align:center;">').append(limSub).append(limLabel).append(limAdd).append('</div>');
+            let limControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(limSub).append(limLabel).append(limAdd).append('</div>');
             buildingDiv.append(limControls);
 
             // Building SoftCap
@@ -4850,7 +4850,7 @@
                 count.appendChild(document.createTextNode(buildings[building.id].softCap));
             });
             let softCapLabel = $('<span class="count current" id="'+building.id+'-softcap" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].softCap+'</span>');
-            let softCapControls = $('<div class="controls ea-buildings-tab" style="width:20%;text-align:center;">').append(softCapSub).append(softCapLabel).append(softCapAdd).append('</div>');
+            let softCapControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(softCapSub).append(softCapLabel).append(softCapAdd).append('</div>');
             buildingDiv.append(softCapControls);
 
             // Building Toggle
@@ -4886,7 +4886,7 @@
                 count.appendChild(document.createTextNode(buildings[building.id].priority));
             });
             let prioLabel = $('<span class="count current" id="'+building.id+'-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].priority+'</span>');
-            let prioControls = $('<div class="controls ea-buildings-tab" style="width:20%;text-align:center;">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
+            let prioControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
             buildingDiv.append(prioControls);
 
             // Power Priority
@@ -4906,7 +4906,7 @@
                     count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
                 });
                 let powerLabel = $('<span class="count current" id="'+building.id+'-power-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].powerPriority+'</span>');
-                let powerControls = $('<div class="controls ea-buildings-tab" style="width:20%;text-align:center;">').append(powerSub).append(powerLabel).append(powerAdd).append('</div>');
+                let powerControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(powerSub).append(powerLabel).append(powerAdd).append('</div>');
                 buildingDiv.append(powerControls);
             } else {
                 let temp = $('<div class="ea-buildings-tab" style="width:20%;">');
@@ -4987,7 +4987,13 @@
     }
 
     function createFactorySettings() {
-        return;
+        // Create manual button for Auto Factory
+        let autoFactoryBtn = $('<a class="button is-dark is-small ea-factory-settings" id="factory-manual" title="Manually trigger Auto Factory"><span>Manual</span></a>');
+        autoFactoryBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            count = 0;
+        });
+        $('#autoFactory_right').append(autoFactoryBtn);
     }
     function removeFactorySettings() {
         $('.ea-factory-settings').remove();
@@ -5175,7 +5181,7 @@
                         jobs[job.id].updateUI();
                     });
                     let priorityLabel = $('<span class="count current" id="'+job.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
-                    let priorityControls = $('<div class="foundry controls ea-employ-craft-settings" style="text-align:right;min-width:9.25rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
+                    let priorityControls = $('<div class="foundry controls ea-employ-craft-settings" style="text-align:right;display:flex;margin-left:4.5rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     let parent = $('#foundry > .job > .foundry').parent();
                     parent.append(priorityControls);
                 } else if (job.id == 'free') {
@@ -5190,7 +5196,7 @@
                         jobs[job.id].updateUI();
                     });
                     let priorityLabel = $('<span class="count current" id="'+job.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
-                    let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;min-width:9.25rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
+                    let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;display:flex;margin-left:4.5rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     $('#civ-'+job.id).append(priorityControls)
                 }else {
                     let prioritySub = $('<span role="button" aria-label="Decrease '+job.name+' Priority" class="sub ea-employ-settings">«</span>');
@@ -5204,7 +5210,7 @@
                         jobs[job.id].updateUI();
                     });
                     let priorityLabel = $('<span class="count current" id="'+job.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
-                    let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;min-width:6rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
+                    let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;display:flex;margin-left:1.25rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     $('#civ-'+job.id).append(priorityControls)
                 }
 
@@ -5228,7 +5234,7 @@
                 craftJobs[cjob.id].updateUI();
             });
             let priorityLabel = $('<span class="count current" id="'+cjob.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+cjob.priority+'</span>');
-            let priorityControls = $('<div class="controls ea-employ-craft-settings" style="text-align:right;min-width:6rem;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
+            let priorityControls = $('<div class="controls ea-employ-craft-settings" style="text-align:right;display:flex;margin-left:1.25rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
             $('#craft'+cjob.id).parent().append(priorityControls)
         }
     }
@@ -5256,7 +5262,7 @@
             updateSettings();
         });
         let moraleLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:3rem;">'+settings.defaultMorale+'</span>');
-        let moraleControls = $('<div class="controls ea-tax-settings" style="text-align:right;min-width:6rem;">').append(moraleText).append(moraleSub).append(moraleLabel).append(moraleAdd).append('</div>');
+        let moraleControls = $('<div class="controls ea-tax-settings" style="text-align:right;min-width:6rem;display:flex">').append(moraleText).append(moraleSub).append(moraleLabel).append(moraleAdd).append('</div>');
         $('#autoTax_right').append(moraleControls);
     }
     function removeTaxSettings() {
@@ -5266,35 +5272,38 @@
     function createResearchTab() {
         // Creating Auto Research Tab
         let researchSettingTabLabel = $('<li class="ea-research-tab"><a><span>Auto Settings</span></a></li>');
-        let newTab = $('#research > .b-tabs > .tabs > ul > li:nth-child(1)');
-        let completeTab = $('#research > .b-tabs > .tabs > ul > li:nth-child(2)');
+        let mainResearchTab = getTab("Research");
+        let newTab = mainResearchTab.querySelector('.b-tabs > .tabs > ul > li:nth-child(1)');
+        let completeTab = mainResearchTab.querySelector('.b-tabs > .tabs > ul > li:nth-child(2)');
         let newTabItem = $('#tech');
         let completeTabItem = $('#oldTech');
-        $('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child(5) > .b-tabs > .tabs > ul').append(researchSettingTabLabel);
+
+
+        mainResearchTab.querySelector('.b-tabs > .tabs > ul').append(researchSettingTabLabel[0]);
         let researchSettingTab = $('<div id="researchSettings" class="tab-item ea-research-tab" style="display:none"><h2 class="is-sr-only">Auto Research Settings</h2></div>');
-        $('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child(5) > .b-tabs > .tab-content').append(researchSettingTab);
-        newTab.on('mouseup',function(e) {
+        mainResearchTab.querySelector('.b-tabs > .tab-content').append(researchSettingTab[0]);
+        newTab.onmouseup = function(e) {
             if (e.which != 1) {return;}
             if (researchSettingTabLabel.hasClass("is-active")) {
                 researchSettingTabLabel.removeClass("is-active");
                 newTabItem[0].style.display = '';
             }
             researchSettingTab[0].style.display = 'none';
-            if (!newTab.hasClass("is-active")) {newTab.addClass("is-active");}
-        });
-        completeTab.on('mouseup',function(e) {
+            if (!newTab.classList.contains("is-active")) {newTab.classList.add("is-active");}
+        };
+        completeTab.onmouseup = function(e) {
             if (e.which != 1) {return;}
             if (researchSettingTabLabel.hasClass("is-active")) {
                 researchSettingTabLabel.removeClass("is-active");
                 completeTabItem[0].style.display = '';
             }
             researchSettingTab[0].style.display = 'none';
-            if (!completeTab.hasClass("is-active")) {completeTab.addClass("is-active");}
-        });
+            if (!completeTab.classList.contains("is-active")) {completeTab.classList.add("is-active");}
+        };
         researchSettingTabLabel.on('mouseup',function(e) {
             if (e.which != 1) {return;}
-            newTab.removeClass("is-active");
-            completeTab.removeClass("is-active");
+            newTab.classList.remove("is-active");
+            completeTab.classList.remove("is-active");
             newTabItem[0].style.display = 'none';
             completeTabItem[0].style.display = 'none';
             researchSettingTabLabel.addClass("is-active");
@@ -5517,9 +5526,9 @@
             let research = shownResearches[i];
             var researchDiv;
             if (i % 2) {
-                researchDiv = $('<div style="display:flex"></div>');
+                researchDiv = $('<div style="display:flex" class="market-item"></div>');
             } else {
-                researchDiv = $('<div style="display:flex" class="resource alt"></div>');
+                researchDiv = $('<div style="display:flex" class="resource alt market-item"></div>');
             }
             researchList.appendChild(researchDiv[0]);
 
@@ -5564,8 +5573,8 @@
                 }
             });
             let temp = (research.tags.includes('arpa')) ? arpas[research.id].priority : researches[research.id].priority;
-            let prioLabel = $('<span class="count current" id="'+research.id+'-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+temp+'</span>');
-            let prioControls = $('<div class="controls ea-research-tab" style="width:20%;text-align:center;">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
+            let prioLabel = $('<span class="count current" id="'+research.id+'-prio" >'+temp+'</span>');
+            let prioControls = $('<div class="trade controls ea-research-tab" style="margin-left:0;text-align:center;">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
             researchDiv.append(prioControls);
         }
 
@@ -5695,18 +5704,36 @@
 
     // Determines if stage is currently in evolution
     function inEvolution() {
-        return $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child(1)')[0].style.display != 'none';
+        let evolutionTabLabel = getTabLabel("Evolution");
+        if (evolutionTabLabel === null) {return false;}
+        return evolutionTabLabel.style.display != 'none';
     }
     // Determines if the civics tab has been unlocked
     function civicsOn() {
+        let civicsTabLabel = getTabLabel("Civics");
+        if (civicsTabLabel === null) {return false;}
+        return civicsTabLabel.style.display != 'none';
+    }
+    // Finding tab-items
+    function getTab(name) {
         let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
         for (let i = 0;i < nav.length;i++) {
-            if (nav[i].innerText == "Civics") {
-                let nth = i+1;
-                return $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')[0].style.display != 'none';
+            if (nav[i].innerText == name) {
+                let nth=i+1
+                return document.querySelector('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child('+nth+')')
             }
         }
-        return false;
+        return null;
+    }
+    function getTabLabel(name) {
+        let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
+        for (let i = 0;i < nav.length;i++) {
+            if (nav[i].innerText == name) {
+                let nth=i+1
+                return document.querySelector('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')
+            }
+        }
+        return null;
     }
     // Determines if a perk has been unlocked
     function perkUnlocked(perk) {
