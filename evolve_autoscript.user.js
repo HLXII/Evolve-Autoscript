@@ -3368,7 +3368,7 @@
                 polymerNum = +labels[2].innerText
             }
             if (decBtns.length > 3) {
-                let str = datas[2].attributes['data-label'].value;
+                let str = datas[3].attributes['data-label'].value;
                 let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
                 nanoTubeCoalCost = temp[1];
                 nanoTubeNeutroniumCost = temp[2];
@@ -3469,16 +3469,16 @@
                 } else {
                     allocation.push(posAllocation);
                     switch(posAllocation) {
-                        case 0: {wantedLux += 1; break;}
-                        case 1: {wantedAlloy += 1; break;}
-                        case 2: {wantedPolymer += 1; break;}
-                        case 3: {wantedNanoTube += 1; break;}
+                        case 0: {wantedLux += 1; resources.Furs.temp_rate -= luxFurCost; break;}
+                        case 1: {wantedAlloy += 1; resources.Copper.temp_rate -= alloyCopperCost; resources.Aluminium.temp_rate -= alloyAluminiumCost; break;}
+                        case 2: {wantedPolymer += 1; resources.Oil.temp_rate -= polymerOilCost; resources.Lumber.temp_rate -= polymerLumberCost; break;}
+                        case 3: {wantedNanoTube += 1; resources.Coal.temp_rate -= nanoTubeCoalCost; resources.Neutronium.temp_rate -= nanoTubeNeutroniumCost; break;}
                         default: break;
                     }
                 }
             }
+            //console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
             //console.log(allocation);
-
             // Removing all settings
             for (let i = 0;i < totalFactories;i++) {
                 decBtns.click();
@@ -4092,7 +4092,7 @@
 
     let count = 1;
     function fastAutomate() {
-        //console.clear();
+        console.clear();
         console.log(count);
         updateUI();
         loadSettings();
