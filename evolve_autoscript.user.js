@@ -3943,8 +3943,10 @@
             if (limits[x] === null) {continue;}
             // Excluding craftable resources
             if (!(x in resources)) {continue;}
-            // Excluding knowledge
+            // Excluding untradeable resources
             if (x == 'Knowledge') {continue;}
+            if (x == 'Nano_Tube') {continue;}
+            if (x == 'Elerium') {continue;}  //TODO: Make a tradeable property so I don't have to do this
             // Excluding actions whose resource is already filled
             if (limits[x].completion[x] == true) {continue;}
             if (buyRes === null) {
@@ -4000,7 +4002,7 @@
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
                 wantedRatio[focusList[i].res] = prioMultiplier[focusList[i].res] * focusList[i].action.priority / totalPriority;
-                //console.log(focusList[i].res, focusList[i].action.priority , prioMultiplier[focusList[i].res], wantedRatio[focusList[i].res]);
+                //console.log(focusList[i].res, focusList[i].action.priority , prioMultiplier[focusList[i].res], wantedRatio[focusList[i].res], totalPriority);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
