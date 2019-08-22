@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.13
+// @version      1.1.14
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -112,6 +112,10 @@
     class Resource {
         constructor(id) {
             this.id = id;
+            if (this.id == 'Money' || this instanceof TradeableResource) {
+                if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
+                if (!settings.resources[this.id].hasOwnProperty('tradePriority')) {settings.resources[this.id].tradePriority = 1;}
+            }
         }
 
         get mainDiv() {
@@ -174,6 +178,22 @@
                 console.log("Error:", this.id, "Rate");
                 return -1;
             }
+        }
+
+        get tradePriority() {return settings.resources[this.id].tradePriority;}
+        set tradePriority(tradePriority) {settings.resources[this.id].tradePriority = tradePriority;}
+
+
+        decTradePriority() {
+            if (this.tradePriority == 0) {return;}
+            this.tradePriority -= 1;
+            updateSettings();
+            console.log("Decrementing Trade Priority", this.id, this.tradePriority);
+        }
+        incTradePriority() {
+            this.tradePriority += 1;
+            updateSettings();
+            console.log("Incrementing Trade Priority", this.id, this.tradePriority);
         }
     }
 
@@ -475,7 +495,6 @@
             updateSettings();
             console.log("Incrementing Store Minimum", this.id, this.storeMin);
         }
-
     }
     var resources = [];
     function loadResources() {
@@ -804,7 +823,6 @@
                     this.res[name.substr(5, name.length)] = parseInt(cost);
                 }
             }
-            console.log(this);
         }
 
         getResDep(resid) {
@@ -812,7 +830,6 @@
         }
 
         click() {
-            console.log(this.id);
             if (buildings['space-star_dock'].numTotal < 1) {return false;}
             // Checking if modal already open
             if ($('.modal').length != 0) {
@@ -863,7 +880,6 @@
             buildings['spcdock-probes'].loadRes();
             buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
             buildings['spcdock-seeder'].loadRes();
-            console.log(buildings['spcdock-seeder'].res,buildings['spcdock-probes'].res);
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
@@ -4023,11 +4039,11 @@
         if (focusList.length > 0) {
             // Creating sequence of trade route allocations to match priority ratios
             let curError = 0;
-            for (let i = 0;i < focusList.length;i++) {totalPriority += prioMultiplier[focusList[i].res] * focusList[i].action.priority;}
+            for (let i = 0;i < focusList.length;i++) {totalPriority += resources[focusList[i].res].tradePriority**2 * focusList[i].action.priority;}
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
-                wantedRatio[focusList[i].res] = prioMultiplier[focusList[i].res] * focusList[i].action.priority / totalPriority;
-                console.log(focusList[i].res, focusList[i].action.priority , prioMultiplier[focusList[i].res], wantedRatio[focusList[i].res], totalPriority);
+                wantedRatio[focusList[i].res] = resources[focusList[i].res].tradePriority**2 * focusList[i].action.priority / totalPriority;
+                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].tradePriority**2, wantedRatio[focusList[i].res], totalPriority);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
@@ -4065,7 +4081,7 @@
             // Allocating all possible trade routes with given money
             let curFreeTradeRoutes = totalTradeRoutes;
             // Keeping fraction of base money for money
-            if (wantedRatio.Money > 0) {resources.Money.temp_rate *= wantedRatio.Money;}
+            if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
             // Begin allocating algorithm
             while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
                 // Checking if can buy trade route
@@ -5085,7 +5101,7 @@
     function createMarketSetting(resource){
         let marketRow = $('#market-'+resource.id);
 
-        let toggleBuy = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="control-label" style="font-size: small;">auto buy</span><span class="state"></span></label>');
+        let toggleBuy = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
         let buyRatioLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">(&lt'+resource.buyRatio+')</span>');
         let buyRatioSub = $('<span role="button" aria-label="Decrease '+resource.name+' Buy Ratio" class="sub ea-market-settings">«</span>');
         buyRatioSub.on('mouseup', function(e) {
@@ -5104,7 +5120,7 @@
         marketRow.append(toggleBuy);
         marketRow.append(buyRatioSub).append(buyRatioLabel).append(buyRatioAdd);
 
-        let toggleSell = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="control-label" style="font-size: small;">auto sell</span><span class="state"></span></label>');
+        let toggleSell = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
         let sellRatioLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">(&gt'+resource.sellRatio+')</span>');
         let sellRatioSub = $('<span role="button" aria-label="Decrease '+resource.name+' Sell Ratio" class="sub ea-market-settings">«</span>');
         sellRatioSub.on('mouseup', function(e) {
@@ -5122,6 +5138,21 @@
         });
         marketRow.append(toggleSell);
         marketRow.append(sellRatioSub).append(sellRatioLabel).append(sellRatioAdd);
+
+        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resource.tradePriority+'</span>');
+        let prioritySub = $('<span role="button" aria-label="Decrease '+resource.name+' Priority" class="sub ea-market-settings">«</span>');
+        prioritySub.on('mouseup', function(e) {
+            if (e.which != 1) {return;}
+            resource.decTradePriority();
+            priorityLabel[0].innerText = resource.tradePriority;
+        });
+        let priorityAdd = $('<span role="button" aria-label="Increase '+resource.name+' Priority" class="add ea-market-settings">»</span>');
+        priorityAdd.on('mouseup', function(e) {
+            if (e.which != 1) {return;}
+            resource.incTradePriority();
+            priorityLabel[0].innerText = resource.tradePriority;
+        });
+        marketRow.append(prioritySub).append(priorityLabel).append(priorityAdd);
 
         if(resource.autoBuy){
             toggleBuy.click();
@@ -5175,9 +5206,37 @@
     }
     function createMarketSettings(){
         removeMarketSettings();
+        let mainDiv = document.getElementById('market');
+        let div = $('<div class="market-item alt"></div>');
+        let manualBuyLabel = $('<span style="text-align:right;display:flex;margin-left:23rem;width:6rem;" title="Toggle to auto buy resources when under this ratio. Only buys when money is over minimum amount.">Manual Buy</span>')[0];
+        let manualSellLabel = $('<span style="text-align:right;display:flex;margin-left:2rem;width:6rem;" title="Toggle to auto sell resources when over this ratio. Only sells when money is not capped.">Manual Sell</span>')[0];
+        let tradePriorityLabel = $('<span style="text-align:right;display:flex;margin-left:2rem;width:6rem;" title="Priority for importing this resource through trade routes.">Priority</span>')[0];
+        div.append(manualBuyLabel).append(manualSellLabel).append(tradePriorityLabel);
+        mainDiv.insertBefore(div[0],mainDiv.children[1]);
+        // Creating settings for TradeableResources
         for (var x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
             createMarketSetting(resources[x]);
         }
+        // Creating trade setting for money
+        let tradeRow = document.getElementById("tradeTotal");
+        let moneyLabel = $('<span title="Priority of money when allocating trade routes">Money Priority</span>');
+        let priorityControl = $('<div style="display:flex;margin-left:6rem;"</div>');
+        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resources.Money.tradePriority+'</span>');
+        let prioritySub = $('<span role="button" aria-label="Decrease '+resources.Money.name+' Priority" class="sub ea-market-settings">«</span>');
+        prioritySub.on('mouseup', function(e) {
+            if (e.which != 1) {return;}
+            resources.Money.decTradePriority();
+            priorityLabel[0].innerText = resources.Money.tradePriority;
+        });
+        let priorityAdd = $('<span role="button" aria-label="Increase '+resources.Money.name+' Priority" class="add ea-market-settings">»</span>');
+        priorityAdd.on('mouseup', function(e) {
+            if (e.which != 1) {return;}
+            resources.Money.incTradePriority();
+            priorityLabel[0].innerText = resources.Money.tradePriority;
+        });
+        priorityControl.append(moneyLabel).append(prioritySub).append(priorityLabel).append(priorityAdd);
+        tradeRow.append(priorityControl[0]);
     }
     function removeMarketSettings(){
         $('.ea-market-settings').remove();
