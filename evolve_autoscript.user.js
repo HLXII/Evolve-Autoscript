@@ -3044,29 +3044,64 @@
         setTimeout(function() {
             let totalCraftsman = 0;
             let total_priority = 0;
+            let cjobs = [];
+            let cwant = [];
+            let cratio = [];
+            let cneed = [];
+            // Finding availible craftsman positions, as well as total priority and craftsman numbers
             for (x in craftJobs) {
-                let cjob = craftJobs[x];
-                if (!cjob.unlocked) {continue;}
-                total_priority += cjob.priority;
-                totalCraftsman += cjob.employed;
+                if (!craftJobs[x].unlocked) {continue;}
+                cjobs.push(craftJobs[x]);
+                total_priority += craftJobs[x].priority;
+                totalCraftsman += craftJobs[x].employed;
+                craftJobs[x].want = 0;
+                cwant.push(0);
             }
-            for (x in craftJobs) {
-                let cjob = craftJobs[x];
-                if (!cjob.unlocked) {continue;}
-                cjob.want = Math.ceil(totalCraftsman * cjob.priority / total_priority)
-                cjob.need = cjob.want - cjob.employed;
-                if (cjob.need < 0) {
-                    for (let j = 0;j < -cjob.need;j++) {
-                        cjob.fire();
+            // Calculating wanted ratios
+            for (let i = 0;i < cjobs.length;i++) {
+                cratio.push(cjobs[i].priority / total_priority);
+            }
+            // Optimizing craftsman placement
+            for (let i = 0;i < totalCraftsman;i++) {
+                // Calculating error based on next value choice
+                let error = -1;
+                let choice = -1;
+                for (let j = 0;j < cjobs.length;j++) {
+                    let total = i+1;
+                    let tempError = 0;
+                    // Finding new error based on adding this craftsman
+                    for (let k = 0;k < cjobs.length;k++) {
+                        if (j == k) {
+                            // Currently attempting to add a craftsman to this position
+                            tempError += (((cwant[k]+1) / total) - cratio[k]) ** 2;
+                        } else {
+                            tempError += ((cwant[k] / total) - cratio[k]) ** 2;
+                        }
+                    }
+                    if (error == -1 || tempError < error) {
+                        error = tempError;
+                        choice = j;
+                    }
+                }
+                cwant[choice] += 1;
+            }
+            // Finding differential
+            for (let i = 0;i < cjobs.length;i++) {
+                cneed[i] = cwant[i] - cjobs[i].employed;
+            }
+            // Firing all unneeded
+            for (let i = 0;i < cjobs.length;i++) {
+                if (cneed[i] < 0) {
+                    for (let j = 0;j < -cneed[i];j++) {
+                        cjobs[i].fire();
                     }
                 }
             }
-            for (x in craftJobs) {
-                let cjob = craftJobs[x];
-                if (!cjob.unlocked) {continue;}
-                if (cjob.need > 0) {
-                    for (let j = 0;j < cjob.need;j++) {
-                        cjob.hire();
+            // Hiring all needed
+            for (let i = 0;i < cjobs.length;i++) {
+                if (cneed[i] > 0) {
+                    for (let j = 0;j < cneed[i];j++) {
+                        cjobs[i].hire();
                     }
                 }
             }
@@ -3452,7 +3487,7 @@
                 // Attempting to allocate
                 // Must be possible (positive temp_rates), as well as lowers ratio error
                 let posAllocation = null
-                let posAllocationError = 100000000000;
+                let posAllocationError = 1e10;
                 for (let j = 0;j < decBtns.length;j++) {
                     let tempError = 0;
                     switch(j) {
@@ -3463,6 +3498,8 @@
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
+                            } else if (resources.Furs.temp_rate > luxFurCost) {
+                                tempError = 1e10 / prioMultipliers[0];
                             }
                             break;
                         }
@@ -3473,6 +3510,8 @@
                                 tempError += ((wantedAlloy+1)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
+                            } else if (resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
+                                tempError = 1e10 / prioMultipliers[1];
                             }
                             break;
                         }
@@ -3483,6 +3522,8 @@
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer+1)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
+                            } else if (resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
+                                tempError = 1e10 / prioMultipliers[2];
                             }
                             break;
                         }
@@ -3493,6 +3534,8 @@
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube+1)/(i+1) - nanoTubePriority/totalPriority)**2
+                            } else if (resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
+                                tempError = 1e10 / prioMultipliers[3];
                             }
                             break;
                         }
@@ -3630,12 +3673,49 @@
         if (!researched('tech-electricity')) {return;}
         var x;
         // Getting support categories
-        var resourceConsumers;
-        var resourceProducers;
-        var electricityConsumers;
-        var moonConsumers;
-        var redConsumers;
-        var beltConsumers;
+        var maximize = [];
+        var electricityConsumers = [];
+        var passiveProducers = [];
+        var moonConsumers = [];
+        var redConsumers = [];
+        var beltConsumers = [];
+        for (x in buildings) {
+            // Ignore not unlocked buildings
+            if (!buildings[x].unlocked) {continue;}
+            // Ignore non-powered buildings
+            if (!(buildings[x] instanceof PoweredBuilding)) {continue;}
+            // Splitting buildings by type
+            if (buildings[x].consume.length >= 2) {
+                // Multiple consumptions means a complex powered building
+                maximize.push(buildings[x]);
+            } else if (buildings[x].consume.length == 0) {
+                // No consumption means building's always on
+                passiveProducers.push(buildings[x]);
+            } else if (buildings[x].consume[0].res instanceof Resource) {
+                // Resource consumer
+                maximize.push(buildings[x]);
+            } else if (buildings[x].consume[0].res == "electricity") {
+                // Electricity consumer
+                electricityConsumers.push(buildings[x]);
+            } else if (buildings[x].consume[0].res == "moon_support") {
+                // Moon Support consumer
+                moonConsumers.push(buildings[x]);
+            } else if (buildings[x].consume[0].res == "red_support") {
+                // Red Support consumer
+                redConsumers.push(buildings[x]);
+            } else if (buildings[x].consume[0].res == "belt_support") {
+                // Belt Support consumer
+                beltConsumers.push(buildings[x]);
+            }
+        }
+        /*
+        console.log("Max",maximize);
+        console.log("Passive",passiveProducers);
+        console.log("Electricity", electricityConsumers);
+        console.log("Moon", moonConsumers);
+        console.log("Red", redConsumers);
+        console.log("Belt", beltConsumers);
+        */
 
         // Calculating base values of resource production
         // Constant Consumption
@@ -4142,6 +4222,7 @@
     function fastAutomate() {
         console.clear();
         console.log(count);
+        _autoSupport();
         updateUI();
         updateSettings();
         autoFarm();
@@ -5788,7 +5869,7 @@
 
     // Determines if stage is currently in evolution
     function inEvolution() {
-        let evolutionTabLabel = getTabLabel("Evolution");
+        let evolutionTabLabel = getTabLabel("Evolve");
         if (evolutionTabLabel === null) {return false;}
         return evolutionTabLabel.style.display != 'none';
     }
@@ -5802,7 +5883,7 @@
     function getTab(name) {
         let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
         for (let i = 0;i < nav.length;i++) {
-            if (nav[i].innerText == name) {
+            if (nav[i].innerText.trim() == name) {
                 let nth=i+1
                 return document.querySelector('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child('+nth+')')
             }
@@ -5812,7 +5893,7 @@
     function getTabLabel(name) {
         let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
         for (let i = 0;i < nav.length;i++) {
-            if (nav[i].innerText == name) {
+            if (nav[i].innerText.trim() == name) {
                 let nth=i+1
                 return document.querySelector('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+nth+')')
             }
