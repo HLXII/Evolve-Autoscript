@@ -736,7 +736,7 @@
 
     }
     class PoweredBuilding extends Building {
-        constructor(id, tags, enabled, limit, priority, onBuy, powerPriority, consume, produce, unlockResearch) {
+        constructor(id, tags, enabled, limit, priority, powerPriority, consume, produce, unlockResearch, onBuy) {
             super(id, tags, enabled, limit, priority, onBuy);
             this.produce = produce;
             this.consume = consume;
@@ -811,7 +811,11 @@
         }
 
         get numTotal() {
-            return this.num;
+            try {
+                return +this.amountLabel.innerText
+            } catch(e) {
+                return this.num;
+            }
         }
 
         loadRes() {
@@ -880,6 +884,7 @@
             buildings['spcdock-probes'].loadRes();
             buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
             buildings['spcdock-seeder'].loadRes();
+            //console.log(buildings['spcdock-probes'].num,buildings['spcdock-seeder'].num);
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
