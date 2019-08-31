@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.14
+// @version      1.1.15
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -10,6 +10,36 @@
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
 // @require      https://raw.githubusercontent.com/pieroxy/lz-string/master/libs/lz-string.min.js
 // ==/UserScript==
+
+
+/*
+ * Script entry point, sets up unsafewindow.game.global
+ * Stolen from NotOats
+ */
+function userscriptEntryPoint() {
+    console.log(unsafeWindow.game);
+}
+
+unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
+
+$(document).ready(function() {
+    let injectScript = `
+import { global } from './vars.js';
+import { actions } from './actions.js';
+import { races } from './races.js';
+window.game =  {
+    global: global,
+    actions: actions,
+    races: races
+};
+window.dispatchEvent(new CustomEvent('customModuleAdded'));
+`;
+
+    $('<script>')
+    .attr('type', 'module')
+    .text(injectScript)
+    .appendTo('head');
+});
 
 (function($) {
     'use strict';
@@ -616,26 +646,6 @@
 
         get priority() {return settings.actions[this.id].priority;}
         set priority(priority) {settings.actions[this.id].priority = priority;}
-
-        get label() {
-            return document.querySelector('#'+this.id+' > a > .aTitle');
-        }
-        get btn() {
-            return document.getElementById(this.id);
-        }
-
-        get unlocked() {
-            return this.label !== null;
-        }
-
-        get name() {
-            if (this.label !== null) {
-                return this.label.innerText;
-            } else {
-                return this.id;
-            }
-        }
-
         decPriority() {
             if (this.priority == -99) {return;}
             this.priority -= 1;
@@ -647,6 +657,24 @@
             this.priority += 1;
             updateSettings();
             console.log("Incrementing Priority", this.id, this.priority);
+        }
+
+        get label() {
+            return document.querySelector('#'+this.id+' > a > .aTitle');
+        }
+        get btn() {
+            return document.getElementById(this.id);
+        }
+
+        get unlocked() {
+            return this.label !== null;
+        }
+        get name() {
+            if (this.label !== null) {
+                return this.label.innerText;
+            } else {
+                return this.id;
+            }
         }
 
         getResDep(resid) {
@@ -781,13 +809,23 @@
             }
         }
 
+        incPower() {
+            if (this.incBtn === null) {return false;}
+            this.incBtn.click();
+            return true;
+        }
+        decPower() {
+            if (this.decBtn === null) {return false;}
+            this.decBtn.click();
+            return true;
+        }
+
         decPowerPriority() {
             if (this.powerPriority == 0) {return;}
             this.powerPriority -= 1;
             updateSettings();
             console.log("Decrementing Power Priority", this.id, this.powerPriority);
         }
-
         incPowerPriority() {
             if (this.powerPriority == 99) {return;}
             this.powerPriority += 1;
@@ -1075,7 +1113,7 @@
                                                                     false, -1, 5,
                                                                     9,
                                                                     [{res:resources.Uranium,cost:0.1}],
-                                                                    [{res:'electricity',cost:14}]);     //TODO Update to 18 kW after tech-breeder_reactor
+                                                                    [{res:'electricity',cost:researched('tech-breeder_reactor') ? 18 : 14}]);     //TODO Update to 18 kW after tech-breeder_reactor
         buildings['city-mass_driver']       = new PoweredBuilding(  'city-mass_driver',
                                                                     ['city', 'power', 'oil', 'helium_3'],
                                                                     false, -1, 1,
@@ -1114,13 +1152,13 @@
                                                                     false, -1, 3,
                                                                     9,
                                                                     [{res:'moon_support',cost:1}],
-                                                                    [{res:resources.Iridium,cost:0}]); //TODO create function for iridium
+                                                                    [{res:resources.Iridium,cost:0.035}]); //TODO create function for iridium
         buildings['space-helium_mine']      = new PoweredBuilding(  'space-helium_mine',
                                                                     ['space', 'moon', 'power', 'helium_3'],
                                                                     false, -1, 1,
                                                                     9,
                                                                     [{res:'moon_support',cost:1}],
-                                                                    [{res:resources.Helium_3,cost:0}]); //TODO create function for helium_3
+                                                                    [{res:resources.Helium_3,cost:0.18}]); //TODO create function for helium_3
         buildings['space-observatory']      = new PoweredBuilding(  'space-observatory',
                                                                     ['space', 'moon', 'knowledge', 'power'],
                                                                     false, -1, 2,
@@ -1207,7 +1245,7 @@
                                                                     false, -1, 1,
                                                                     9,
                                                                     [],
-                                                                    [{res:'swarm_support',cost:4}]); //TODO This changes to 6 after tech-swarm_control_ai
+                                                                    [{res:'swarm_support',cost:researched('tech-swarm_control_ai') ? 6 : 4}]); //TODO This changes to 6 after tech-swarm_control_ai
         buildings['space-swarm_satellite']  = new PoweredBuilding(  'space-swarm_satellite',
                                                                     ['space', 'sun', 'power', 'swarm'],
                                                                     false, -1, 3,
@@ -1222,7 +1260,7 @@
                                                                     false, -1, 4,
                                                                     9,
                                                                     [{res:'electricity',cost:2}],
-                                                                    [{res:resources.Helium_3,cost:0.5}]); //TODO this changes to 0.65 after tech-helium_attractor
+                                                                    [{res:resources.Helium_3,cost:researched('tech-helium_attractor') ? 0.65 : 0.5}]); //TODO this changes to 0.65 after tech-helium_attractor
         buildings['space-gas_storage']      = new Building(         'space-gas_storage',
                                                                     ['space', 'gas', 'helium_3'],
                                                                     false, -1, 2);
@@ -3474,7 +3512,7 @@
                 0:.1,
                 1:5,
                 2:4,
-                3:5
+                3:10
             }
             if (limits.Money !== null && limits.Money !== undefined) {luxPriority = limits.Money.priority * prioMultipliers[0]; totalPriority += luxPriority; }
             if (limits.Alloy !== null && limits.Alloy !== undefined) {alloyPriority = limits.Alloy.priority * prioMultipliers[1]; totalPriority += alloyPriority;}
@@ -3582,7 +3620,7 @@
         }, 100);
     }
 
-    function autoSupport(priorityData) {
+    function _autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
         var x;
@@ -3668,35 +3706,73 @@
         }
     }
 
-    function _autoSupport(priorityData) {
+    function isFuelProducer(building) {
+        let fuels = ['Coal', 'Oil', 'Uranium', 'Helium_3','Elerium'];
+        let yes = false;
+        for (let i = 0;i < building.produce.length;i++) {
+            if (building.produce[i].res instanceof Resource) {
+                let res = building.produce[i].res.id;
+                if (res in fuels) {
+                    yes = true;
+                }
+            }
+        }
+        return yes;
+    }
+    function autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
-        var x;
+        let x;
         // Getting support categories
-        var maximize = [];
-        var electricityConsumers = [];
-        var passiveProducers = [];
-        var moonConsumers = [];
-        var redConsumers = [];
-        var beltConsumers = [];
+        let maximize = []; let maximize_want = [];
+        let electricityConsumers = []; let electricityConsumers_want = [];
+        let passiveProducers = [];
+        let moonConsumers = [];
+        let redConsumers = [];
+        let beltConsumers = [];
+        let swarmConsumers = [];
         for (x in buildings) {
             // Ignore not unlocked buildings
             if (!buildings[x].unlocked) {continue;}
+            // Ignore not power unlocked buildings
+            if (!buildings[x].powerUnlocked) {continue;}
             // Ignore non-powered buildings
             if (!(buildings[x] instanceof PoweredBuilding)) {continue;}
+            // Reverting consumption/production
+            for (let i = 0;i < buildings[x].consume.length;i++) {
+                if (buildings[x].consume[i].res instanceof Resource) {
+                    // Consuming a resource
+                    buildings[x].consume[i].res.temp_rate += buildings[x].numOn * buildings[x].consume[i].cost;
+                    //console.log(buildings[x].consume[i].res.id, buildings[x].consume[i].res.temp_rate);
+                } else {
+                    // Consuming a support, don't care for now I think
+                }
+            }
+            for (let i = 0;i < buildings[x].produce.length;i++) {
+                if (buildings[x].produce[i].res instanceof Resource) {
+                    buildings[x].produce[i].res.temp_rate -= buildings[x].numOn * buildings[x].produce[i].cost;
+                }
+            }
             // Splitting buildings by type
             if (buildings[x].consume.length >= 2) {
                 // Multiple consumptions means a complex powered building
                 maximize.push(buildings[x]);
+                maximize_want.push(0);
             } else if (buildings[x].consume.length == 0) {
                 // No consumption means building's always on
                 passiveProducers.push(buildings[x]);
             } else if (buildings[x].consume[0].res instanceof Resource) {
                 // Resource consumer
                 maximize.push(buildings[x]);
+                maximize_want.push(0);
+            } else if (isFuelProducer(buildings[x])) {
+                // Resource producer
+                maximize.push(buildings[x]);
+                maximize_want.push(0);
             } else if (buildings[x].consume[0].res == "electricity") {
                 // Electricity consumer
                 electricityConsumers.push(buildings[x]);
+                electricityConsumers_want.push(0);
             } else if (buildings[x].consume[0].res == "moon_support") {
                 // Moon Support consumer
                 moonConsumers.push(buildings[x]);
@@ -3706,6 +3782,9 @@
             } else if (buildings[x].consume[0].res == "belt_support") {
                 // Belt Support consumer
                 beltConsumers.push(buildings[x]);
+            } else if (buildings[x].consume[0].res == "swarm_support") {
+                // Swarm Support consumer
+                swarmConsumers.push(buildings[x]);
             }
         }
         /*
@@ -3716,11 +3795,161 @@
         console.log("Red", redConsumers);
         console.log("Belt", beltConsumers);
         */
-
-        // Calculating base values of resource production
-        // Constant Consumption
-
-        // Percent Gain
+        let support = {
+            electricity:0,
+            moon:0,
+            red:0,
+            swarm:0,
+            belt:0
+        }
+        // Add all passive producers
+        for (let i = 0;i < passiveProducers.length;i++) {
+            let pp = passiveProducers[i];
+            for (let j = 0;j < pp.produce.length;j++) {
+                if (pp.produce[j].res instanceof Resource) {
+                    pp.produce[j].res.temp_rate += pp.numTotal * pp.produce[j].cost;
+                } else {
+                    support[pp.produce[j].res] += pp.numTotal * pp.produce[j].cost;
+                }
+            }
+        }
+        // Maximizing the maximize category
+        maximize.sort(function(a,b) {return b.powerPriority - a.powerPriority;});
+        let update = true;
+        // Looping until cannot turn on any more buildings
+        while(true) {
+            update = false;
+            // Looping to find building to turn on
+            for (let i = 0;i < maximize.length;i++) {
+                let building = maximize[i];
+                if (maximize_want[i] == building.numTotal) {continue;}
+                let canTurnOn = true;
+                // Checking if this building can be turned on by resources
+                for (let j = 0;j < building.consume.length;j++) {
+                    let res = building.consume[j].res;
+                    let cost = building.consume[j].cost;
+                    if (res instanceof Resource) {
+                        //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
+                        if (res.temp_rate < cost) {
+                            canTurnOn = false;
+                        }
+                    } else {
+                        if (support[res] < cost) {
+                            canTurnOn = false;
+                        }
+                    }
+                }
+                if (canTurnOn) {
+                    // Turning on building
+                    update = true;
+                    maximize_want[i] += 1;
+                    for (let j = 0;j < building.consume.length;j++) {
+                        let res = building.consume[j].res;
+                        let cost = building.consume[j].cost;
+                        if (res instanceof Resource) {
+                            res.temp_rate -= cost;
+                        } else {
+                            support[res] -= cost;
+                        }
+                    }
+                    for (let j = 0;j < building.produce.length;j++) {
+                        let res = building.produce[j].res;
+                        let cost = building.produce[j].cost;
+                        if (res instanceof Resource) {
+                            res.temp_rate += cost;
+                        } else {
+                            support[res] += cost;
+                        }
+                    }
+                    //console.log("Turning on", building.id, maximize_want[i], building.numTotal);
+                    break;
+                }
+            }
+            if (!update) {
+                break;
+            }
+        }
+        //console.log(resources.Helium_3.temp_rate);
+        //console.log(maximize, maximize_want);
+        // Optimizing each support
+        electricityConsumers.sort(function(a,b) {return b.powerPriority - a.powerPriority;});
+        if (electricityConsumers.length) {
+            while (support.electricity > 0) {
+                update = false;
+                // Looping to find building to turn on
+                for (let i = 0;i < electricityConsumers.length;i++) {
+                    let building = electricityConsumers[i];
+                    if (electricityConsumers_want[i] == building.numTotal) {continue;}
+                    let canTurnOn = true;
+                    // Checking if this building can be turned on by resources
+                    for (let j = 0;j < building.consume.length;j++) {
+                        let res = building.consume[j].res;
+                        let cost = building.consume[j].cost;
+                        if (res instanceof Resource) {
+                            //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
+                            if (res.temp_rate < cost) {
+                                canTurnOn = false;
+                            }
+                        } else {
+                            if (support[res] < cost) {
+                                canTurnOn = false;
+                            }
+                        }
+                    }
+                    if (canTurnOn) {
+                        // Turning on building
+                        update = true;
+                        electricityConsumers_want[i] += 1;
+                        for (let j = 0;j < building.consume.length;j++) {
+                            let res = building.consume[j].res;
+                            let cost = building.consume[j].cost;
+                            if (res instanceof Resource) {
+                                res.temp_rate -= cost;
+                            } else {
+                                support[res] -= cost;
+                            }
+                        }
+                        for (let j = 0;j < building.produce.length;j++) {
+                            let res = building.produce[j].res;
+                            let cost = building.produce[j].cost;
+                            if (res instanceof Resource) {
+                                res.temp_rate += cost;
+                            } else {
+                                support[res] += cost;
+                            }
+                        }
+                        //console.log("Turning on", building.id, maximize_want[i], building.numTotal);
+                        break;
+                    }
+                }
+                if (!update) {
+                    break;
+                }
+            }
+        }
+        //console.log(electricityConsumers,electricityConsumers_want);
+        for (let i = 0;i < maximize.length;i++) {
+            if (maximize[i].numOn < maximize_want[i]) {
+                for (let j = 0;j < maximize_want[i] - maximize[i].numOn;j++) {
+                    maximize[i].incPower();
+                }
+            } else {
+                for (let j = 0;j < maximize[i].numOn - maximize_want[i];j++) {
+                    maximize[i].decPower();
+                }
+            }
+        }
+        for (let i = 0;i < electricityConsumers.length;i++) {
+            if (electricityConsumers[i].numOn < electricityConsumers_want[i]) {
+                for (let j = 0;j < electricityConsumers_want[i] - electricityConsumers[i].numOn;j++) {
+                    electricityConsumers[i].incPower();
+                }
+            } else {
+                for (let j = 0;j < electricityConsumers[i].numOn - electricityConsumers_want[i];j++) {
+                    electricityConsumers[i].decPower();
+                }
+            }
+        }
     }
 
     function autoResearch(){
@@ -4124,11 +4353,12 @@
         if (focusList.length > 0) {
             // Creating sequence of trade route allocations to match priority ratios
             let curError = 0;
-            for (let i = 0;i < focusList.length;i++) {totalPriority += resources[focusList[i].res].tradePriority**2 * focusList[i].action.priority;}
+            for (let i = 0;i < focusList.length;i++) {totalPriority += resources[focusList[i].res].tradePriority * focusList[i].action.priority;}
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
-                wantedRatio[focusList[i].res] = resources[focusList[i].res].tradePriority**2 * focusList[i].action.priority / totalPriority;
-                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].tradePriority**2, wantedRatio[focusList[i].res], totalPriority);
+                wantedRatio[focusList[i].res] = resources[focusList[i].res].tradePriority * focusList[i].action.priority / totalPriority;
+                //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
+                //console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].tradePriority, wantedRatio[focusList[i].res], totalPriority);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
@@ -4167,6 +4397,7 @@
             let curFreeTradeRoutes = totalTradeRoutes;
             // Keeping fraction of base money for money
             if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
+            console.log(wantedRatio.Money,resources.Money.temp_rate);
             // Begin allocating algorithm
             while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
                 // Checking if can buy trade route
@@ -4221,8 +4452,8 @@
     let count = 1;
     function fastAutomate() {
         console.clear();
+        //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
         console.log(count);
-        _autoSupport();
         updateUI();
         updateSettings();
         autoFarm();
@@ -4272,30 +4503,6 @@
         count += 1;
     }
         setInterval(fastAutomate, 1000);
-
-    //Temporary
-    let stardockBtn = $('#space-star_dock > .special');
-    function temp() {
-        stardockBtn.click();
-        setTimeout(function() {
-            let seederBtn = $('#spcdock-seeder > .button')[0];
-            let probeBtn = $('#spcdock-probes > .button')[0];
-            seederBtn.click();
-            probeBtn.click();
-            setTimeout(function() {
-                let exitBtn = $('.modal > .modal-close').click();
-            }, 1000);
-
-        }, 1000);
-    }
-    //setInterval(temp, 4000);
-    function temp2() {
-        if (resources.Knowledge.amount > 200000) {
-            $('#arpaSequence > span > button')[1].click();
-        }
-        //resetUI();
-    }
-    //setInterval(temp2, 20000);
 
     // Refreshing page every 150s to update data-values in elements
     setInterval(function() {
@@ -4819,7 +5026,9 @@
         return b.priority - a.priority;
     }
     function powerCompare(a, b) {
-        return b.priority - a.priority;
+        let bPP = (b instanceof PoweredBuilding) ? b.powerPriority : -1;
+        let aPP = (a instanceof PoweredBuilding) ? a.powerPriority : -1;
+        return bPP - aPP;
     }
     let shownBuildings = [];
     function populateBuildingList() {
@@ -5855,7 +6064,6 @@
         }
         return parseFloat(num);
     }
-
     // Determines if the research given has already been researched
     function researched(id) {
         let researched = $('#oldTech > div');
@@ -5866,7 +6074,6 @@
         }
         return false;
     }
-
     // Determines if stage is currently in evolution
     function inEvolution() {
         let evolutionTabLabel = getTabLabel("Evolve");
@@ -5899,6 +6106,33 @@
             }
         }
         return null;
+    }
+    // Getting free support
+    function getFreePower(name) {
+        switch(name) {
+            case 'electricity': {
+                let label = document.getElementById('powerMeter');
+                if (label !== null) {
+                    return parseInt(label.innerText);
+                } else {
+                    return 0;
+                }
+            }
+            case 'moon':
+            case 'red':
+            case 'swarm':
+            case 'belt': {
+                let label = document.querySelector('#srspc_'+name+' > span');
+                if (label !== null) {
+                    let data = label.innerText.split('/');
+                    return data[1] - data[0];
+                } else {
+                    return 0;
+                }
+            }
+            default:
+                return 0;
+        }
     }
     // Determines if a perk has been unlocked
     function perkUnlocked(perk) {
