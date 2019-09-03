@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.15
+// @version      1.1.16
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -18,6 +18,7 @@
  */
 function userscriptEntryPoint() {
     console.log(unsafeWindow.game);
+    main();
 }
 
 unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
@@ -27,10 +28,13 @@ $(document).ready(function() {
 import { global } from './vars.js';
 import { actions } from './actions.js';
 import { races } from './races.js';
+import {tradeRatio, craftCost } from './resources.js';
 window.game =  {
     global: global,
     actions: actions,
-    races: races
+    races: races,
+    tradeRatio: tradeRatio,
+    craftCost: craftCost,
 };
 window.dispatchEvent(new CustomEvent('customModuleAdded'));
 `;
@@ -41,7 +45,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     .appendTo('head');
 });
 
-(function($) {
+function main() {
+    window.game = unsafeWindow.game;
     'use strict';
     var settings = {};
     var jsonSettings = localStorage.getItem('settings');
@@ -142,10 +147,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     class Resource {
         constructor(id) {
             this.id = id;
-            if (this.id == 'Money' || this instanceof TradeableResource) {
-                if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
-                if (!settings.resources[this.id].hasOwnProperty('tradePriority')) {settings.resources[this.id].tradePriority = 1;}
-            }
+            if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
+            if (!settings.resources[this.id].hasOwnProperty('basePriority')) {settings.resources[this.id].basePriority = 0;}
         }
 
         get mainDiv() {
@@ -159,84 +162,52 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
 
         get name() {
-            if (this.mainDiv !== null) {
-                return this.mainDiv.children[0].innerText
-            } else {
-                return this.id;
-            }
+            return window.game.global.resource[this.id].name;
         }
 
         get unlocked() {
-            return (this.mainDiv !== null && this.mainDiv.style.display != 'none');
+            return window.game.global.resource[this.id].display;
         }
 
         get amount() {
-            if (this.cntLabel !== null) {
-                let data = this.cntLabel.innerHTML.split(' / ');
-                if (data.length == 0) {
-                    console.log("Error:", this.id, "Amount");
-                    return -1;
-                } else {
-                    return getRealValue(data[0]);
-                }
-            } else {
-                console.log("Error:", this.id, "Amount");
-                return -1;
-            }
+            return window.game.global.resource[this.id].amount;
         }
         get storage() {
-            if (this.cntLabel !== null) {
-                let data = this.cntLabel.innerHTML.split(' / ');
-                if (data.length != 2) {
-                    console.log("Error:", this.id, "Storage");
-                    return -1;
-                } else {
-                    return getRealValue(data[1]);
-                }
-            } else {
-                console.log("Error:", this.id, "Amount");
-                return -1;
-            }
+            return window.game.global.resource[this.id].max;
         }
         get ratio() {
             return this.amount / this.storage;
         }
         get rate() {
-            if (this.rateLabel !== null) {
-                return getRealValue(this.rateLabel.innerText.substr(0, this.rateLabel.innerText.length - 3));
-            } else {
-                console.log("Error:", this.id, "Rate");
-                return -1;
-            }
+            return window.game.global.resource[this.id].diff;
         }
 
-        get tradePriority() {return settings.resources[this.id].tradePriority;}
-        set tradePriority(tradePriority) {settings.resources[this.id].tradePriority = tradePriority;}
+        get basePriority() {return settings.resources[this.id].basePriority;}
+        set basePriority(basePriority) {settings.resources[this.id].basePriority = basePriority;}
+        get priority() {return settings.resources[this.id].basePriority;}
 
-
-        decTradePriority() {
-            if (this.tradePriority == 0) {return;}
-            this.tradePriority -= 1;
+        decBasePriority() {
+            if (this.basePriority == 0) {return;}
+            this.basePriority -= 1;
             updateSettings();
-            console.log("Decrementing Trade Priority", this.id, this.tradePriority);
+            console.log("Decrementing Base Priority", this.id, this.basePriority);
         }
-        incTradePriority() {
-            this.tradePriority += 1;
+        incBasePriority() {
+            this.basePriority += 1;
             updateSettings();
-            console.log("Incrementing Trade Priority", this.id, this.tradePriority);
+            console.log("Incrementing Base Priority", this.id, this.basePriority);
         }
     }
-
     class TradeableResource extends Resource {
-        constructor(id, autoBuy, autoSell, buyRatio, sellRatio, storePriority, storeMin) {
+        constructor(id) {
             super(id);
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
-            if (!settings.resources[this.id].hasOwnProperty('autoSell')) {settings.resources[this.id].autoSell = autoSell;}
-            if (!settings.resources[this.id].hasOwnProperty('autoBuy')) {settings.resources[this.id].autoBuy = autoBuy;}
-            if (!settings.resources[this.id].hasOwnProperty('buyRatio')) {settings.resources[this.id].buyRatio = buyRatio;}
-            if (!settings.resources[this.id].hasOwnProperty('sellRatio')) {settings.resources[this.id].sellRatio = sellRatio;}
-            if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = storePriority;}
-            if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = storeMin;}
+            if (!settings.resources[this.id].hasOwnProperty('autoSell')) {settings.resources[this.id].autoSell = false;}
+            if (!settings.resources[this.id].hasOwnProperty('autoBuy')) {settings.resources[this.id].autoBuy = false;}
+            if (!settings.resources[this.id].hasOwnProperty('buyRatio')) {settings.resources[this.id].buyRatio = 0.5;}
+            if (!settings.resources[this.id].hasOwnProperty('sellRatio')) {settings.resources[this.id].sellRatio = 0.9;}
+            if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = 0;}
+            if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = 0;}
         }
 
         get autoSell() {return settings.resources[this.id].autoSell};
@@ -331,14 +302,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 return null;
             }
         }
-        get crateSpan() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 0) {
-                return storageDiv[0].children[2]
-            } else {
-                return null;
-            }
-        }
         get crateDecBtn() {
             let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 0) {
@@ -351,14 +314,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
             if (storageDiv.length > 1) {
                 return storageDiv[1].children[3]
-            } else {
-                return null;
-            }
-        }
-        get containerSpan() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 1) {
-                return storageDiv[1].children[2]
             } else {
                 return null;
             }
@@ -392,12 +347,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
 
         get tradeNum() {
-            if (this.tradeLabel !== null) {
-                return parseInt(this.tradeLabel.innerText);
-            } else {
-                console.log("Error:", this.id, "Trade Num");
-                return -1;
-            }
+            return window.game.global.resource[this.id].trade;
         }
         get tradeBuyCost() {
             if (this.tradeDecSpan !== null) {
@@ -420,14 +370,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
         }
         get tradeAmount() {
-            if (this.tradeIncSpan !== null) {
-                let dataStr = this.tradeIncSpan.attributes['data-label'].value;
-                var reg = /Auto-sell\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
-                return parseFloat(reg[1]);
-            } else {
-                console.log("Error:", this.id, "Trade Amount");
-                return -1;
-            }
+            return window.game.tradeRatio[this.id];
         }
 
         crateInc(num) {
@@ -476,29 +419,13 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
 
         get crateNum() {
-            if (this.crateSpan !== null) {
-                return +this.crateSpan.innerText;
-            } else {
-                return 0;
-            }
+            return window.game.global.resource[this.id].crates;
         }
         get containerNum() {
-            if (this.containerSpan !== null) {
-                return +this.containerSpan.innerText;
-            } else {
-                return 0;
-            }
+            return window.game.global.resource[this.id].containers;
         }
         get crateable() {
-            return this.crateSpan !== null;
-        }
-        openStorage() {
-            try {
-                let storageBtn = $('#con'+this.id)[0];
-                storageBtn.click();
-            } catch(e) {
-                console.log("Error:", this.id, "OpenStorage");
-            }
+            return window.game.global.resource[this.id].stackable;
         }
 
         decStorePriority() {
@@ -508,7 +435,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             console.log("Decrementing Store Priority", this.id, this.storePriority);
         }
         incStorePriority() {
-            if (this.storePriority == 99) {return;}
             this.storePriority += 1;
             updateSettings();
             console.log("Incrementing Store Priority", this.id, this.storePriority);
@@ -520,7 +446,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             console.log("Decrementing Store Minimum", this.id, this.storeMin);
         }
         incStoreMin() {
-            if (this.storeMin == 99) {return;}
             this.storeMin += 1;
             updateSettings();
             console.log("Incrementing Store Minimum", this.id, this.storeMin);
@@ -529,36 +454,30 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     var resources = [];
     function loadResources() {
         if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
-        resources.Money = new Resource("Money");
-        resources.Knowledge = new Resource("Knowledge");
-        resources.Food = new TradeableResource("Food", false, false, .5, .9, 0, 0);
-        resources.Lumber = new TradeableResource("Lumber", false, false, .5, .9, 3, 0);
-        resources.Stone = new TradeableResource("Stone", false, false, .5, .9, 3, 0);
-        resources.Furs = new TradeableResource("Furs", false, false, .5, .9, 2, 0);
-        resources.Copper = new TradeableResource("Copper", false, false, .5, .9, 2, 0);
-        resources.Iron = new TradeableResource("Iron", false, false, .5, .9, 2, 0);
-        resources.Aluminium = new TradeableResource("Aluminium", false, false, .5, .9, 2, 0);
-        resources.Cement = new TradeableResource("Cement", false, false, .5, .9, 2, 0);
-        resources.Coal = new TradeableResource("Coal", false, false, .5, .9, 0, 0);
-        resources.Oil = new TradeableResource("Oil", false, false, .5, .9, 0, 0);
-        resources.Uranium = new TradeableResource("Uranium", false, false, .5, .9, 0, 0);
-        resources.Steel = new TradeableResource("Steel", false, false, .5, .9, 3, 10);
-        resources.Titanium = new TradeableResource("Titanium", false, false, .5, .9, 3, 10);
-        resources.Alloy = new TradeableResource("Alloy", false, false, .5, .9, 3, 10);
-        resources.Polymer = new TradeableResource("Polymer", false, false, .5, .9, 3, 10);
-        resources.Iridium = new TradeableResource("Iridium", false, false, .5, .9, 3, 10);
-        resources.Helium_3 = new TradeableResource("Helium_3", false, false, .5, .9, 0, 0);
-        resources.Neutronium = new Resource("Neutronium");
-        resources.Elerium = new Resource("Elerium");
-        resources.Nano_Tube = new Resource("Nano_Tube");
+        Object.keys(window.game.global.resource).forEach(function(res) {
+            // Craftable Resources
+            if (window.game.craftCost[res] !== undefined) {
+                //console.log("Craftable Resource:", res);
+                resources[res] = new CraftableResource(res);
+            }
+            // Tradeable Resources
+            else if (window.game.global.resource[res].trade !== undefined) {
+                //console.log("Tradeable Resource:", res);
+                resources[res] = new TradeableResource(res);
+            }
+            // Normal Resources
+            else {
+                //console.log("Normal Resource:", res);
+                resources[res] = new Resource(res);
+            }
+        });
     }
-
     class CraftableResource extends Resource {
-        constructor(id, enabled, sources) {
+        constructor(id) {
             super(id);
-            this.sources = sources;
+            this.sources = window.game.craftCost[id];
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
-            if (!settings.resources[this.id].hasOwnProperty('enabled')) {settings.resources[this.id].enabled = enabled;}
+            if (!settings.resources[this.id].hasOwnProperty('enabled')) {settings.resources[this.id].enabled = false;}
         }
 
         get enabled() {return settings.resources[this.id].enabled;}
@@ -575,14 +494,14 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 //console.log("Checking crafting of", this);
                 if (this.sources.every(function(element) {
                     //console.log("Checking Resource", element.res, element.res.ratio);
-                    return element.res.ratio > 0.9;
+                    return resources[element.r].ratio > 0.9;
                 })) {
                     //console.log("Can Craft", this.name);
                     // Determining number of crafts
                     let total_crafts = 100000000000;
                     for (let i = 0;i < this.sources.length;i++) {
-                        let res = this.sources[i].res;
-                        let cost = this.sources[i].cost * 5;
+                        let res = resources[this.sources[i].r];
+                        let cost = this.sources[i].a * 5;
                         let cur_crafts = Math.round((res.amount - (res.storage * .9)) / cost);
                         //console.log("Checking", res.name, "A/S", res.amount, res.storage, cur_crafts);
                         if (cur_crafts < total_crafts) {
@@ -595,11 +514,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             return 0;
         }
 
-        get rate() {
-            //TODO: Somehow figure out how to find the rate (number of craftsmen can be found, but not how much per craftsman)
-            return 0.000001;
-        }
-
         craft(num) {
             if (!this.unlocked || !this.enabled) {return false;}
             if (this.craftBtn === null) {return false;}
@@ -610,15 +524,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
             return false;
         }
-    }
-    var craftableResources = {};
-    function loadCraftableResources() {
-        if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
-        craftableResources.Plywood = new CraftableResource("Plywood", false, [{res:resources.Lumber,cost:100}]);
-        craftableResources.Brick = new CraftableResource("Brick", false, [{res:resources.Cement,cost:40}]);
-        craftableResources.Wrought_Iron = new CraftableResource("Wrought_Iron", false, [{res:resources.Iron,cost:160}]);
-        craftableResources.Sheet_Metal = new CraftableResource("Sheet_Metal", false, [{res:resources.Aluminium,cost:120}]);
-        craftableResources.Mythril = new CraftableResource("Mythril", false, [{res:resources.Alloy,cost:100}, {res:resources.Iridium,cost:250}]);
     }
 
     function priorityScale(value, priority, action) {
@@ -635,29 +540,29 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         return value * scale;
     }
     class Action {
-        constructor(id, tags, priority, onBuy) {
+        constructor(id, loc) {
             this.id = id;
-            this.tags = tags;
-            this.onBuy = onBuy;
+            this.loc = loc;
             if (!settings.actions.hasOwnProperty(this.id)) {settings.actions[this.id] = {};}
-            if (!settings.actions[this.id].hasOwnProperty('priority')) {settings.actions[this.id].priority = priority;}
-            this.res = {};
+            if (!settings.actions[this.id].hasOwnProperty('basePriority')) {settings.actions[this.id].basePriority = 0;}
+            if (!settings.actions[this.id].hasOwnProperty('enabled')) {settings.actions[this.id].enabled = false;}
         }
 
-        get priority() {return settings.actions[this.id].priority;}
-        set priority(priority) {settings.actions[this.id].priority = priority;}
-        decPriority() {
-            if (this.priority == -99) {return;}
-            this.priority -= 1;
+        get enabled() {return settings.actions[this.id].enabled;}
+        set enabled(enabled) {settings.actions[this.id].enabled = enabled;}
+        get basePriority() {return settings.actions[this.id].basePriority;}
+        set basePriority(basePriority) {settings.actions[this.id].basePriority = basePriority;}
+        decBasePriority() {
+            this.basePriority -= 1;
             updateSettings();
-            console.log("Decrementing Priority", this.id, this.priority);
+            console.log("Decrementing Priority", this.id, this.basePriority);
         }
-        incPriority() {
-            if (this.priority == 99) {return;}
-            this.priority += 1;
+        incBasePriority() {
+            this.basePriority += 1;
             updateSettings();
-            console.log("Incrementing Priority", this.id, this.priority);
+            console.log("Incrementing Priority", this.id, this.basePriority);
         }
+        get priority() {return this.basePriority;}
 
         get label() {
             return document.querySelector('#'+this.id+' > a > .aTitle');
@@ -670,29 +575,35 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             return this.label !== null;
         }
         get name() {
-            if (this.label !== null) {
-                return this.label.innerText;
-            } else {
-                return this.id;
+            let title = this.def.title;
+            if (typeof title != 'string') {
+                return title();
             }
+            return title;
+        }
+
+        get def() {
+            let details = window.game.actions;
+            for (let i = 0;i < this.loc.length;i++) {
+                details = details[this.loc[i]];
+            }
+            // Because tech-exotic_lab has a different key than id
+            if (this.id == 'tech-energy_lab') {
+                return details['exotic_lab'];
+            }
+            return details[this.id.split('-')[1]];
+        }
+
+        get data() {
+            let [type, action] = this.id.split('-');
+            return window.game.global[type][action];
         }
 
         getResDep(resid) {
-            try {
-                this.res = {};
-                let data = $('#' + this.id + ' > a')[0];
-                for (let i = 0;i < data.attributes.length;i++) {
-                    let name = data.attributes[i].name;
-                    let cost = data.attributes[i].value;
-                    if (name.indexOf('data-') >= 0) {
-                        this.res[name.substr(5, name.length)] = parseInt(cost);
-                    }
-                }
-                return this.res[resid.toLowerCase()];
-            } catch(e) {
-                console.log("Error:", this.id, "getResDep");
-                return null;
+            if (this.def.cost[resid] !== undefined) {
+                return this.def.cost[resid]();
             }
+            return null;
         }
 
         click() {
@@ -710,32 +621,24 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
         }
     }
-
     class Building extends Action {
-        constructor(id, tags, enabled, limit, priority, onBuy) {
-            super(id, tags, priority, onBuy);
-            if (!settings.actions[this.id].hasOwnProperty('enabled')) {settings.actions[this.id].enabled = enabled;}
-            if (!settings.actions[this.id].hasOwnProperty('limit')) {settings.actions[this.id].limit = limit;}
+        constructor(id, loc) {
+            super(id, loc);
+            if (!settings.actions[this.id].hasOwnProperty('limit')) {settings.actions[this.id].limit = -1;}
             if (!settings.actions[this.id].hasOwnProperty('softCap')) {settings.actions[this.id].softCap = -1;}
         }
 
-        get enabled() {return settings.actions[this.id].enabled;}
-        set enabled(enabled) {settings.actions[this.id].enabled = enabled;}
         get limit() {return settings.actions[this.id].limit;}
         set limit(limit) {settings.actions[this.id].limit = limit;}
         get softCap() {return settings.actions[this.id].softCap;}
         set softCap(softCap) {settings.actions[this.id].softCap = softCap;}
 
-        get amountLabel() {
-            return document.querySelector('#'+this.id+' > a > .count')
+        get numTotal() {
+            return this.data.count;
         }
 
-        get numTotal() {
-            if (this.amountLabel !== null) {
-                return +this.amountLabel.innerText
-            } else {
-                return 0;
-            }
+        get numOn() {
+            return this.data.on;
         }
 
         decLimit() {
@@ -764,8 +667,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
 
     }
     class PoweredBuilding extends Building {
-        constructor(id, tags, enabled, limit, priority, powerPriority, consume, produce, unlockResearch, onBuy) {
-            super(id, tags, enabled, limit, priority, onBuy);
+        constructor(id, loc, powerPriority, consume, produce, unlockResearch) {
+            super(id, loc);
             this.produce = produce;
             this.consume = consume;
             if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = powerPriority;}
@@ -795,18 +698,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
 
         get numOn() {
-            if (this.incBtn !== null) {
-                return +this.incBtn.innerText
-            } else {
-                return 0;
-            }
-        }
-        get numOff() {
-            if (this.decBtn !== null) {
-                return +this.decBtn.innerText
-            } else {
-                return 0;
-            }
+            return this.data.on;
         }
 
         incPower() {
@@ -834,41 +726,12 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
     }
     class SpaceDockBuilding extends Building {
-        constructor(id, tags, enabled, limit, priority, onBuy) {
-            super(id, tags, enabled, limit, priority, onBuy);
-            this.num = 0;
-        }
-
-        get btn() {
-            console.log("WTF");
-            return document.getElementById(this.id);
+        constructor(id, loc) {
+            super(id, loc);
         }
 
         get unlocked() {
             return buildings['space-star_dock'].numTotal > 0;
-        }
-
-        get numTotal() {
-            try {
-                return +this.amountLabel.innerText
-            } catch(e) {
-                return this.num;
-            }
-        }
-
-        loadRes() {
-            let data = $('#' + this.id + ' > a')[0];
-            for (let i = 0;i < data.attributes.length;i++) {
-                let name = data.attributes[i].name;
-                let cost = data.attributes[i].value;
-                if (name.indexOf('data-') >= 0) {
-                    this.res[name.substr(5, name.length)] = parseInt(cost);
-                }
-            }
-        }
-
-        getResDep(resid) {
-            return this.res[resid.toLowerCase()];
         }
 
         click() {
@@ -903,451 +766,34 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }, 100);
         }
     }
-    function loadSpaceDockBuildings() {
-        if (buildings['space-star_dock'].numTotal < 1) {return;}
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            return;
-        }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
-
-        // Opening modal
-        $('#space-star_dock > .special').click();
-        // Delaying for modal animation
-        setTimeout(function() {
-            // Getting info
-            buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
-            buildings['spcdock-probes'].loadRes();
-            buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
-            buildings['spcdock-seeder'].loadRes();
-            //console.log(buildings['spcdock-probes'].num,buildings['spcdock-seeder'].num);
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
-    }
     var buildings = {};
     function loadBuildings() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
-        buildings['city-house']             = new Building(         'city-house',
-                                                                    ['city', 'citizen'],
-                                                                    false, -1, 1);
-        buildings['city-cottage']           = new Building(         'city-cottage',
-                                                                    ['city', 'citizen'],
-                                                                    false, -1, 0);
-        buildings['city-apartment']         = new PoweredBuilding(  'city-apartment',
-                                                                    ['city', 'citizen', 'power'],
-                                                                    false, -1, 5,
-                                                                    9,
-                                                                    [{res:'electricity',cost:1}],
-                                                                    []);
-        buildings['city-lodge']             = new Building(         'city-lodge',
-                                                                    ['city', 'citizen'],
-                                                                    false, -1, 1);
-        buildings['city-smokehouse']        = new Building(         'city-smokehouse',
-                                                                    ['city', 'food'],
-                                                                    false, -1, 1);
-        buildings['city-soul_well']         = new Building(         'city-soul_well',
-                                                                    ['city', 'food', 'evil'],
-                                                                    false, -1, 1);
-        buildings['city-slave_pen']         = new Building(         'city-slave_pen',
-                                                                    ['city', 'evil'],
-                                                                    false, -1, 1);
-        buildings['city-farm']              = new Building(         'city-farm',
-                                                                    ['city', 'food'],
-                                                                    false, -1, 1);
-        buildings['city-mill']              = new PoweredBuilding(  'city-mill',
-                                                                    ['city', 'food', 'power'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:resources.Food,cost:0.1}],
-                                                                    [{res:'electricity',cost:1}],
-                                                                    'tech-windturbine');
-        buildings['city-windmill']          = new PoweredBuilding(  'city-windmill',
-                                                                    ['city', 'power', 'evil'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [],
-                                                                    [{res:'electricity',cost:1}]);
-        buildings['city-silo']              = new Building(         'city-silo',
-                                                                    ['city', 'food'],
-                                                                    false, -1, 0);
-        buildings['city-garrison']          = new Building(         'city-garrison',
-                                                                    ['city', 'army'],
-                                                                    false, -1, 4);
-        buildings['city-hospital']          = new Building(         'city-hospital',
-                                                                    ['city', 'army'],
-                                                                    false, -1, 3);
-        buildings['city-boot_camp']         = new Building(         'city-boot_camp',
-                                                                    ['city', 'army'],
-                                                                    false, -1, 3);
-        buildings['city-shed']              = new Building(         'city-shed',
-                                                                    ['city', 'storage'],
-                                                                    false, -1, 2);
-        buildings['city-storage_yard']      = new Building(         'city-storage_yard',
-                                                                    ['city', 'storage'],
-                                                                    false, -1, 0);
-        buildings['city-warehouse']         = new Building(         'city-warehouse',
-                                                                    ['city', 'storage'],
-                                                                    false, -1, 0);
-        buildings['city-bank']              = new Building(         'city-bank',
-                                                                    ['city', 'money'],
-                                                                    false, -1, 5);
-        buildings['city-lumber_yard']       = new Building(         'city-lumber_yard',
-                                                                    ['city','lumber'],
-                                                                    false, -1, 1);
-        buildings['city-sawmill']           = new PoweredBuilding(  'city-sawmill',
-                                                                    ['city', 'power', 'lumber'],
-                                                                    false, -1, 1,
-                                                                    1,
-                                                                    [{res:'electricity',cost:1}],
-                                                                    [{res:resources.Lumber,cost:0}]); //TODO Create function to find Lumber
-        buildings['city-rock_quarry']       = new PoweredBuilding(  'city-rock_quarry',
-                                                                    ['city', 'power', 'stone', 'aluminium'],
-                                                                    false, -1, 1,
-                                                                    1,
-                                                                    [{res:'electricity',cost:1}],
-                                                                    [{res:resources.Stone,cost:0}], //TODO Create function to find Stone
-                                                                    'tech-mine_conveyor');
-        buildings['city-cement_plant']      = new PoweredBuilding(  'city-cement_plant',
-                                                                    ['city', 'power', 'cement'],
-                                                                    false, -1, 5,
-                                                                    3,
-                                                                    [{res:'electricity',cost:2}],
-                                                                    [{res:resources.Cement,cost:0}], //TODO Create function to find Cement
-                                                                    'tech-screw_conveyor');
-        buildings['city-foundry']           = new Building(         'city-foundry',
-                                                                    ['city', 'craftsman'],
-                                                                    false, -1, 5);
-        buildings['city-factory']           = new PoweredBuilding(  'city-factory',
-                                                                    ['city', 'power', 'money', 'alloy', 'polymer', 'nano_tube'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:3}],
-                                                                    []);
-        buildings['city-smelter']           = new Building(         'city-smelter',
-                                                                    ['city', 'iron', 'steel', 'titanium'],
-                                                                    false, -1, 1);
-        buildings['city-metal_refinery']    = new Building(         'city-metal_refinery',
-                                                                    ['city', 'aluminium'],
-                                                                    false, -1, 1);
-        buildings['city-mine']              = new PoweredBuilding(  'city-mine',
-                                                                    ['city', 'power', 'iron', 'copper'],
-                                                                    false, -1, 1,
-                                                                    2,
-                                                                    [{res:'electricity',cost:1}],
-                                                                    [],
-                                                                    'tech-mine_conveyor');
-        buildings['city-coal_mine']         = new PoweredBuilding(  'city-coal_mine',
-                                                                    ['city', 'power', 'coal', 'uranium'],
-                                                                    false, -1, 1,
-                                                                    2,
-                                                                    [{res:'electricity',cost:1}],
-                                                                    [],
-                                                                    'tech-mine_conveyor');
-        buildings['city-oil_well']          = new Building(         'city-oil_well',
-                                                                    ['city', 'oil'],
-                                                                    false, -1, 6);
-        buildings['city-oil_depot']         = new Building(         'city-oil_depot',
-                                                                    ['city', 'oil'],
-                                                                    false, -1, 2);
-        buildings['city-trade']             = new Building(         'city-trade',
-                                                                    ['city', 'trade'],
-                                                                    false, -1, 3);
-        buildings['city-wharf']             = new Building(         'city-wharf',
-                                                                    ['city', 'storage', 'trade'],
-                                                                    false, -1, 1);
-        buildings['city-tourist_center']    = new PoweredBuilding(  'city-tourist_center',
-                                                                    ['city', 'power', 'money'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:resources.Food,cost:50}],
-                                                                    [{res:resources.Money,cost:0}]); //TODO Create function to get money
-        buildings['city-amphitheatre']      = new Building(         'city-amphitheatre',
-                                                                    ['city', 'morale'],
-                                                                    false, -1, 6);
-        buildings['city-casino']            = new PoweredBuilding(  'city-casino',
-                                                                    ['city', 'power', 'money', 'morale'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:'electricity',cost:5}],
-                                                                    [{res:resources.Money,cost:0}]); //TODO Create function to get money
-        buildings['city-temple']            = new Building(         'city-temple',
-                                                                    ['city', 'trade'],
-                                                                    false, -1, 5);
-        buildings['city-university']        = new Building(         'city-university',
-                                                                    ['city', 'knowledge'],
-                                                                    false, -1, 8);
-        buildings['city-library']           = new Building(         'city-library',
-                                                                    ['city', 'knowledge'],
-                                                                    false, -1, 2);
-        buildings['city-wardenclyffe']      = new PoweredBuilding(  'city-wardenclyffe',
-                                                                    ['city', 'power', 'knowledge', 'morale'],
-                                                                    false, -1, 9,
-                                                                    9,
-                                                                    [{res:'electricity',cost:2}],
-                                                                    []);
-        buildings['city-biolab']            = new PoweredBuilding(  'city-biolab',
-                                                                    ['city', 'power', 'knowledge'],
-                                                                    false, -1, 6,
-                                                                    9,
-                                                                    [{res:'electricity',cost:2}],
-                                                                    []);
-        buildings['city-coal_power']        = new PoweredBuilding(  'city-coal_power',
-                                                                    ['city', 'power', 'coal'],
-                                                                    false, -1, 4,
-                                                                    9,
-                                                                    [{res:resources.Coal,cost:0.35}],
-                                                                    [{res:'electricity',cost:5}]);
-        buildings['city-oil_power']         = new PoweredBuilding(  'city-oil_power',
-                                                                    ['city', 'power', 'oil'],
-                                                                    false, -1, 4,
-                                                                    9,
-                                                                    [{res:resources.Oil,cost:0.65}],
-                                                                    [{res:'electricity',cost:6}]);
-        buildings['city-fission_power']     = new PoweredBuilding(  'city-fission_power',
-                                                                    ['city', 'power', 'uranium'],
-                                                                    false, -1, 5,
-                                                                    9,
-                                                                    [{res:resources.Uranium,cost:0.1}],
-                                                                    [{res:'electricity',cost:researched('tech-breeder_reactor') ? 18 : 14}]);     //TODO Update to 18 kW after tech-breeder_reactor
-        buildings['city-mass_driver']       = new PoweredBuilding(  'city-mass_driver',
-                                                                    ['city', 'power', 'oil', 'helium_3'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:5}],
-                                                                    []);
-        buildings['space-test_launch']      = new Building(         'space-test_launch',
-                                                                    ['space', 'home', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-satellite']        = new Building(         'space-satellite',
-                                                                    ['space', 'home', 'knowledge'],
-                                                                    false, -1, 1);
-        buildings['space-gps']              = new Building(         'space-gps',
-                                                                    ['space', 'home', 'trade'],
-                                                                    false, -1, 0);
-        buildings['space-propellant_depot'] = new Building(         'space-propellant_depot',
-                                                                    ['space', 'home', 'oil', 'helium_3'],
-                                                                    false, -1, 1);
-        buildings['space-nav_beacon']       = new PoweredBuilding(  'space-nav_beacon',
-                                                                    ['space', 'home', 'power'],
-                                                                    false, -1, 2,
-                                                                    9,
-                                                                    [{res:'electricity',cost:2}],
-                                                                    [{res:'moon_support',cost:1}]);
-        buildings['space-moon_mission']     = new Building(         'space-moon_mission',
-                                                                    ['space', 'moon', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-moon_base']        = new PoweredBuilding(  'space-moon_base',
-                                                                    ['space', 'moon', 'power', 'oil'],
-                                                                    false, -1, 2,
-                                                                    9,
-                                                                    [{res:'electricity',cost:4},{res:resources.Oil,cost:2}],
-                                                                    [{res:'moon_support',cost:2}]);
-        buildings['space-iridium_mine']     = new PoweredBuilding(  'space-iridium_mine',
-                                                                    ['space', 'moon', 'power', 'iridium'],
-                                                                    false, -1, 3,
-                                                                    9,
-                                                                    [{res:'moon_support',cost:1}],
-                                                                    [{res:resources.Iridium,cost:0.035}]); //TODO create function for iridium
-        buildings['space-helium_mine']      = new PoweredBuilding(  'space-helium_mine',
-                                                                    ['space', 'moon', 'power', 'helium_3'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'moon_support',cost:1}],
-                                                                    [{res:resources.Helium_3,cost:0.18}]); //TODO create function for helium_3
-        buildings['space-observatory']      = new PoweredBuilding(  'space-observatory',
-                                                                    ['space', 'moon', 'knowledge', 'power'],
-                                                                    false, -1, 2,
-                                                                    9,
-                                                                    [{res:'moon_support',cost:1}],
-                                                                    []);
-        buildings['space-red_mission']      = new Building(         'space-red_mission',
-                                                                    ['space', 'red', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-spaceport']        = new PoweredBuilding(  'space-spaceport',
-                                                                    ['space', 'red', 'power', 'helium_3', 'food'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:5},{res:resources.Helium_3,cost:1.25},{res:resources.Food,cost:25}],
-                                                                    [{res:'red_support',cost:3}]);
-        buildings['space-red_tower']        = new PoweredBuilding(  'space-red_tower',
-                                                                    ['space', 'red', 'power'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:2}],
-                                                                    [{res:'red_support',cost:1}]);
-        buildings['space-living_quarters']  = new PoweredBuilding(  'space-living_quarters',
-                                                                    ['space', 'red', 'citizen', 'power'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'red_support',cost:1}],
-                                                                    []);
-        buildings['space-garage']           = new Building(         'space-garage',
-                                                                    ['space', 'red', 'storage'],
-                                                                    false, -1, 1);
-        buildings['space-red_mine']         = new PoweredBuilding(  'space-red_mine',
-                                                                    ['space', 'red', 'power', 'copper', 'titanium'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'red_support',cost:1}],
-                                                                    [{res:resources.Copper,cost:0},{res:resources.Titanium,cost:0}]); //TODO Create function to find copper/titanium
-        buildings['space-fabrication']      = new PoweredBuilding(  'space-fabrication',
-                                                                    ['space', 'red', 'power', 'craftsman'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'red_support',cost:1}],
-                                                                    []);
-        buildings['space-red_factory']      = new PoweredBuilding(  'space-red_factory',
-                                                                    ['space', 'red', 'power', 'money', 'alloy', 'polymer', 'nano_tube'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:3},{res:resources.Helium_3,cost:1}],
-                                                                    []);
-        buildings['space-biodome']          = new PoweredBuilding(  'space-biodome',
-                                                                    ['space', 'red', 'food', 'power'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:'red_support',cost:1}],
-                                                                    [{res:resources.Food,cost:0}]); //TODO Create function to find food
-        buildings['space-exotic_lab']       = new PoweredBuilding(  'space-exotic_lab',
-                                                                    ['space', 'red', 'knowledge', 'power', 'elerium'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:'red_support',cost:1}],
-                                                                    []);
-        buildings['space-ziggurat']         = new Building(         'space-ziggurat',
-                                                                    ['space', 'red'],
-                                                                    false, -1, 3);
-        buildings['space-space_barracks']   = new Building(         'space-space_barracks',
-                                                                    ['space', 'red', 'army'],
-                                                                    false, -1, 0);
-        buildings['space-hell_mission']     = new Building(         'space-hell_mission',
-                                                                    ['space', 'hell', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-geothermal']       = new PoweredBuilding(  'space-geothermal',
-                                                                    ['space', 'hell', 'power', 'oil'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:resources.Helium_3,cost:0.5}],
-                                                                    [{res:'electricity',cost:8}]);
-        buildings['space-swarm_plant']      = new Building(         'space-swarm_plant',
-                                                                    ['space', 'hell', 'swarm'],
-                                                                    false, -1, 0);
-        buildings['space-sun_mission']      = new Building(         'space-sun_mission',
-                                                                    ['space', 'sun', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-swarm_control']    = new PoweredBuilding(  'space-swarm_control',
-                                                                    ['space', 'sun', 'power', 'swarm'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [],
-                                                                    [{res:'swarm_support',cost:researched('tech-swarm_control_ai') ? 6 : 4}]); //TODO This changes to 6 after tech-swarm_control_ai
-        buildings['space-swarm_satellite']  = new PoweredBuilding(  'space-swarm_satellite',
-                                                                    ['space', 'sun', 'power', 'swarm'],
-                                                                    false, -1, 3,
-                                                                    9,
-                                                                    [{res:'swarm_support',cost:1}],
-                                                                    [{res:'electricity',cost:1}]);
-        buildings['space-gas_mission']      = new Building(         'space-gas_mission',
-                                                                    ['space', 'gas', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-gas_mining']       = new PoweredBuilding(  'space-gas_mining',
-                                                                    ['space', 'gas', 'power', 'helium_3'],
-                                                                    false, -1, 4,
-                                                                    9,
-                                                                    [{res:'electricity',cost:2}],
-                                                                    [{res:resources.Helium_3,cost:researched('tech-helium_attractor') ? 0.65 : 0.5}]); //TODO this changes to 0.65 after tech-helium_attractor
-        buildings['space-gas_storage']      = new Building(         'space-gas_storage',
-                                                                    ['space', 'gas', 'helium_3'],
-                                                                    false, -1, 2);
-        buildings['space-star_dock']        = new Building(         'space-star_dock',
-                                                                    ['space', 'gas'],
-                                                                    false, 1, 6,
-                                                                    loadSpaceDockBuildings);
-        buildings['spcdock-probes']         = new SpaceDockBuilding('spcdock-probes',
-                                                                    ['space', 'spcdock'],
-                                                                    false, 10, 5);
-        buildings['spcdock-seeder']         = new SpaceDockBuilding('spcdock-seeder',
-                                                                    ['space', 'spcdock'],
-                                                                    false, 100, 30);
-        buildings['space-gas_moon_mission'] = new Building(         'space-gas_moon_mission',
-                                                                    ['space', 'gas_moon', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-outpost']          = new PoweredBuilding(  'space-outpost',
-                                                                    ['space', 'gas_moon', 'power', 'oil'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:3},{res:resources.Oil,cost:2}],
-                                                                    [{res:resources.Neutronium,cost:0.025}]);
-        buildings['space-drone']            = new Building(         'space-drone',
-                                                                    ['space', 'gas_moon'],
-                                                                    false, -1, 0);
-        buildings['space-oil_extractor']    = new PoweredBuilding(  'space-oil_extractor',
-                                                                    ['space', 'gas_moon', 'power', 'oil'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:'electricity',cost:1}],
-                                                                    [{res:resources.Oil,cost:0.4}]); //TODO this changes by oil research
-        buildings['space-belt_mission']     = new Building(         'space-belt_mission',
-                                                                    ['space', 'belt', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-space_station']    = new PoweredBuilding(  'space-space_station',
-                                                                    ['space', 'belt', 'power', 'helium_3', 'food'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:3},{res:resources.Helium_3,cost:2.5},{res:resources.Food,cost:20}],
-                                                                    [{res:'belt_support',cost:3}]);
-        buildings['space-elerium_ship']     = new PoweredBuilding(  'space-elerium_ship',
-                                                                    ['space', 'belt', 'power', 'elerium'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'belt_support',cost:2}],
-                                                                    [{res:resources.Elerium,cost:0.005}]); //TODO this changes by tech-laser_mining to 0.0075
-        buildings['space-iridium_ship']     = new PoweredBuilding(  'space-iridium_ship',
-                                                                    ['space', 'belt', 'power', 'iridium'],
-                                                                    false, -1, 2,
-                                                                    9,
-                                                                    [{res:'belt_support',cost:1}],
-                                                                    [{res:resources.Iridium,cost:0.055}]); //TODO this changes by tech-laser_mining to 0.08
-        buildings['space-iron_ship']        = new PoweredBuilding(  'space-iron_ship',
-                                                                    ['space', 'belt', 'power', 'iron', 'swarm'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:'belt_support',cost:1}],
-                                                                    [{res:resources.Iron,cost:2}]); //TODO this changes by tech-laser_mining to 3
-        buildings['space-dwarf_mission']    = new Building(         'space-dwarf_mission',
-                                                                    ['space', 'dwarf', 'mission'],
-                                                                    false, -1, 10);
-        buildings['space-elerium_contain']  = new PoweredBuilding(  'space-elerium_contain',
-                                                                    ['space', 'dwarf', 'power', 'elerium'],
-                                                                    false, -1, 1,
-                                                                    9,
-                                                                    [{res:'electricity',cost:6}],
-                                                                    []);
-        buildings['space-e_reactor']        = new PoweredBuilding(  'space-e_reactor',
-                                                                    ['space', 'dwarf', 'power', 'elerium'],
-                                                                    false, -1, 0,
-                                                                    9,
-                                                                    [{res:resources.Elerium,cost:0.05}], //TODO This might be wierd but I don't know
-                                                                    [{res:'electricity',cost:25}]);
-        buildings['space-world_collider']   = new Building(         'space-world_collider',
-                                                                    ['space', 'dwarf'],
-                                                                    false, 1859, 0);
-        buildings['space-world_controller'] = new PoweredBuilding(  'space-world_controller',
-                                                                    ['space', 'dwarf', 'power', 'knowledge'],
-                                                                    false, 1, 0,
-                                                                    9,
-                                                                    [{res:'electricity',cost:20}],
-                                                                    []);
+        // City
+        for (var action in window.game.actions.city) {
+            // Remove manual buttons
+            if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter') {continue;}
+            buildings['city-'+action] = new Building('city-'+action, ['city']);
+        }
+        // Space
+        for (var location in window.game.actions.space) {
+            for (var action in window.game.actions.space[location]) {
+                // Remove info
+                if (action == 'info') {continue;}
+                buildings['space-'+action] = new Building('space-'+action, ['space', location]);
+            }
+        }
+        // Star Dock
+        for (var action in window.game.actions.starDock) {
+            // Remove reset actions
+            if (action == 'prep_ship' || action == 'launch_ship') {continue;}
+            buildings['spcdock-'+action] = new Building('spcdock-'+action, ['starDock']);
+        }
+        console.log(buildings);
     }
-
     class Research extends Action {
-        constructor(id, tags, priority) {
-            super(id, tags, priority);
+        constructor(id, loc) {
+            super(id, loc);
         }
 
         get researched() {
@@ -1359,745 +805,24 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
             return false;
         }
-
     }
-    var researches = [];
+    var researches = {};
     function loadResearches() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
-        researches['tech-club']                         = new Research(     'tech-club',
-                                                                            ['food'],
-                                                                            1);
-        researches['tech-bone_tools']                   = new Research(     'tech-bone_tools',
-                                                                            ['stone'],
-                                                                            1);
-        researches['tech-sundial']                      = new Research(     'tech-sundial',
-                                                                            ['knowledge'],
-                                                                            5);
-        researches['tech-housing']                      = new Research(     'tech-housing',
-                                                                            ['citizen'],
-                                                                            5);
-        researches['tech-cottage']                      = new Research(     'tech-cottage',
-                                                                            ['citizen'],
-                                                                            0);
-        researches['tech-apartment']                    = new Research(     'tech-apartment',
-                                                                            ['citzen', 'power'],
-                                                                            5);
-        researches['tech-steel_beams']                  = new Research(     'tech-steel_beams',
-                                                                            ['citizen'],
-                                                                            1);
-        researches['tech-mythril_beams']                = new Research(     'tech-mythril_beams',
-                                                                            ['citizen'],
-                                                                            1);
-        researches['tech-neutronium_walls']             = new Research(     'tech-neutronium_walls',
-                                                                            ['citizen'],
-                                                                            1);
-        researches['tech-aphrodisiac']                  = new Research(     'tech-aphrodisiac',
-                                                                            ['citizen'],
-                                                                            0);
-        researches['tech-smokehouse']                   = new Research(     'tech-smokehouse',
-                                                                            ['food'],
-                                                                            1);
-        researches['tech-lodge']                        = new Research(     'tech-lodge',
-                                                                            ['citizen'],
-                                                                            1);
-        researches['tech-soul_well']                    = new Research(     'tech-soul_well',
-                                                                            [],
-                                                                            1);
-        researches['tech-agriculture']                  = new Research(     'tech-agriculture',
-                                                                            ['food'],
-                                                                            0);
-        researches['tech-farm_house']                   = new Research(     'tech-farm_house',
-                                                                            ['food', 'citizen'],
-                                                                            5);
-        researches['tech-irrigation']                   = new Research(     'tech-irrigation',
-                                                                            ['food'],
-                                                                            1);
-        researches['tech-silo']                         = new Research(     'tech-silo',
-                                                                            ['food'],
-                                                                            0);
-        researches['tech-mill']                         = new Research(     'tech-mill',
-                                                                            ['food'],
-                                                                            1);
-        researches['tech-windmill']                     = new Research(     'tech-windmill',
-                                                                            ['food'],
-                                                                            1);
-        researches['tech-windturbine']                  = new Research(     'tech-windturbine',
-                                                                            ['food', 'power'],
-                                                                            5);
-        researches['tech-wind_plant']                   = new Research(     'tech-wind_plant',
-                                                                            ['food'],
-                                                                            1);
-        researches['tech-evil_wind_plant']              = new Research(     'tech-evil_wind_plant',
-                                                                            [],
-                                                                            0);
-        researches['tech-gmfood']                       = new Research(     'tech-gmfood',
-                                                                            ['food'],
-                                                                            0);
-        researches['tech-foundry']                      = new Research(     'tech-foundry',
-                                                                            ['craft'],
-                                                                            7);
-        researches['tech-artisans']                     = new Research(     'tech-artisans',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-apprentices']                  = new Research(     'tech-apprentices',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-carpentry']                    = new Research(     'tech-carpentry',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-demonic_craftsman']            = new Research(     'tech-demonic_craftsman',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-master_craftsman']             = new Research(     'tech-master_craftsman',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-brickworks']                   = new Research(     'tech-brickworks',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-machinery']                    = new Research(     'tech-machinery',
-                                                                            ['factory'],
-                                                                            4);
-        researches['tech-cnc_machine']                  = new Research(     'tech-cnc_machine',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-vocational_training']          = new Research(     'tech-vocational_training',
-                                                                            ['craft'],
-                                                                            4);
-        researches['tech-assembly_line']                = new Research(     'tech-assembly_line',
-                                                                            ['factory'],
-                                                                            4);
-        researches['tech-automation']                   = new Research(     'tech-automation',
-                                                                            ['factory'],
-                                                                            4);
-        researches['tech-laser_cutters']                = new Research(     'tech-laser_cutters',
-                                                                            ['craft'],
-                                                                            3);
-        researches['tech-theatre']                      = new Research(     'tech-theatre',
-                                                                            ['morale'],
-                                                                            7);
-        researches['tech-playwright']                   = new Research(     'tech-playwright',
-                                                                            ['morale'],
-                                                                            6);
-        researches['tech-magic']                        = new Research(     'tech-magic',
-                                                                            ['morale'],
-                                                                            7);
-        researches['tech-radio']                        = new Research(     'tech-radio',
-                                                                            ['morale'],
-                                                                            7);
-        researches['tech-tv']                           = new Research(     'tech-tv',
-                                                                            ['morale'],
-                                                                            7);
-        researches['tech-casino']                       = new Research(     'tech-casino',
-                                                                            ['casino', 'power'],
-                                                                            0);
-        researches['tech-dazzle']                       = new Research(     'tech-dazzle',
-                                                                            ['casino'],
-                                                                            0);
-        researches['tech-casino_vault']                 = new Research(     'tech-casino_vault',
-                                                                            ['casino'],
-                                                                            0);
-        researches['tech-mining']                       = new Research(     'tech-mining',
-                                                                            ['mine'],
-                                                                            7);
-        researches['tech-bayer_process']                = new Research(     'tech-bayer_process',
-                                                                            ['aluminum'],
-                                                                            10);
-        researches['tech-smelting']                     = new Research(     'tech-smelting',
-                                                                            ['mine'],
-                                                                            2);
-        researches['tech-steel']                        = new Research(     'tech-steel',
-                                                                            ['smelter', 'steel'],
-                                                                            8);
-        researches['tech-blast_furnace']                = new Research(     'tech-blast_furnace',
-                                                                            ['smelter', 'iron'],
-                                                                            2);
-        researches['tech-bessemer_process']             = new Research(     'tech-bessemer_process',
-                                                                            ['smelter', 'steel'],
-                                                                            2);
-        researches['tech-oxygen_converter']             = new Research(     'tech-oxygen_converter',
-                                                                            ['smelter', 'steel'],
-                                                                            2);
-        researches['tech-electric_arc_furnace']         = new Research(     'tech-electric_arc_furnace',
-                                                                            ['copper'],
-                                                                            2);
-        researches['tech-rotary_kiln']                  = new Research(     'tech-rotary_kiln',
-                                                                            ['copper'],
-                                                                            2);
-        researches['tech-metal_working']                = new Research(     'tech-metal_working',
-                                                                            ['copper'],
-                                                                            7);
-        researches['tech-iron_mining']                  = new Research(     'tech-iron_mining',
-                                                                            ['iron'],
-                                                                            7);
-        researches['tech-coal_mining']                  = new Research(     'tech-coal_mining',
-                                                                            ['coal'],
-                                                                            7);
-        researches['tech-storage']                      = new Research(     'tech-storage',
-                                                                            ['storage'],
-                                                                            5);
-        researches['tech-reinforced_shed']              = new Research(     'tech-reinforced_shed',
-                                                                            ['storage'],
-                                                                            5);
-        researches['tech-barns']                        = new Research(     'tech-barns',
-                                                                            ['storage'],
-                                                                            5);
-        researches['tech-warehouse']                    = new Research(     'tech-warehouse',
-                                                                            ['storage'],
-                                                                            5);
-        researches['tech-cameras']                      = new Research(     'tech-cameras',
-                                                                            ['storage'],
-                                                                            5);
-        researches['tech-pocket_dimensions']            = new Research(     'tech-pocket_dimensions',
-                                                                            ['storage'],
-                                                                            5);
-        researches['tech-containerization']             = new Research(     'tech-containerization',
-                                                                            ['storage', 'crate'],
-                                                                            5);
-        researches['tech-reinforced_crates']            = new Research(     'tech-reinforced_crates',
-                                                                            ['storage', 'crate'],
-                                                                            5);
-        researches['tech-cranes']                       = new Research(     'tech-cranes',
-                                                                            ['storage', 'crate'],
-                                                                            5);
-        researches['tech-titanium_crates']              = new Research(     'tech-titanium_crates',
-                                                                            ['storage', 'crate'],
-                                                                            5);
-        researches['tech-mythril_crates']               = new Research(     'tech-mythril_crates',
-                                                                            ['storage', 'crate'],
-                                                                            5);
-        researches['tech-steel_containers']             = new Research(     'tech-steel_containers',
-                                                                            ['storage', 'container'],
-                                                                            5);
-        researches['tech-gantry_crane']                 = new Research(     'tech-gantry_crane',
-                                                                            ['storage', 'container'],
-                                                                            5);
-        researches['tech-alloy_containers']             = new Research(     'tech-alloy_containers',
-                                                                            ['storage', 'container'],
-                                                                            5);
-        researches['tech-mythril_containers']           = new Research(     'tech-mythril_containers',
-                                                                            ['storage', 'container'],
-                                                                            5);
-        researches['tech-currency']                     = new Research(     'tech-currency',
-                                                                            ['money'],
-                                                                            10);
-        researches['tech-market']                       = new Research(     'tech-market',
-                                                                            ['money', 'market'],
-                                                                            3);
-        researches['tech-tax_rates']                    = new Research(     'tech-tax_rates',
-                                                                            ['money', 'tax'],
-                                                                            1);
-        researches['tech-large_trades']                 = new Research(     'tech-large_trades',
-                                                                            ['money', 'market'],
-                                                                            0);
-        researches['tech-corruption']                   = new Research(     'tech-corruption',
-                                                                            ['money', 'tax'],
-                                                                            1);
-        researches['tech-massive_trades']               = new Research(     'tech-massive_trades',
-                                                                            ['money', 'market'],
-                                                                            0);
-        researches['tech-trade']                        = new Research(     'tech-trade',
-                                                                            ['trade'],
-                                                                            7);
-        researches['tech-diplomacy']                    = new Research(     'tech-diplomacy',
-                                                                            ['trade'],
-                                                                            3);
-        researches['tech-freight']                      = new Research(     'tech-freight',
-                                                                            ['trade'],
-                                                                            3);
-        researches['tech-wharf']                        = new Research(     'tech-wharf',
-                                                                            ['trade', 'storage', 'crate', 'container'],
-                                                                            1);
-        researches['tech-banking']                      = new Research(     'tech-banking',
-                                                                            ['money'],
-                                                                            1);
-        researches['tech-investing']                    = new Research(     'tech-investing',
-                                                                            ['money'],
-                                                                            5);
-        researches['tech-vault']                        = new Research(     'tech-vault',
-                                                                            ['money'],
-                                                                            2);
-        researches['tech-bonds']                        = new Research(     'tech-bonds',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-steel_vault']                  = new Research(     'tech-steel_vault',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-eebonds']                      = new Research(     'tech-eebonds',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-swiss_banking']                = new Research(     'tech-swiss_banking',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-safety_deposit']               = new Research(     'tech-safety_deposit',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-stock_market']                 = new Research(     'tech-stock_market',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-hedge_funds']                  = new Research(     'tech-hedge_funds',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-four_oh_one']                  = new Research(     'tech-four_oh_one',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-mythril_vault']                = new Research(     'tech-mythril_vault',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-neutronium_vault']             = new Research(     'tech-neutronium_vault',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-home_safe']                    = new Research(     'tech-home_safe',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-fire_proof_safe']              = new Research(     'tech-fire_proof_safe',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-monument']                     = new Research(     'tech-monument',
-                                                                            ['morale'],
-                                                                            0);
-        researches['tech-tourism']                      = new Research(     'tech-tourism',
-                                                                            ['money'],
-                                                                            0);
-        researches['tech-science']                      = new Research(     'tech-science',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-library']                      = new Research(     'tech-library',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-thesis']                       = new Research(     'tech-thesis',
-                                                                            ['knowledge'],
-                                                                            9);
-        researches['tech-research_grant']               = new Research(     'tech-research_grant',
-                                                                            ['knowledge'],
-                                                                            9);
-        researches['tech-scientific_journal']           = new Research(     'tech-scientific_journal',
-                                                                            ['knowledge'],
-                                                                            9);
-        researches['tech-adjunct_professor']            = new Research(     'tech-adjunct_professor',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-tesla_coil']                   = new Research(     'tech-tesla_coil',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-internet']                     = new Research(     'tech-internet',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-observatory']                  = new Research(     'tech-observatory',
-                                                                            ['knowledge'],
-                                                                            8);
-        researches['tech-world_collider']               = new Research(     'tech-world_collider',
-                                                                            [],
-                                                                            5);
-        researches['tech-bioscience']                   = new Research(     'tech-bioscience',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-genetics']                     = new Research(     'tech-genetics',
-                                                                            ['gene'],
-                                                                            0);
-        researches['tech-crispr']                       = new Research(     'tech-crispr',
-                                                                            ['gene'],
-                                                                            0);
-        researches['tech-shotgun_sequencing']           = new Research(     'tech-shotgun_sequencing',
-                                                                            ['gene'],
-                                                                            0);
-        researches['tech-de_novo_sequencing']           = new Research(     'tech-de_novo_sequencing',
-                                                                            ['gene'],
-                                                                            0);
-        researches['tech-dna_sequencer']                = new Research(     'tech-dna_sequencer',
-                                                                            ['gene'],
-                                                                            0);
-        researches['tech-mad_science']                  = new Research(     'tech-mad_science',
-                                                                            ['knowledge'],
-                                                                            10);
-        researches['tech-electricity']                  = new Research(     'tech-electricity',
-                                                                            ['power'],
-                                                                            9);
-        researches['tech-industrialization']            = new Research(     'tech-industrialization',
-                                                                            [],
-                                                                            9);
-        researches['tech-electronics']                  = new Research(     'tech-electronics',
-                                                                            ['power'],
-                                                                            9);
-        researches['tech-fission']                      = new Research(     'tech-fission',
-                                                                            ['power', 'uranium'],
-                                                                            7);
-        researches['tech-arpa']                         = new Research(     'tech-arpa',
-                                                                            [],
-                                                                            5);
-        researches['tech-rocketry']                     = new Research(     'tech-rocketry',
-                                                                            [],
-                                                                            9);
-        researches['tech-robotics']                     = new Research(     'tech-robotics',
-                                                                            [],
-                                                                            9);
-        researches['tech-lasers']                       = new Research(     'tech-lasers',
-                                                                            [],
-                                                                            9);
-        researches['tech-artifical_intelligence']       = new Research(     'tech-artifical_intelligence',
-                                                                            [],
-                                                                            9);
-        researches['tech-quantum_computing']            = new Research(     'tech-quantum_computing',
-                                                                            [],
-                                                                            9);
-        researches['tech-thermomechanics']              = new Research(     'tech-thermomechanics',
-                                                                            ['factory', 'alloy'],
-                                                                            5);
-        researches['tech-quantum_manufacturing']        = new Research(     'tech-quantum_manufacturing',
-                                                                            ['factory'],
-                                                                            5);
-        researches['tech-worker_drone']                 = new Research(     'tech-worker_drone',
-                                                                            ['neutronium'],
-                                                                            10);
-        researches['tech-uranium']                      = new Research(     'tech-uranium',
-                                                                            ['uranium'],
-                                                                            7);
-        researches['tech-uranium_storage']              = new Research(     'tech-uranium_storage',
-                                                                            ['uranium'],
-                                                                            6);
-        researches['tech-uranium_ash']                  = new Research(     'tech-uranium_ash',
-                                                                            ['uranium'],
-                                                                            6);
-        researches['tech-breeder_reactor']              = new Research(     'tech-breeder_reactor',
-                                                                            ['power'],
-                                                                            4);
-        researches['tech-mine_conveyor']                = new Research(     'tech-mine_conveyor',
-                                                                            ['mine', 'power'],
-                                                                            4);
-        researches['tech-oil_well']                     = new Research(     'tech-oil_well',
-                                                                            ['oil'],
-                                                                            5);
-        researches['tech-oil_depot']                    = new Research(     'tech-oil_depot',
-                                                                            ['oil'],
-                                                                            5);
-        researches['tech-oil_power']                    = new Research(     'tech-oil_power',
-                                                                            ['oil', 'power'],
-                                                                            7);
-        researches['tech-titanium_drills']              = new Research(     'tech-titanium_drills',
-                                                                            ['oil'],
-                                                                            5);
-        researches['tech-alloy_drills']                 = new Research(     'tech-alloy_drills',
-                                                                            ['oil'],
-                                                                            4);
-        researches['tech-fracking']                     = new Research(     'tech-fracking',
-                                                                            ['oil'],
-                                                                            4);
-        researches['tech-mythril_drills']               = new Research(     'tech-mythril_drills',
-                                                                            ['oil'],
-                                                                            2);
-        researches['tech-mass_driver']                  = new Research(     'tech-mass_driver',
-                                                                            ['power'],
-                                                                            0);
-        researches['tech-polymer']                      = new Research(     'tech-polymer',
-                                                                            ['factory', 'polymer'],
-                                                                            10);
-        researches['tech-fluidized_bed_reactor']        = new Research(     'tech-fluidized_bed_reactor',
-                                                                            ['factory', 'polymer'],
-                                                                            4);
-        researches['tech-nano_tubes']                   = new Research(     'tech-nano_tubes',
-                                                                            ['factory', 'nano_tubes'],
-                                                                            5);
-        researches['tech-stone_axe']                    = new Research(     'tech-stone_axe',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-copper_axes']                  = new Research(     'tech-copper_axes',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-iron_saw']                     = new Research(     'tech-iron_saw',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-steel_saw']                    = new Research(     'tech-steel_saw',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-iron_axes']                    = new Research(     'tech-iron_axes',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-steel_axes']                   = new Research(     'tech-steel_axes',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-titanium_axes']                = new Research(     'tech-titanium_axes',
-                                                                            ['lumber'],
-                                                                            1);
-        researches['tech-copper_sledgehammer']          = new Research(     'tech-copper_sledgehammer',
-                                                                            ['stone'],
-                                                                            1);
-        researches['tech-iron_sledgehammer']            = new Research(     'tech-iron_sledgehammer',
-                                                                            ['stone'],
-                                                                            1);
-        researches['tech-steel_sledgehammer']           = new Research(     'tech-steel_sledgehammer',
-                                                                            ['stone'],
-                                                                            1);
-        researches['tech-titanium_sledgehammer']        = new Research(     'tech-titanium_sledgehammer',
-                                                                            ['stone'],
-                                                                            1);
-        researches['tech-copper_pickaxe']               = new Research(     'tech-copper_pickaxe',
-                                                                            ['mine'],
-                                                                            2);
-        researches['tech-iron_pickaxe']                 = new Research(     'tech-iron_pickaxe',
-                                                                            ['mine'],
-                                                                            2);
-        researches['tech-steel_pickaxe']                = new Research(     'tech-steel_pickaxe',
-                                                                            ['mine'],
-                                                                            2);
-        researches['tech-jackhammer']                   = new Research(     'tech-jackhammer',
-                                                                            ['mine'],
-                                                                            2);
-        researches['tech-jackhammer_mk2']               = new Research(     'tech-jackhammer_mk2',
-                                                                            ['mine'],
-                                                                            2);
-        researches['tech-copper_hoe']                   = new Research(     'tech-copper_hoe',
-                                                                            ['food'],
-                                                                            2);
-        researches['tech-iron_hoe']                     = new Research(     'tech-iron_hoe',
-                                                                            ['food'],
-                                                                            2);
-        researches['tech-steel_hoe']                    = new Research(     'tech-steel_hoe',
-                                                                            ['food'],
-                                                                            2);
-        researches['tech-titanium_hoe']                 = new Research(     'tech-titanium_hoe',
-                                                                            ['food'],
-                                                                            2);
-        researches['tech-slave_pens']                   = new Research(     'tech-slave_pens',
-                                                                            ['slave'],
-                                                                            5);
-        researches['tech-garrison']                     = new Research(     'tech-garrison',
-                                                                            ['army'],
-                                                                            9);
-        researches['tech-mercs']                        = new Research(     'tech-mercs',
-                                                                            ['army', 'money'],
-                                                                            0);
-        researches['tech-signing_bonus']                = new Research(     'tech-signing_bonus',
-                                                                            ['army', 'money'],
-                                                                            0);
-        researches['tech-hospital']                     = new Research(     'tech-hospital',
-                                                                            ['army'],
-                                                                            9);
-        researches['tech-boot_camp']                    = new Research(     'tech-boot_camp',
-                                                                            ['army'],
-                                                                            7);
-        researches['tech-bows']                         = new Research(     'tech-bows',
-                                                                            ['army'],
-                                                                            2);
-        researches['tech-flintlock_rifle']              = new Research(     'tech-flintlock_rifle',
-                                                                            ['army'],
-                                                                            2);
-        researches['tech-machine_gun']                  = new Research(     'tech-machine_gun',
-                                                                            ['army'],
-                                                                            2);
-        researches['tech-bunk_beds']                    = new Research(     'tech-bunk_beds',
-                                                                            ['army'],
-                                                                            10);
-        researches['tech-rail_guns']                    = new Research(     'tech-rail_guns',
-                                                                            ['army'],
-                                                                            1);
-        researches['tech-laser_rifles']                 = new Research(     'tech-laser_rifles',
-                                                                            ['army'],
-                                                                            1);
-        researches['tech-space_marines']                = new Research(     'tech-space_marines',
-                                                                            ['army'],
-                                                                            0);
-        researches['tech-armor']                        = new Research(     'tech-armor',
-                                                                            ['army'],
-                                                                            2);
-        researches['tech-plate_armor']                  = new Research(     'tech-plate_armor',
-                                                                            ['army'],
-                                                                            2);
-        researches['tech-kevlar']                       = new Research(     'tech-kevlar',
-                                                                            ['army'],
-                                                                            2);
-        researches['tech-black_powder']                 = new Research(     'tech-black_powder',
-                                                                            [],
-                                                                            0);
-        researches['tech-dynamite']                     = new Research(     'tech-dynamite',
-                                                                            ['mine'],
-                                                                            3);
-        researches['tech-anfo']                         = new Research(     'tech-anfo',
-                                                                            ['mine'],
-                                                                            3);
-        researches['tech-mad']                          = new Research(     'tech-mad',
-                                                                            [],
-                                                                            10);
-        researches['tech-cement']                       = new Research(     'tech-cement',
-                                                                            ['cement'],
-                                                                            5);
-        researches['tech-rebar']                        = new Research(     'tech-rebar',
-                                                                            ['cement'],
-                                                                            4);
-        researches['tech-steel_rebar']                  = new Research(     'tech-steel_rebar',
-                                                                            ['cement'],
-                                                                            4);
-        researches['tech-portland_cement']              = new Research(     'tech-portland_cement',
-                                                                            ['cement'],
-                                                                            4);
-        researches['tech-screw_conveyor']               = new Research(     'tech-screw_conveyor',
-                                                                            ['cement', 'power'],
-                                                                            4);
-        researches['tech-hunter_process']               = new Research(     'tech-hunter_process',
-                                                                            ['smelter', 'titanium'],
-                                                                            9);
-        researches['tech-kroll_process']                = new Research(     'tech-kroll_process',
-                                                                            ['smelter', 'titanium'],
-                                                                            3);
-        researches['tech-cambridge_process']            = new Research(     'tech-cambridge_process',
-                                                                            ['smelter', 'titanium'],
-                                                                            9);
-        researches['tech-pynn_partical']                = new Research(     'tech-pynn_partical',
-                                                                            ['storage'],
-                                                                            8);
-        researches['tech-matter_compression']           = new Research(     'tech-matter_compression',
-                                                                            ['storage', 'container'],
-                                                                            7);
-        researches['tech-higgs_boson']                  = new Research(     'tech-higgs_boson',
-                                                                            ['storage'],
-                                                                            7);
-        researches['tech-dimensional_compression']      = new Research(     'tech-dimensional_compression',
-                                                                            ['storage', 'garage'],
-                                                                            5);
-        researches['tech-theology']                     = new Research(     'tech-theology',
-                                                                            ['religion'],
-                                                                            4);
-        researches['tech-fanaticism']                   = new Research(     'tech-fanaticism',
-                                                                            ['religion'],
-                                                                            4);
-        researches['tech-ancient_theology']             = new Research(     'tech-ancient_theology',
-                                                                            ['religion'],
-                                                                            4);
-        researches['tech-study']                        = new Research(     'tech-study',
-                                                                            ['religion'],
-                                                                            4);
-        researches['tech-deify']                        = new Research(     'tech-deify',
-                                                                            ['religion'],
-                                                                            4);
-        researches['tech-indoctrination']               = new Research(     'tech-indoctrination',
-                                                                            ['religion', 'knowledge'],
-                                                                            4);
-        researches['tech-missionary']                   = new Research(     'tech-missionary',
-                                                                            ['religion', 'trade'],
-                                                                            4);
-        researches['tech-zealotry']                     = new Research(     'tech-zealotry',
-                                                                            ['religion', 'army'],
-                                                                            4);
-        researches['tech-anthropology']                 = new Research(     'tech-anthropology',
-                                                                            ['religion'],
-                                                                            4);
-        researches['tech-mythology']                    = new Research(     'tech-mythology',
-                                                                            ['religion', 'knowledge'],
-                                                                            4);
-        researches['tech-archaeology']                  = new Research(     'tech-archaeology',
-                                                                            ['religion', 'knowledge'],
-                                                                            4);
-        researches['tech-merchandising']                = new Research(     'tech-merchandising',
-                                                                            ['religion', 'money', 'tax'],
-                                                                            0);
-        researches['tech-astrophysics']                 = new Research(     'tech-astrophysics',
-                                                                            ['space'],
-                                                                            5);
-        researches['tech-rover']                        = new Research(     'tech-rover',
-                                                                            ['space'],
-                                                                            10);
-        researches['tech-probes']                       = new Research(     'tech-probes',
-                                                                            ['space'],
-                                                                            10);
-        researches['tech-starcharts']                   = new Research(     'tech-starcharts',
-                                                                            ['space'],
-                                                                            5);
-        researches['tech-colonization']                 = new Research(     'tech-colonization',
-                                                                            ['space'],
-                                                                            10);
-        researches['tech-red_tower']                    = new Research(     'tech-red_tower',
-                                                                            ['space', 'power'],
-                                                                            3);
-        researches['tech-space_manufacturing']          = new Research(     'tech-space_manufacturing',
-                                                                            ['space', 'factory'],
-                                                                            3);
-        researches['tech-energy_lab']                   = new Research(     'tech-energy_lab',
-                                                                            ['space', 'knowledge', 'power'],
-                                                                            0);
-        researches['tech-dyson_sphere']                 = new Research(     'tech-dyson_sphere',
-                                                                            ['space', 'power', 'swarm'],
-                                                                            0);
-        researches['tech-dyson_swarm']                  = new Research(     'tech-dyson_swarm',
-                                                                            ['space', 'power', 'swarm'],
-                                                                            0);
-        researches['tech-swarm_plant']                  = new Research(     'tech-swarm_plant',
-                                                                            ['space', 'power', 'swarm'],
-                                                                            0);
-        researches['tech-space_sourced']                = new Research(     'tech-space_sourced',
-                                                                            ['space', 'swarm', 'iron'],
-                                                                            0);
-        researches['tech-swarm_plant_ai']               = new Research(     'tech-swarm_plant_ai',
-                                                                            ['space', 'power', 'swarm'],
-                                                                            0);
-        researches['tech-swarm_control_ai']             = new Research(     'tech-swarm_control_ai',
-                                                                            ['space', 'swarm', 'power'],
-                                                                            0);
-        researches['tech-quantum_swarm']                = new Research(     'tech-quantum_swarm',
-                                                                            ['space', 'swarm', 'power'],
-                                                                            0);
-        researches['tech-gps']                          = new Research(     'tech-gps',
-                                                                            ['space',' trade'],
-                                                                            0);
-        researches['tech-nav_beacon']                   = new Research(     'tech-nav_beacon',
-                                                                            ['space', 'power'],
-                                                                            3);
-        researches['tech-atmospheric_mining']           = new Research(     'tech-atmospheric_mining',
-                                                                            ['space', 'mine', 'helium_3'],
-                                                                            7);
-        researches['tech-helium_attractor']             = new Research(     'tech-helium_attractor',
-                                                                            ['space', 'helium_3'],
-                                                                            7);
-        researches['tech-zero_g_mining']                = new Research(     'tech-zero_g_mining',
-                                                                            ['space', 'mine'],
-                                                                            0);
-        researches['tech-elerium_mining']               = new Research(     'tech-elerium_mining',
-                                                                            ['space', 'elerium'],
-                                                                            10);
-        researches['tech-laser_mining']                 = new Research(     'tech-laser_mining',
-                                                                            ['space', 'mine'],
-                                                                            4);
-        researches['tech-elerium_tech']                 = new Research(     'tech-elerium_tech',
-                                                                            ['space', 'elerium'],
-                                                                            10);
-        researches['tech-elerium_reactor']              = new Research(     'tech-elerium_reactor',
-                                                                            ['space', 'elerium', 'power'],
-                                                                            0);
-        researches['tech-neutronium_housing']           = new Research(     'tech-neutronium_housing',
-                                                                            ['space', 'citizen'],
-                                                                            0);
-        researches['tech-unification']                  = new Research(     'tech-unification',
-                                                                            ['unification'],
-                                                                            10);
-        researches['tech-wc_conquest']                  = new Research(     'tech-wc_conquest',
-                                                                            ['unification'],
-                                                                            10);
-        researches['tech-wc_morale']                    = new Research(     'tech-wc_morale',
-                                                                            ['unification'],
-                                                                            10);
-        researches['tech-wc_money']                     = new Research(     'tech-wc_money',
-                                                                            ['unification'],
-                                                                            10);
-        researches['tech-wc_reject']                    = new Research(     'tech-wc_reject',
-                                                                            ['unification'],
-                                                                            10);
-        researches['tech-genesis']                      = new Research(     'tech-genesis',
-                                                                            ['space'],
-                                                                            10);
-        researches['tech-star_dock']                    = new Research(     'tech-star_dock',
-                                                                            ['space'],
-                                                                            10);
-        researches['tech-interstellar']                 = new Research(     'tech-interstellar',
-                                                                            ['space'],
-                                                                            5);
-        researches['tech-genesis_ship']                 = new Research(     'tech-genesis_ship',
-                                                                            ['space'],
-                                                                            10);
-        researches['tech-genetic_decay']                = new Research(     'tech-genetic_decay',
-                                                                            ['gene'],
-                                                                            10);
+        // Tech
+        for (var action in window.game.actions.tech) {
+            // Because tech-exotic_lab has a different key than id
+            if (action == "exotic_lab") {
+                researches['tech-energy_lab'] = new Research('tech-energy_lab', ['tech']);
+                continue;
+            }
+            researches['tech-'+action] = new Research('tech-'+action, ['tech']);
+        }
+        // Space
     }
-
     class ArpaAction extends Action {
-        constructor(id, tags, priority, res) {
-            super(id, tags, priority);
+        constructor(id, res) {
+            super(id, ['arpa']);
             this.res = res;
         }
 
@@ -2105,32 +830,28 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             return document.querySelector('#arpa'+this.id+' > .head > .desc');
         }
         get btn() {
-            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x10');
+            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x25');
         }
         get rankLabel() {
             return document.querySelector('#arpa'+this.id+' > .head > .rank');
         }
 
-        get enabled() {
-            return settings.arpa[this.id];
+        get name() {
+            if (this.label === null) {
+                return this.id;
+            }
+            return this.label.innerText;
         }
 
         get rank() {
-            if (this.rankLabel !== null) {
-                let rankStr = this.rankLabel.innerText;
-                let reg = /Level - ([\d]+)/.exec(rankStr);
-                return parseInt(reg[1]);
-            } else {
-                console.log("Error:", this.id, "Rank");
-                return -1;
-            }
+            return window.game.global.arpa[this.id].rank
         }
 
         getResDep(resid) {
             if (this.res === null) {
                 return null;
             }
-            return this.res[resid.toLowerCase()] * (1.05 ** this.rank) / 10;
+            return this.res[resid] * (1.05 ** this.rank) / 4;
         }
 
         click() {
@@ -2147,61 +868,54 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     function loadArpas() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         arpas.lhc = new ArpaAction('lhc',
-                                   ['arpa'],
-                                   5,
-                                   {money:2500000,
-                                   knowledge:500000,
-                                   copper:125000,
-                                   cement:250000,
-                                   steel:187500,
-                                   titanium:50000,
-                                   polymer:12000});
+                                   {Money:2500000,
+                                   Knowledge:500000,
+                                   Copper:125000,
+                                   Cement:250000,
+                                   Steel:187500,
+                                   Titanium:50000,
+                                   Polymer:12000});
         arpas.stock_exchange = new ArpaAction('stock_exchange',
-                                              ['arpa'],
-                                              5,
-                                              {money:3000000,
-                                               plywood:25000,
-                                               brick:20000,
-                                               wrought_Iron:10000});
+                                              {Money:3000000,
+                                               Plywood:25000,
+                                               Brick:20000,
+                                               Wrought_Iron:10000});
         arpas.launch_facility = new ArpaAction('launch_facility',
-                                        ['arpa'],
-                                        10,
-                                        {money:2000000,
-                                        knowledge:500000,
-                                        cement:150000,
-                                        oil:20000,
-                                        sheet_metal:15000,
-                                        alloy:25000});
+                                        {Money:2000000,
+                                        Knowledge:500000,
+                                        Cement:150000,
+                                        Oil:20000,
+                                        Sheet_Metal:15000,
+                                        Alloy:25000});
         arpas.monument = new ArpaAction('monument', ['arpa'], 5);
         if (arpas.monument.label !== null) {
             switch(arpas.monument.label.innerText) {
                 case "Obelisk":
                     {
-                        arpas.monument.res = {stone:1000000};
+                        arpas.monument.res = {Stone:1000000};
                         break;
                     }
                 case "Statue":
                     {
-                        arpas.monument.res = {aluminium:350000};
+                        arpas.monument.res = {Aluminium:350000};
                         break;
                     }
                 case "Sculpture":
                     {
-                        arpas.monument.res = {steel:300000};
+                        arpas.monument.res = {Steel:300000};
                         break;
                     }
                 case "Monolith":
                     {
-                        arpas.monument.res = {cement:300000};
+                        arpas.monument.res = {Cement:300000};
                         break;
                     }
             }
         }
     }
-
     class StorageAction extends Action {
-        constructor(id, tags, priority, res) {
-            super(id, tags, priority);
+        constructor(id, res) {
+            super(id, ['storage']);
             this.res = res;
         }
 
@@ -2209,7 +923,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             return document.querySelector('#cnt'+this.name+'s');
         }
         get btn() {
-            let div = document.querySelector('.'+this.id);
+            let div = document.querySelector('.'+this.id.toLowerCase());
             if (div === null) {return null;}
             return div.children[0];
         }
@@ -2255,139 +969,13 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     var storages = {};
     function loadStorages() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
-        storages.Crate = new StorageAction('crate',
-                                           ['storage'], 0,
+        storages.Crate = new StorageAction('Crate',
                                            (resources.Lumber.unlocked) ?
-                                           {plywood:100}
+                                           {Plywood:100}
                                            :
-                                           {stone:2000});
-        storages.Container = new StorageAction('container',
-                                               ['storage'], 0,
-                                               {steel:1250});
-    }
-
-    class SupportProducer {
-        constructor(name, id, type, produce, consume, unlock_research) {
-            this.name = name;
-            this.id = id;
-            this.type = type;
-            this.produce = produce;
-            this.consume = consume;
-            this.unlock_research = unlock_research;
-            this.numLabel = null;
-            this.decBtn = null;
-            this.incBtn = null;
-            try {
-                this.numLabel = $('#'+this.id+' > a > .count')[0];
-                this.decBtn = $('#'+this.id+' > .off')[0];
-                this.incBtn = $('#'+this.id+' > .on')[0];
-            } catch(e) {
-                //console.log("Error: Could not load support producer", this.name);
-            }
-        }
-
-        get unlocked() {
-            if (this.unlock_research !== undefined) {
-                return $('#'+this.id).length > 0 && researched(this.unlock_research);
-            }
-            return $('#'+this.id).length > 0;
-        }
-
-        get numTotal() {
-            return parseInt(this.numLabel.innerText);
-        }
-
-        get numOn() {
-            return parseInt(this.incBtn.innerText);
-        }
-
-        get numOff() {
-            return parseInt(this.decBtn.innerText);
-        }
-    }
-    var elecProducers = {}
-    function loadElecProducers() {
-        elecProducers.Coal = new SupportProducer("Coal Powerplant", "city-coal_power", "electricity", 5, [{res:resources.Coal,cost:0.35}]);
-        elecProducers.Oil = new SupportProducer("Oil Powerplant", "city-oil_power", "electricity", 6, [{res:resources.Oil,cost:0.65}]);
-        elecProducers.Wind = new SupportProducer("Wind Turbine", "city-mill", "electricity", 1, [{res:resources.Food,cost:0.1}], "tech-windturbine");
-        elecProducers.Fission = new SupportProducer("Fission Reactor", "city-fission_power", "electricity",
-                                                    researched('tech-breeder_reactor') ? 16 : 14,
-                                                    [{res:resources.Uranium, cost:0.1}]);
-    }
-
-    class SupportConsumer {
-        constructor(name, id, type, consume, priority, unlock_research) {
-            this.name = name;
-            this.id = id;
-            this.type = type;
-            this.consume = consume;
-            this.unlock_research = unlock_research;
-            let skey = 'sup-prio' + this.id;
-            if(settings.hasOwnProperty(skey)){
-                this.priority = settings[skey];
-            } else {
-                this.priority = priority;
-                settings[skey] = priority;
-            }
-            this.numLabel = null;
-            this.decBtn = null;
-            this.incBtn = null;
-            try {
-                this.numLabel = $('#'+this.id+' > a > .count')[0];
-                this.decBtn = $('#'+this.id+' > .off')[0];
-                this.incBtn = $('#'+this.id+' > .on')[0];
-            } catch(e) {
-                //console.log("Error: Could not load support consumer", this.name);
-            }
-        }
-
-        get unlocked() {
-            if (this.unlock_research !== undefined) {
-                return $('#'+this.id).length > 0 && researched(this.unlock_research);
-            }
-            return $('#'+this.id).length > 0;
-        }
-
-        get numTotal() {
-            return parseInt(this.numLabel.innerText);
-        }
-
-        get numOn() {
-            return parseInt(this.incBtn.innerText);
-        }
-
-        get numOff() {
-            return parseInt(this.decBtn.innerText);
-        }
-
-        lowerPriority() {
-            if (this.priority != 0) {
-                this.priority -= 1;
-                console.log("Lowering", this.name, "Priority", this.priority);
-                settings['sup-prio' + this.id] = this.priority;
-            }
-        }
-
-        higherPriority() {
-            if (this.priority != 99) {
-                this.priority += 1;
-                console.log("Increasing", this.name, "Priority", this.priority);
-                settings['sup-prio' + this.id] = this.priority;
-            }
-        }
-    }
-    var elecConsumers = {}
-    function loadElecConsumers() {
-        elecConsumers["Rock Quarry"] = new SupportConsumer("Rock Quarry", "city-rock_quarry", "electricity", 1, 1, "tech-mine_conveyor");
-        elecConsumers.Sawmill = new SupportConsumer("Sawmill", "city-sawmill", "electricity", 1, 1);
-        elecConsumers.Mine = new SupportConsumer("Mine", "city-mine", "electricity", 1, 2, "tech-mine_conveyor");
-        elecConsumers["Coal Mine"] = new SupportConsumer("Coal Mine", "city-coal_mine", "electricity", 1, 2, "tech-mine_conveyor");
-        elecConsumers["Cement Plant"] = new SupportConsumer("Cement Plant", "city-cement_plant", "electricity", 2, 3, "tech-screw_conveyor");
-        elecConsumers.Apartment = new SupportConsumer("Apartment", "city-apartment", "electricity", 1, 9);
-        elecConsumers.Factory = new SupportConsumer("Factory", "city-factory", "electricity", 3, 9);
-        elecConsumers.Wardenclyffe = new SupportConsumer("Wardenclyffe", "city-wardenclyffe", "electricity", 2, 9);
-        elecConsumers["Bioscience Lab"] = new SupportConsumer("Bioscience Lab", "city-biolab", "electricity", 2, 9);
-        elecConsumers["Moon Base"] = new SupportConsumer("Moon Base", "space-moon_base", "electricity", 4, 9);
+                                           {Stone:2000});
+        storages.Container = new StorageAction('Container',
+                                               {Steel:1250});
     }
 
     class Job {
@@ -2570,7 +1158,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         jobs.space_miner = new Job("space_miner", 7);
         jobs.craftsman = new Craftsman("craftsman", 9);
     }
-
     class CraftJob extends Job {
         constructor(id, priority) {
             super(id, priority);
@@ -2641,6 +1228,22 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
     }
 
+    function loadSmelter() {
+        if (!settings.hasOwnProperty('smelterSettings')) {settings.smelterSettings = {};}
+        if (!settings.smelterSettings.hasOwnProperty('interval')) {settings.smelterSettings.interval = 20;}
+        if (!settings.smelterSettings.hasOwnProperty('Iron')) {settings.smelterSettings.Iron = 2;}
+        if (!settings.smelterSettings.hasOwnProperty('Steel')) {settings.smelterSettings.Steel = 3;}
+    }
+    function loadFactory() {
+        if (!settings.hasOwnProperty('factorySettings')) {settings.factorySettings = {};}
+        if (!settings.factorySettings.hasOwnProperty('interval')) {settings.factorySettings.interval = 23;}
+        if (!settings.factorySettings.hasOwnProperty('Luxury_Goods')) {settings.factorySettings.Luxury_Goods = 0;}
+        if (!settings.factorySettings.hasOwnProperty('Alloy')) {settings.factorySettings.Alloy = 3;}
+        if (!settings.factorySettings.hasOwnProperty('Polymer')) {settings.factorySettings.Polymer = 3;}
+        if (!settings.factorySettings.hasOwnProperty('Nano_Tube')) {settings.factorySettings.Nano_Tube = 7;}
+        if (!settings.factorySettings.hasOwnProperty('Stanene')) {settings.factorySettings.Stanene = 4;}
+    }
+
     /***
     *
     * Settings
@@ -2648,6 +1251,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     ***/
 
     function loadSettings() {
+        console.log("Loading Settings");
         // Evolution
         loadEvolution();
         // Farm
@@ -2656,14 +1260,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         loadResources();
         // Storages
         loadStorages();
-        // Crafting
-        loadCraftableResources();
         // Buildings
         loadBuildings();
-        loadSpaceDockBuildings();
-        // Support
-        loadElecProducers();
-        loadElecConsumers();
         // Jobs
         loadJobs();
         loadCraftJobs();
@@ -2671,6 +1269,10 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         loadResearches();
         // ARPA
         loadArpas();
+        // Smelter
+        loadSmelter();
+        // Factory
+        loadFactory();
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
         }
@@ -2836,11 +1438,11 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     }
 
     function autoCraft() {
-        //console.log("AutoCrafting", craftableResources);
-        var x;
-        for (x in craftableResources) {
-            let craftableResource = craftableResources[x];
-            craftableResource.craft();
+        //console.log("AutoCrafting");
+        for (var x in resources) {
+            if (resources[x] instanceof CraftableResource) {
+                resources[x].craft();
+            }
         }
     }
 
@@ -3227,24 +1829,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }, 25);
     }
 
-    function autoBuild(){
-        for (var x in buildings) {
-            let building = buildings[x];
-            if (!building.unlocked) {
-                continue;
-            }
-            if (building.limit != -1 && building.numTotal >= building.limit) {
-                continue;
-            }
-            let btn = document.getElementById(building.id);
-            if (building.enabled && btn.className.indexOf('cna') < 0) {
-                btn.getElementsByTagName("a")[0].click();
-                if (settings.autoPrint){messageQueue("[AUTO-BUILD] " + btn.getElementsByTagName("a")[0].children[0].innerText, 'dark');}
-                return;
-            }
-        }
-    }
-
     function autoSmelter(limits) {
         // Don't Auto smelt if not unlocked
         if (!researched('tech-steel')) {return;}
@@ -3380,9 +1964,9 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 wantedLumber = wantedTotal;
             }
 
-            console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
+            //console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
             let pos_coal_rate = resources.Coal.temp_rate - wantedCoal*coalFuel - wantedSteel*steelCoalFuel;
-            console.log(pos_coal_rate, resources.Coal, resources.Coal.temp_rate, coalFuel, steelCoalFuel)
+            //console.log(pos_coal_rate, resources.Coal, resources.Coal.temp_rate, coalFuel, steelCoalFuel)
             while(pos_coal_rate < 0) {
                 console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel, "CR", pos_coal_rate);
                 // Try getting rid of coal
@@ -3419,7 +2003,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 }
                 pos_iron_rate = resources.Iron.temp_rate * (1 + ironPercent*wantedIron / 100) - wantedSteel*steelIronFuel;
             }
-            console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
+            //console.log("L", wantedLumber, "C", wantedCoal, "O", wantedOil, "I", wantedIron,"S", wantedSteel);
             // Removing all settings
             for (let i = 0;i < totalSmelters;i++) {
                 if (lumberDec !== null) {lumberDec.click();}
@@ -3507,19 +2091,13 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             let wantedPolymer = 0; let polymerPriority = 0;
             let wantedNanoTube = 0; let nanoTubePriority = 0;
             let totalPriority = 0;
-            // TODO: Bring priomultipliers into editable settings
-            let prioMultipliers = {
-                0:.1,
-                1:5,
-                2:4,
-                3:10
-            }
-            if (limits.Money !== null && limits.Money !== undefined) {luxPriority = limits.Money.priority * prioMultipliers[0]; totalPriority += luxPriority; }
-            if (limits.Alloy !== null && limits.Alloy !== undefined) {alloyPriority = limits.Alloy.priority * prioMultipliers[1]; totalPriority += alloyPriority;}
-            if (limits.Polymer !== null && limits.Polymer !== undefined) {polymerPriority = limits.Polymer.priority * prioMultipliers[2]; totalPriority += polymerPriority;}
-            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined) {nanoTubePriority = limits.Nano_Tube.priority * prioMultipliers[3]; totalPriority += nanoTubePriority;}
+            if (limits.Money !== null && limits.Money !== undefined) {luxPriority = limits.Money.priority * settings.factorySettings.Luxury_Goods; totalPriority += luxPriority; }
+            if (limits.Alloy !== null && limits.Alloy !== undefined) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
+            if (limits.Polymer !== null && limits.Polymer !== undefined) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
+            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
             //console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
             // Creating allocation list
+            let prioMultipliers = [settings.factorySettings.Luxury_Goods, settings.factorySettings.Alloy, settings.factorySettings.Polymer, settings.factorySettings.Nano_Tube];
             let allocation = [];
             for (let i = 0;i < totalFactories;i++) {
                 // Attempting to allocate
@@ -3952,33 +2530,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
     }
 
-    function autoResearch(){
-        let items = document.querySelectorAll('#tech .action');
-        for(let i = 0; i < items.length; i++){
-            if(items[i].className.indexOf("cna") < 0){
-                // Checking if fanaticism or anthropology
-                if(items[i].id == "tech-fanaticism" && settings.fanORanth == "anthropology") {continue;}
-                if(items[i].id == "tech-anthropology" && settings.fanORanth == "fanaticism") {continue;}
-                // Checking if study/deify ancients
-                if(items[i].id == "tech-study" && settings.studyORdeify == "deify") {continue;}
-                if(items[i].id == "tech-deify" && settings.studyORdeify == "study") {continue;}
-                // Checking if unification
-                if(items[i].id.indexOf("wc") >= 0) {
-                    if (settings.uniChoice == 'unify') {
-                        if (items[i].id == 'tech-wc_reject') {continue;}
-                    } else {
-                        if (items[i].id == 'tech-wc_conquest' || items[i].id == 'tech-wc_morale' || items[i].id == 'tech-wc_money') {continue;}
-                    }
-                }
-                items[i].children[0].click();
-                if(items[i].id.indexOf("wc") >= 0) {continue;}
-                if(settings.autoPrint){messageQueue("[AUTO-RESEARCH] " + items[i].children[0].children[0].innerText,'dark');}
-                setTimeout(resetUI, 2000);
-                return;
-            }
-        }
-    }
-
     function getAvailableBuildings() {
         let build = [];
         for (var x in buildings) {
@@ -4065,14 +2616,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     function getAvailableResources() {
         let res = [];
         for (var x in resources) {
-            // Don't check resources that aren't unlocked
             if (!resources[x].unlocked) {continue;}
             res.push(resources[x]);
-        }
-        for (x in craftableResources) {
-            // Don't check resources that aren't unlocked
-            if (!craftableResources[x].unlocked) {continue;}
-            res.push(craftableResources[x]);
         }
         return res;
     }
@@ -4087,7 +2632,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
 
         // Removing trade routes (if exists) for accurate rate
-        resources.Money.temp_rate = resources.Money.rate;
         if (researched('tech-trade')) {
             // Clearing out trade routes
             for (x in resources) {
@@ -4121,9 +2665,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             // Checking each action for resource dependence
             for (let j = 0;j < actions.length;j++) {
                 let cost = actions[j].getResDep(curRes.id);
-                //console.log(actions[j].id, cost);
                 if (cost !== null && cost !== NaN && cost > 0) {
-
                     pq.push(actions[j]);
                     // Setting up completion attribute
                     actions[j].completion[curRes.id.toLowerCase()] = false;
@@ -4131,8 +2673,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
             // Sorting actions by scaled priority
             pq.sort(function(a,b) {
-                let aCost = priorityScale(a.getResDep(curRes.id.toLowerCase()), a.priority, a);
-                let bCost = priorityScale(b.getResDep(curRes.id.toLowerCase()), b.priority, b);
+                let aCost = priorityScale(a.getResDep(curRes.id), a.priority, a);
+                let bCost = priorityScale(b.getResDep(curRes.id), b.priority, b);
                 return aCost > bCost;
             });
 
@@ -4141,7 +2683,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 let action = pq[j];
                 // Already completed with current resources
                 // Scaling by 1.01 for rounding error
-                if (curRes.amount >= action.getResDep(curRes.id) * 1.01) {
+                if (curRes.amount >= action.getResDep(curRes.id)) {
                     action.completionTime[curRes.id] = 0;
                 } else {
                     let time = 0;
@@ -4183,8 +2725,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 for (let j = 0;j < pq.length;j++) {
                     let action = pq[j];
                     //console.log(pq[j].id, pq[j].getResDep(curRes.id) , curAmount);
-                    // Scaling by 1.01 for rounding error
-                    if (action.getResDep(curRes.id) * 1.01 <= curAmount) {
+                    if (action.getResDep(curRes.id) <= curAmount) {
                         // Action can be achieved with this resource
                         action.completion[curRes.id.toLowerCase()] = true;
                         // Determining how much of the resource to save for this action
@@ -4243,11 +2784,11 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
         }
 
-        if (settings.autoSmelter && (count % 20 == 0)) {
+        if (settings.autoSmelter && (count % settings.smelterSettings.interval == 0)) {
             autoSmelter(limits);
             return {limits:limits,PQs:PQs}
         }
-        if (settings.autoFactory && (count % 23 == 0)) {
+        if (settings.autoFactory && (count % settings.factorySettings.interval == 0)) {
             autoFactory(limits);
             return {limits:limits,PQs:PQs}
         }
@@ -4275,7 +2816,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             if (!resources[x].unlocked) {continue;}
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             if (resources[x].ratio < 0.99) {continue;}
-            if (x == "Coal" || x == "Oil") {continue;}
             sellingRes.push(resources[x]);
         }
         // Sort by sell cost
@@ -4323,27 +2863,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 return prioCompare(a.action, b.action);
             });
         }
-        // TODO: Move this to front end for users to change
-        let prioMultiplier = {
-            Money:20,
-            Food:0,
-            Lumber:0,
-            Stone:0,
-            Furs:1,
-            Copper:1,
-            Iron:1,
-            Aluminium:1,
-            Cement:10,
-            Coal:20,
-            Oil:20,
-            Uranium:30,
-            Steel:30,
-            Titanium:40,
-            Alloy:40,
-            Polymer:40,
-            Iridium:60,
-            Helium_3:40
-        };
         console.log("FOC LIST:", focusList);
         let focusSequence = [];
         let curNum = {};
@@ -4353,12 +2872,12 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         if (focusList.length > 0) {
             // Creating sequence of trade route allocations to match priority ratios
             let curError = 0;
-            for (let i = 0;i < focusList.length;i++) {totalPriority += resources[focusList[i].res].tradePriority * focusList[i].action.priority;}
+            for (let i = 0;i < focusList.length;i++) {totalPriority += resources[focusList[i].res].priority * focusList[i].action.priority;}
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
-                wantedRatio[focusList[i].res] = resources[focusList[i].res].tradePriority * focusList[i].action.priority / totalPriority;
+                wantedRatio[focusList[i].res] = resources[focusList[i].res].priority * focusList[i].action.priority / totalPriority;
                 //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
-                //console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].tradePriority, wantedRatio[focusList[i].res], totalPriority);
+                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res], totalPriority);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
@@ -4367,6 +2886,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 for (let j = 0;j < focusList.length;j++) {
                     // There is no trade route for money
                     if (focusList[j].res == 'Money') {continue;}
+                    if (resources[focusList[j].res].priority == 0) {continue;}
                     let total = i+1;
                     let tempError = 0;
                     // Finding new error based on adding this trade route
@@ -4420,35 +2940,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
     }
 
-    function autoArpa(){
-        // If haven't unlocked ARPA, don't autoArpa
-        if (!researched('tech-arpa')) {return;}
-        if(settings.arpa.lhc){
-            let btn = document.querySelector("#arpalhc > div.buy > button.button.x1");
-            if(btn != null && !wouldBreakMoneyFloor(26500)){
-                btn.click();
-            }
-        }
-        if(settings.arpa.stock_exchange){
-            let btn = document.querySelector("#arpastock_exchange > div.buy > button.button.x1");
-            if(btn != null && ! wouldBreakMoneyFloor(30000)){
-                btn.click();
-            }
-        }
-        if(settings.arpa.monument){
-            let btn = document.querySelector("#arpamonument > div.buy > button.button.x1");
-            if(btn != null){
-                btn.click();
-            }
-        }
-        if(settings.arpa.launch_facility){
-            let btn = document.querySelector("#arpalaunch_facility > div.buy > button.button.x1");
-            if(btn != null && ! wouldBreakMoneyFloor(20000)){
-                btn.click();
-            }
-        }
-    }
-
     let count = 1;
     function fastAutomate() {
         console.clear();
@@ -4472,9 +2963,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             if(settings.autoCraft){
                 autoCraft();
             }
-            if(settings.autoBuild && !settings.autoPrioritize){
-                autoBuild();
-            }
             if(settings.autoSupport) {
                 autoSupport(priorityData);
             }
@@ -4487,14 +2975,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             if(settings.autoBattle){
                 autoBattler.autoBattle();
             }
-            if(settings.autoResearch && !settings.autoPrioritize){
-                autoResearch();
-            }
             if(settings.autoMarket){
                 autoMarket();
-            }
-            if(settings.autoARPA && !settings.autoPrioritize){
-                autoArpa();
             }
             if (settings.autoStorage) {
                 autoStorage();
@@ -4502,12 +2984,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         }
         count += 1;
     }
-        setInterval(fastAutomate, 1000);
-
-    // Refreshing page every 150s to update data-values in elements
-    setInterval(function() {
-        location.reload();
-    }, 150 * 1000)
+    setInterval(fastAutomate, 1000);
 
     /***
     *
@@ -4565,17 +3042,11 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         if ($('#autoFarm').length == 0){
             createSettingToggle('autoFarm', 'Turns on autofarming of resources');
         }
+        if ($('#autoSettingTab').length == 0) {
+            createSettingTab();
+        }
         // If not currently in the evolution stage (thus civilization stage
         if(!inEvolution()) {
-            // These toggles only appear after the evolution stage is over
-            // Creating Buildings Tab
-            if ($('.ea-buildings-tab').length == 0) {
-                createBuildingsTab();
-            }
-            // Create Research Tab
-            if ($('.ea-research-tab').length == 0) {
-                createResearchTab();
-            }
             // Crafting requires foundries
             if ($('#autoStorage').length == 0 && researched('tech-containerization')) {
                 createSettingToggle('autoStorage', 'Automatically assigns crates and containers to resources', createStorageSettings, removeStorageSettings);
@@ -4586,11 +3057,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 createSettingToggle('autoCraft', 'Automatically crafts craftable resources when resource ratio is above 0.9', createCraftSettings, removeCraftSettings);
             } else if (settings.autoCraft && $('.ea-craft-settings').length == 0 && researched('tech-foundry')) {
                 createCraftSettings();
-            }
-            if ($('#autoBuild').length == 0) {
-                createSettingToggle('autoBuild', 'Automatically builds buildings when available. Can disable specific buildings with unique toggles', createBuildingSettings, removeBuildingSettings);
-            } else if (settings.autoBuild && $('.ea-building-settings').length == 0) {
-                createBuildingSettings();
             }
             if ($('#autoSmelter').length == 0 && researched('tech-smelting')) {
                 createSettingToggle('autoSmelter', 'Automatically allocates resources in the smelter. See Buildings tab for more settings', createSmelterSettings, removeSmelterSettings);
@@ -4604,9 +3070,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             }
             // Support requires electricity
             if ($('#autoSupport').length == 0 && researched("tech-electricity")) {
-                createSettingToggle('autoSupport', 'Automatically powers buildings and supports space buildings. See the Support Tab for more settings', createSupportSettings, removeSupportSettings);
-            } else if (settings.autoSupport && $('.ea-support-settings').length == 0 && researched("tech-electricity")) {
-                createSupportSettings();
+                createSettingToggle('autoSupport', 'Automatically powers buildings and supports space buildings. See the Support Tab for more settings');
             }
             if ($('#autoEmploy').length == 0) {
                 createSettingToggle('autoEmploy', 'Autoemploys workers. See Civics page for job priorities', createEmploySettings, removeEmploySettings);
@@ -4620,9 +3084,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             // Battles require garrisions
             if ($('#autoBattle').length == 0 && researched('tech-garrison') && !(researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject'))) {
                 createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
-            }
-            if ($('#autoResearch').length == 0) {
-                createSettingToggle('autoResearch', 'Automatically researches. See Research > Auto Settings tab for more settings');
             }
             // Markets require market researched
             if ($('#autoMarket').length == 0 && researched('tech-market')) {
@@ -4650,11 +3111,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                     }
                 });
             }
-            if ($('#autoARPA').length == 0 && researched('tech-arpa')){
-                createSettingToggle('autoARPA', 'Automatically funds A.R.P.A. research projects. See the A.R.P.A. tab for more settings', createArpaToggles, removeArpaToggles);
-            }else if(settings.autoArpa && $('.ea-arpa-toggle').length == 0) {
-                createArpaToggles();
-            }
             if ($('#autoPrioritize').length == 0) {
                 createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
             }
@@ -4676,16 +3132,12 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         removeEvolutionSettings();
         removeStorageSettings();
         removeCraftSettings();
-        removeBuildingSettings();
         removeSmelterSettings();
         removeFactorySettings();
         removeSupportSettings();
         removeMarketSettings();
         removeEmploySettings();
         removeTaxSettings();
-        removeArpaToggles();
-        $('.ea-buildings-tab').remove();
-        $('.ea-research-tab').remove();
         $('.ea-autolog').remove();
         $('#reload').remove();
         $('#autoPrint').remove();
@@ -4693,7 +3145,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         $('#autoEvolution').remove();
         $('#autoStorage').remove();
         $('#autoCraft').remove();
-        $('#autoBuild').remove();
         $('#autoSmelter').remove();
         $('#autoFactory').remove();
         $('#autoSupport').remove();
@@ -4701,10 +3152,8 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         $('#autoEmploy').remove();
         $('#autoTax').remove();
         $('#autoBattle').remove();
-        $('#autoResearch').remove();
         $('#autoMarket').remove();
         $('#ea-settings').remove();
-        $('#autoARPA').remove();
         $('#autoSettings').remove();
     }
 
@@ -4868,440 +3317,20 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             let input = e.currentTarget.children[0];
             let state = !(input.getAttribute('value') === "true");
             input.setAttribute('value', state);
-            craftableResources[resource.id].enabled = state;
+            resources[resource.id].enabled = state;
         });
     }
     function createCraftSettings(){
         removeCraftSettings();
         var x;
-        for (x in craftableResources) {
-            createCraftToggle(craftableResources[x]);
+        for (x in resources) {
+            if (resources[x] instanceof CraftableResource) {
+                createCraftToggle(resources[x]);
+            }
         }
     }
     function removeCraftSettings(){
         $('.ea-craft-settings').remove();
-    }
-
-    function createBuildingsTab() {
-        let buildingsTabLabel = $('<li class="ea-buildings-tab"><a><span>Buildings</span></a></li>');
-        let buildingsTab = $('<div id="buildingsTab" class="tab-item ea-buildings-tab" style="display:none"><h2 class="is-sr-only">Buildings Settings</h2></div>');
-        // Creating click functions for other tabs
-        for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
-            let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
-            let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-            tabLabel.on('mouseup',function(e) {
-                if (e.which != 1) {return;}
-                if (buildingsTabLabel.hasClass("is-active")) {
-                    buildingsTabLabel.removeClass("is-active");
-                    tabItem.style.display = '';
-                }
-                buildingsTab[0].style.display = 'none';
-                if (!tabLabel.hasClass("is-active")) {tabLabel.addClass("is-active");}
-            });
-        }
-        // Inserting Buildings tab after Space tab
-        let navTab = $('#mainColumn > .content > .b-tabs > .tabs > ul')[0];
-        let conTab = $('#mainColumn > .content > .b-tabs > .tab-content')[0];
-        navTab.insertBefore(buildingsTabLabel[0], navTab.children[3]);
-        conTab.insertBefore(buildingsTab[0], conTab.children[3]);
-        // Creating click function for Buildings tab
-        buildingsTabLabel.on('mouseup',function(e) {
-            if (e.which != 1) {return;}
-            // For every other tab
-            for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
-                let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
-                let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-                // Ignore Building tab
-                if (tabLabel[0].class !== undefined) {
-                    continue;
-                }
-                tabLabel.removeClass("is-active");
-                tabItem.style.display = 'none';
-            }
-            buildingsTabLabel.addClass("is-active");
-            buildingsTab[0].style.display = '';
-        });
-
-        // Creating Smelter Settings
-        let smelterLabel = $('<div><h3 class="name has-text-warning" title="Set the smelter settings">Smelter:</h3></div></br>');
-        buildingsTab.append(smelterLabel);
-
-        // Creating Factory Settings
-        let factoryLabel = $('<div><h3 class="name has-text-warning" title="Set the factory settings">Factory:</h3></div></br>');
-        buildingsTab.append(factoryLabel);
-
-        // Creating Building Settings
-        let buildingLabel = $('<div><h3 class="name has-text-warning" title="Set the building settings">Buildings:</h3></div></br>');
-        buildingsTab.append(buildingLabel);
-        let buildSettingsDiv = $('<div id="buildSettingsDiv" style="overflow:auto"></div>');
-        let buildSettingsLeft = $('<div id="buildSettingsLeft" style="float:left"></div>');
-        let buildSettingsRight = $('<div id="buildSettingsRight" style="float:right"></div>');
-
-        let topLeft = $('<div id="buildSettingsTopLeft"></div>');
-        let bottomLeft = $('<div id="buildSettingsBottomLeft"></div>');
-        let topRight = $('<div id="buildSettingsTopRight" style="float:right"></div>');
-        let bottomRight = $('<div id="buildSettingsBottomRight"></div>');
-
-        let search = $('<input type="text" id="buildingInput" placeholder="Search for buildings (ex: \'iron tag:city res:money\')" style="width:400px;">');
-        search.on('input', populateBuildingList);
-        let sortLabel = $('<span style="padding-left:20px;padding-right:20px;">Sort:</span>');
-        let sort = $('<select style="width:110px;" id="buildingSort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option><option value="power_priority">Power Priority</option></select>');
-        sort.on('change', populateBuildingList);
-        topLeft.append(search).append(sortLabel).append(sort);
-
-        let showToggle = $('<label tabindex="0" class="switch" id="show_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show All</span></label>');
-        showToggle.on('change', populateBuildingList);
-        showToggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-        });
-        bottomLeft.append(showToggle);
-
-        let enableLabel = $('<span style="padding-right:10px;">Enable:</span>');
-        let enableAllBtn = $('<a class="button is-dark is-small" id="enable-all-btn"><span>All</span></a>');
-        enableAllBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            for (var x in buildings) {
-                buildings[x].enabled = true;
-            }
-            populateBuildingList();
-            createBuildingSettings();
-        });
-        let enableVisBtn = $('<a class="button is-dark is-small" id="enable-vis-btn"><span>Visible</span></a>');
-        enableVisBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            for (let i = 0;i < shownBuildings.length;i++) {
-                buildings[shownBuildings[i].id].enabled = true;
-            }
-            populateBuildingList();
-            createBuildingSettings();
-        });
-        topRight.append(enableLabel).append(enableAllBtn).append(enableVisBtn);
-
-        let disableLabel = $('<span style="padding-right:10px;">Disable:</span>');
-        let disableAllBtn = $('<a class="button is-dark is-small" id="disable-all-btn"><span>All</span></a>');
-        disableAllBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            for (var x in buildings) {
-                buildings[x].enabled = false;
-            }
-            populateBuildingList();
-            createBuildingSettings();
-        });
-        let disableVisBtn = $('<a class="button is-dark is-small" id="disable-vis-btn"><span>Visible</span></a>');
-        disableVisBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            for (let i = 0;i < shownBuildings.length;i++) {
-                buildings[shownBuildings[i].id].enabled = false;
-            }
-            populateBuildingList();
-            createBuildingSettings();
-        });
-        bottomRight.append(disableLabel).append(disableAllBtn).append(disableVisBtn);
-
-        buildSettingsLeft.append(topLeft).append(bottomLeft);
-        buildSettingsRight.append(topRight).append(bottomRight);
-        buildSettingsDiv.append(buildSettingsLeft).append(buildSettingsRight);
-        buildingsTab.append(buildSettingsDiv);
-
-        let buildingList = $('<div id="buildingList"></div>');
-        let buildingListLabel = $(`<div style="display:flex;">
-                                    <span class="name has-text-warning" style="width:20%;" title="Building Name. Can be lowercase id if not currently available">Building</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will stop building this building after reaching this limit">Limit</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
-                                    <span class="name has-text-warning" style="width:10%;" title="Enables this building for being automatically built">Enabled</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this building to be built">Priority</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority for powering this building">Power Priority</span>
-                                    </div>`);
-        buildingList.append(buildingListLabel);
-        buildingsTab.append(buildingList);
-        populateBuildingList();
-    }
-    function nameCompare(a, b) {
-        return b.id.split('-')[1] < a.id.split('-')[1];
-    }
-    function priorityCompare(a, b) {
-        return b.priority - a.priority;
-    }
-    function powerCompare(a, b) {
-        let bPP = (b instanceof PoweredBuilding) ? b.powerPriority : -1;
-        let aPP = (a instanceof PoweredBuilding) ? a.powerPriority : -1;
-        return bPP - aPP;
-    }
-    let shownBuildings = [];
-    function populateBuildingList() {
-        let search = $('#buildingInput')[0];
-        let sort = $('#buildingSort')[0];
-        let showToggle = $('#show_toggle')[0];
-        let buildingList = $('#buildingList')[0];
-        while(buildingList.childNodes.length != 1) {
-            buildingList.removeChild(buildingList.lastChild);
-        }
-        //console.log("Populating Building List");
-        let terms = search.value.split(' ');
-        let names = [];
-        let tags = [];
-        let res = [];
-        for (let i = 0;i < terms.length;i++) {
-            let tagCheck = /tag:(.+)/.exec(terms[i]);
-            let resCheck = /res:(.+)/.exec(terms[i]);
-            //console.log(terms[i], tagCheck, resCheck);
-            if (tagCheck !== null) {
-                tags.push(tagCheck[1]);
-            } else if (resCheck !== null) {
-                res.push(resCheck[1]);
-            } else {
-                names.push(terms[i]);
-            }
-        }
-        //console.log(names, tags, res);
-        shownBuildings = [];
-        for (var x in buildings) {
-            let building = buildings[x];
-
-
-            // Checking if available
-            if (showToggle.children[0].value == 'false' && !building.unlocked) {
-                continue;
-            }
-
-            // Searching for if any names appear in building name
-            if (names.length != 0) {
-                let pass = false;
-                for (let i = 0;i < names.length;i++) {
-                    var name;
-                    if (building.name !== null) {
-                        name = building.name;
-                    } else {
-                        name = building.id.split('-')[1];
-                    }
-                    if (name.toLowerCase().indexOf(names[i]) >= 0) {
-                        pass = true;
-                        break;
-                    }
-                }
-                if (!pass) {
-                    continue;
-                }
-            }
-            // Searching for if any tags appear in building name
-            if (tags.length != 0) {
-                let pass = false;
-                for (let i = 0;i < tags.length;i++) {
-                    if (building.tags.includes(tags[i])) {
-                        pass = true;
-                        break;
-                    }
-                }
-                if (!pass) {
-                    continue;
-                }
-            }
-
-            // Searching for if any resources appear in building requirements
-            if (res.length != 0 && building.res !== null) {
-                let pass = false;
-                for (let i = 0;i < res.length;i++) {
-                    if (building.getResDep(res[i]) !== null && building.getResDep(res[i]) > 0) {
-                        pass = true;
-                        break;
-                    }
-                }
-                if (!pass) {
-                    continue;
-                }
-            }
-
-            shownBuildings.push(building);
-        }
-        //console.log(shownBuildings);
-
-        // Sorting if necessary
-        if (sort.value == 'name') {
-            shownBuildings.sort(nameCompare);
-        } else if (sort.value == 'priority') {
-            shownBuildings.sort(priorityCompare);
-        } else if (sort.value == 'power_priority') {
-            shownBuildings.sort(powerCompare);
-        }
-
-        // Drawing buildings into list
-        for (let i = 0;i < shownBuildings.length;i++) {
-            let building = shownBuildings[i];
-            var buildingDiv;
-            if (i % 2) {
-                buildingDiv = $('<div style="display:flex" class="market-item"></div>');
-            } else {
-                buildingDiv = $('<div style="display:flex" class="resource alt market-item"></div>');
-            }
-            buildingList.appendChild(buildingDiv[0]);
-
-            // Name Label
-            if (building.name === null) {
-                name = building.id.split('-')[1];
-            } else {
-                name = building.name;
-            }
-            buildingDiv.append($('<span style="width:20%;">'+name+'</span>'));
-
-            // Building Limit
-            let limSub = $('<span role="button" aria-label="Decrease Build Limit" class="sub ea-buildings-tab">«</span>');
-            limSub.on('mouseup', function(e) {
-                buildings[building.id].decLimit();
-                let count = $('#'+building.id+'-limit')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].limit));
-            });
-            let limAdd = $('<span role="button" aria-label="Increase Build Limit" class="add ea-buildings-tab">»</span>');
-            limAdd.on('mouseup', function(e) {
-                buildings[building.id].incLimit();
-                let count = $('#'+building.id+'-limit')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].limit));
-            });
-            let limLabel = $('<span class="count current" id="'+building.id+'-limit" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].limit+'</span>');
-            let limControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(limSub).append(limLabel).append(limAdd).append('</div>');
-            buildingDiv.append(limControls);
-
-            // Building SoftCap
-            let softCapSub = $('<span role="button" aria-label="Decrease SoftCap Limit" class="sub ea-buildings-tab">«</span>');
-            softCapSub.on('mouseup', function(e) {
-                buildings[building.id].decSoftCap();
-                let count = $('#'+building.id+'-softcap')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].softCap));
-            });
-            let softCapAdd = $('<span role="button" aria-label="Increase SoftCap Limit" class="add ea-buildings-tab">»</span>');
-            softCapAdd.on('mouseup', function(e) {
-                buildings[building.id].incSoftCap();
-                let count = $('#'+building.id+'-softcap')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].softCap));
-            });
-            let softCapLabel = $('<span class="count current" id="'+building.id+'-softcap" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].softCap+'</span>');
-            let softCapControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(softCapSub).append(softCapLabel).append(softCapAdd).append('</div>');
-            buildingDiv.append(softCapControls);
-
-            // Building Toggle
-            let toggle = $('<label tabindex="0" class="switch ea-buildings-tab" style="margin-top: 4px;width:10%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
-            buildingDiv.append(toggle);
-            if(buildings[building.id].enabled){
-                toggle.click();
-                toggle.children('input').attr('value', true);
-            }
-            toggle.on('mouseup', function(e){
-                if (e.which != 1) {return;}
-                let input = e.currentTarget.children[0];
-                let state = !(input.getAttribute('value') === "true");
-                console.log("Updated build state", building.id, state);
-                input.setAttribute('value', state);
-                buildings[building.id].enabled = state;
-                createBuildingSettings();
-            });
-
-            // Building Priority
-            let prioSub = $('<span role="button" aria-label="Decrease Build Priority" class="sub ea-buildings-tab">«</span>');
-            prioSub.on('mouseup', function(e) {
-                buildings[building.id].decPriority();
-                let count = $('#'+building.id+'-prio')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].priority));
-            });
-            let prioAdd = $('<span role="button" aria-label="Increase Build Priority" class="add ea-buildings-tab">»</span>');
-            prioAdd.on('mouseup', function(e) {
-                buildings[building.id].incPriority();
-                let count = $('#'+building.id+'-prio')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].priority));
-            });
-            let prioLabel = $('<span class="count current" id="'+building.id+'-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].priority+'</span>');
-            let prioControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
-            buildingDiv.append(prioControls);
-
-            // Power Priority
-            if (building instanceof PoweredBuilding) {
-                let powerSub = $('<span role="button" aria-label="Decrease Power Priority" class="sub ea-buildings-tab">«</span>');
-                powerSub.on('mouseup', function(e) {
-                    buildings[building.id].decPowerPriority();
-                    let count = $('#'+building.id+'-power-prio')[0];
-                    count.removeChild(count.firstChild);
-                    count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
-                });
-                let powerAdd = $('<span role="button" aria-label="Increase Power Priority" class="add ea-buildings-tab">»</span>');
-                powerAdd.on('mouseup', function(e) {
-                    buildings[building.id].incPowerPriority();
-                    let count = $('#'+building.id+'-power-prio')[0];
-                    count.removeChild(count.firstChild);
-                    count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
-                });
-                let powerLabel = $('<span class="count current" id="'+building.id+'-power-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].powerPriority+'</span>');
-                let powerControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(powerSub).append(powerLabel).append(powerAdd).append('</div>');
-                buildingDiv.append(powerControls);
-            } else {
-                let temp = $('<div class="ea-buildings-tab" style="width:20%;">');
-                buildingDiv.append(temp);
-            }
-
-        }
-
-        // Set focus back on search
-        search.focus();
-    }
-
-    function createBuildingToggle(building){
-        var batElmt;
-        var key;
-        batElmt = $('#'+building.id);
-        let toggle = $('<label tabindex="0" class="switch ea-building-settings" style="position:absolute; margin-top: 30px;left:13%;top:-13%;"><input type="checkbox" value=false> <span class="check" style="height:5px; max-width:15px"></span></label>');
-        batElmt.append(toggle);
-        if(buildings[building.id].enabled){
-            toggle.click();
-            toggle.children('input').attr('value', true);
-        }
-        toggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-            buildings[building.id].enabled = state;
-        });
-    }
-    function createBuildingSettings(){
-        removeBuildingSettings();
-        // Creating building toggles for Village and Space tabs
-        var x;
-        for (x in buildings) {
-            if (buildings[x].unlocked) {
-                createBuildingToggle(buildings[x]);
-            }
-        }
-
-        // Create generic Build All button for main settings div
-        let buildAllBtn = $('<a class="button is-dark is-small ea-building-settings" id="build-all"><span>Set All</span></a>');
-        buildAllBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            for (x in buildings) {
-                buildings[x].enabled = true;
-            }
-            populateBuildingList();
-            createBuildingSettings();
-        });
-        // Create generic Build None button for main settings div
-        let buildNoneBtn = $('<a class="button is-dark is-small ea-building-settings" id="build-all"><span>Set None</span></a>');
-        buildNoneBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            for (x in buildings) {
-                buildings[x].enabled = false;
-            }
-            populateBuildingList();
-            createBuildingSettings();
-        });
-        $('#autoBuild_right').append(buildAllBtn).append(buildNoneBtn);
-    }
-    function removeBuildingSettings(){
-        $('.ea-building-settings').remove();
     }
 
     function createSmelterSettings() {
@@ -5328,69 +3357,6 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     }
     function removeFactorySettings() {
         $('.ea-factory-settings').remove();
-    }
-
-    function createSupportSettings() {
-        let supportTabLabel = $('<li class="ea-support-settings"><a><span>Support</span></a></li>');
-        let supportTab = $('<div id="supportSettings" class="tab-item ea-support-settings" style="display:none"><h2 class="is-sr-only">Auto Support Settings</h2></div>');
-        // Creating click functions for other tabs
-        for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
-            let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
-            let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-            tabLabel.on('mouseup',function(e) {
-                if (e.which != 1) {return;}
-                if (supportTabLabel.hasClass("is-active")) {
-                    supportTabLabel.removeClass("is-active");
-                    tabItem.style.display = '';
-                }
-                supportTab[0].style.display = 'none';
-                if (!tabLabel.hasClass("is-active")) {tabLabel.addClass("is-active");}
-            });
-        }
-        $('#mainColumn > .content > .b-tabs > .tabs > ul').append(supportTabLabel);
-        $('#mainColumn > .content > .b-tabs > .tab-content').append(supportTab);
-        supportTabLabel.on('mouseup',function(e) {
-            if (e.which != 1) {return;}
-            // For every other tab
-            for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length-1;i++) {
-                let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
-                let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-                tabLabel.removeClass("is-active");
-                tabItem.style.display = 'none';
-            }
-            supportTabLabel.addClass("is-active");
-            supportTab[0].style.display = '';
-        });
-        // Filling support tab
-        if(researched('tech-electricity')) {
-            let label = $('<div><h3 class="name has-text-warning" title="Set the priority of buildings that require electricity">Electricity:</h3></div>');
-            supportTab.append(label);
-            for (var x in elecConsumers) {
-                let c = elecConsumers[x];
-                if (!c.unlocked) {continue;}
-                let btnDiv = $('<div class="action cna"></div>');
-                let btnLabel = $('<a class="button is-dark"><span class="aTitle">'+c.name+'</span><span class="count" title="'+c.name+' Priority">'+c.priority+'</span></a>');
-                let btnInc = $('<span role="button" title="Increase '+c.name+' Priority" class="on">+</span>');
-                let btnDec = $('<span role="button" title="Decrease '+c.name+' Priority" class="off">-</span>');
-                btnDec.on('mouseup',function(e) {
-                    if (e.which != 1) {return;}
-                    elecConsumers[c.name].lowerPriority();
-                    btnLabel[0].children[1].innerText = elecConsumers[c.name].priority;
-                    updateSettings();
-                });
-                btnInc.on('mouseup',function(e) {
-                    if (e.which != 1) {return;}
-                    elecConsumers[c.name].higherPriority();
-                    btnLabel[0].children[1].innerText = elecConsumers[c.name].priority;
-                    updateSettings();
-                });
-                btnDiv.append(btnLabel).append(btnDec).append(btnInc);
-                supportTab.append(btnDiv);
-            }
-        }
-    }
-    function removeSupportSettings() {
-        $('.ea-support-settings').remove();
     }
 
     function createMarketSetting(resource){
@@ -5434,18 +3400,20 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         marketRow.append(toggleSell);
         marketRow.append(sellRatioSub).append(sellRatioLabel).append(sellRatioAdd);
 
-        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resource.tradePriority+'</span>');
+        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resource.basePriority+'</span>');
         let prioritySub = $('<span role="button" aria-label="Decrease '+resource.name+' Priority" class="sub ea-market-settings">«</span>');
         prioritySub.on('mouseup', function(e) {
             if (e.which != 1) {return;}
-            resource.decTradePriority();
-            priorityLabel[0].innerText = resource.tradePriority;
+            resource.decBasePriority();
+            priorityLabel[0].removeChild(priorityLabel[0].firstChild);
+            priorityLabel[0].appendChild(document.createTextNode(resource.basePriority));
         });
         let priorityAdd = $('<span role="button" aria-label="Increase '+resource.name+' Priority" class="add ea-market-settings">»</span>');
         priorityAdd.on('mouseup', function(e) {
             if (e.which != 1) {return;}
-            resource.incTradePriority();
-            priorityLabel[0].innerText = resource.tradePriority;
+            resource.incBasePriority();
+            priorityLabel[0].removeChild(priorityLabel[0].firstChild);
+            priorityLabel[0].appendChild(document.createTextNode(resource.basePriority));
         });
         marketRow.append(prioritySub).append(priorityLabel).append(priorityAdd);
 
@@ -5517,18 +3485,18 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         let tradeRow = document.getElementById("tradeTotal");
         let moneyLabel = $('<span title="Priority of money when allocating trade routes">Money Priority</span>');
         let priorityControl = $('<div style="display:flex;margin-left:6rem;"</div>');
-        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resources.Money.tradePriority+'</span>');
+        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resources.Money.basePriority+'</span>');
         let prioritySub = $('<span role="button" aria-label="Decrease '+resources.Money.name+' Priority" class="sub ea-market-settings">«</span>');
         prioritySub.on('mouseup', function(e) {
             if (e.which != 1) {return;}
-            resources.Money.decTradePriority();
-            priorityLabel[0].innerText = resources.Money.tradePriority;
+            resources.Money.decBasePriority();
+            priorityLabel[0].innerText = resources.Money.basePriority;
         });
         let priorityAdd = $('<span role="button" aria-label="Increase '+resources.Money.name+' Priority" class="add ea-market-settings">»</span>');
         priorityAdd.on('mouseup', function(e) {
             if (e.which != 1) {return;}
-            resources.Money.incTradePriority();
-            priorityLabel[0].innerText = resources.Money.tradePriority;
+            resources.Money.incBasePriority();
+            priorityLabel[0].innerText = resources.Money.basePriority;
         });
         priorityControl.append(moneyLabel).append(prioritySub).append(priorityLabel).append(priorityAdd);
         tradeRow.append(priorityControl[0]);
@@ -5643,47 +3611,69 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
         $('.ea-tax-settings').remove();
     }
 
-    function createResearchTab() {
-        // Creating Auto Research Tab
-        let researchSettingTabLabel = $('<li class="ea-research-tab"><a><span>Auto Settings</span></a></li>');
-        let mainResearchTab = getTab("Research");
-        let newTab = mainResearchTab.querySelector('.b-tabs > .tabs > ul > li:nth-child(1)');
-        let completeTab = mainResearchTab.querySelector('.b-tabs > .tabs > ul > li:nth-child(2)');
-        let newTabItem = $('#tech');
-        let completeTabItem = $('#oldTech');
 
+    function populateSmelterSettings(settingsTab) {
+        let smelterLabel = $('<div><h3 class="name has-text-warning" title="Set the smelter settings">Smelter:</h3></div></br>');
+        settingsTab.append(smelterLabel);
+        Object.keys(settings.smelterSettings).forEach(function(res) {
+            let resText = null;
+            if (res == 'interval') {
+                resText = $('<div style="width:12rem" title="Update the smelter every so much seconds">Interval Rate:</div>');
+            } else {
+                resText = $('<div style="width:12rem">'+res+' Priority:</div>');
+            }
 
-        mainResearchTab.querySelector('.b-tabs > .tabs > ul').append(researchSettingTabLabel[0]);
-        let researchSettingTab = $('<div id="researchSettings" class="tab-item ea-research-tab" style="display:none"><h2 class="is-sr-only">Auto Research Settings</h2></div>');
-        mainResearchTab.querySelector('.b-tabs > .tab-content').append(researchSettingTab[0]);
-        newTab.onmouseup = function(e) {
-            if (e.which != 1) {return;}
-            if (researchSettingTabLabel.hasClass("is-active")) {
-                researchSettingTabLabel.removeClass("is-active");
-                newTabItem[0].style.display = '';
-            }
-            researchSettingTab[0].style.display = 'none';
-            if (!newTab.classList.contains("is-active")) {newTab.classList.add("is-active");}
-        };
-        completeTab.onmouseup = function(e) {
-            if (e.which != 1) {return;}
-            if (researchSettingTabLabel.hasClass("is-active")) {
-                researchSettingTabLabel.removeClass("is-active");
-                completeTabItem[0].style.display = '';
-            }
-            researchSettingTab[0].style.display = 'none';
-            if (!completeTab.classList.contains("is-active")) {completeTab.classList.add("is-active");}
-        };
-        researchSettingTabLabel.on('mouseup',function(e) {
-            if (e.which != 1) {return;}
-            newTab.classList.remove("is-active");
-            completeTab.classList.remove("is-active");
-            newTabItem[0].style.display = 'none';
-            completeTabItem[0].style.display = 'none';
-            researchSettingTabLabel.addClass("is-active");
-            researchSettingTab[0].style.display = '';
+            let resLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:3rem;">'+settings.smelterSettings[res]+'</span>');
+            let resSub = $('<span role="button" aria-label="Decrease '+res+' Priority" class="sub ea-smelter-settings">«</span>');
+            resSub.on('mouseup', function(e) {
+                settings.smelterSettings[res] -= 1;
+                resLabel[0].removeChild(resLabel[0].firstChild);
+                resLabel[0].appendChild(document.createTextNode(settings.smelterSettings[res]));
+                updateSettings();
+            });
+            let resAdd = $('<span role="button" aria-label="Increase '+res+' Priority" class="add ea-smelter-settings">»</span>');
+            resAdd.on('mouseup', function(e) {
+                settings.smelterSettings[res] += 1;
+                resLabel[0].removeChild(resLabel[0].firstChild);
+                resLabel[0].appendChild(document.createTextNode(settings.smelterSettings[res]));
+                updateSettings();
+            });
+            let resControls = $('<div class="controls ea-smelter-settings">').append(resSub).append(resLabel).append(resAdd).append('</div>');
+            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+            settingsTab.append(newDiv);
         });
-
+    }
+    function populateFactorySettings(settingsTab) {
+        let factoryLabel = $('<div><h3 class="name has-text-warning" title="Set the factory settings">Factory:</h3></div></br>');
+        settingsTab.append(factoryLabel);
+        Object.keys(settings.factorySettings).forEach(function(res) {
+            let resText = null;
+            if (res == 'interval') {
+                resText = $('<div style="width:12rem" title="Update the factory every so much seconds">Interval Rate:</div>');
+            } else {
+                resText = $('<div style="width:12rem">'+res+' Priority:</div>');
+            }
+            let resLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:3rem;">'+settings.factorySettings[res]+'</span>');
+            let resSub = $('<span role="button" aria-label="Decrease '+res+' Priority" class="sub ea-factory-settings">«</span>');
+            resSub.on('mouseup', function(e) {
+                settings.factorySettings[res] -= 1;
+                resLabel[0].removeChild(resLabel[0].firstChild);
+                resLabel[0].appendChild(document.createTextNode(settings.factorySettings[res]));
+                updateSettings();
+            });
+            let resAdd = $('<span role="button" aria-label="Increase '+res+' Priority" class="add ea-factory-settings">»</span>');
+            resAdd.on('mouseup', function(e) {
+                settings.factorySettings[res] += 1;
+                resLabel[0].removeChild(resLabel[0].firstChild);
+                resLabel[0].appendChild(document.createTextNode(settings.factorySettings[res]));
+                updateSettings();
+            });
+            let resControls = $('<div class="controls ea-factory-settings">').append(resSub).append(resLabel).append(resAdd).append('</div>');
+            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+            settingsTab.append(newDiv);
+        });
+    }
+    function populateResearchSettings(settingsTab) {
         // Creating Fanaticism/Anthropology choice
         let label = $('<div><h3 class="name has-text-warning" title="Research choices that give different effects based on the previous runs">Theology:</h3></div></br>');
         let fanORanth = $('<select style="width:150px;"><option value="fanaticism">Fanaticism</option><option value="anthropology">Anthropology</option></select>');
@@ -5730,7 +3720,7 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             console.log("Changing target to ", settings.studyORdeify);
             updateSettings();
         };
-        researchSettingTab.append(label).append(target1).append(target2);
+        settingsTab.append(label).append(target1).append(target2);
 
         // Creating Unification choice
         let label2 = $('<div><h3 class="name has-text-warning" title="Research choice that either gives morale boost or production increase">Unification:</h3></div></br>');
@@ -5755,88 +3745,122 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
             console.log("Changing target to ", settings.uniChoice);
             updateSettings();
         };
-        researchSettingTab.append(label2).append(target3);
-
-        // Creating research list
-        let label3 = $('<div><h3 class="name has-text-warning" title="Research list and priorities">Research List:</h3></div></br>');
-        researchSettingTab.append(label3);
-
-        let listParamDiv = $('<div id="listParamDiv" style="overflow:auto"></div>');
-        let listParamLeft = $('<div id="listParamLeft" style="float:left"></div>');
-        let listParamRight = $('<div id="listParamRight" style="float:right"></div>');
-
-        let topLeft = $('<div id="listParamTopLeft"></div>');
-        let bottomLeft = $('<div id="listParamBottomLeft"></div>');
-        let topRight = $('<div id="listParamTopRight" style="float:right"></div>');
-        let bottomRight = $('<div id="listParamBottomRight"></div>');
-
-        let search = $('<input type="text" id="researchInput" placeholder="Search for research (ex: \'crate tag:mine res:knowledge\')" style="width:400px;">');
-        search.on('input', populateResearchList);
-        let sortLabel = $('<span style="padding-left:20px;padding-right:20px;">Sort:</span>');
-        let sort = $('<select style="width:110px;" id="researchSort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option></select>');
-        sort.on('change', populateResearchList);
-        topLeft.append(search).append(sortLabel).append(sort);
-
-        let showToggle = $('<label tabindex="0" class="switch" id="show_research_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show All</span></label>');
-        showToggle.on('change', populateResearchList);
-        showToggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-        });
-        bottomLeft.append(showToggle);
-
-        listParamLeft.append(topLeft).append(bottomLeft);
-        listParamRight.append(topRight).append(bottomRight);
-        listParamDiv.append(listParamLeft).append(listParamRight);
-        researchSettingTab.append(listParamDiv);
-
-        let researchList = $('<div id="researchList"></div>');
-        let researchListLabel = $(`<div style="display:flex;">
-                                    <span class="name has-text-warning" style="width:30%;" title="Research Name. Can be lowercase id if not currently available">Research</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this building to be built">Priority</span>
-                                    </div>`);
-        researchList.append(researchListLabel);
-        researchSettingTab.append(researchList);
-        populateResearchList();
+        settingsTab.append(label2).append(target3);
     }
-    let shownResearches = [];
-    function populateResearchList() {
-        let search = $('#researchInput')[0];
-        let sort = $('#researchSort')[0];
-        let showToggle = $('#show_research_toggle')[0];
-        let researchList = $('#researchList')[0];
-        while(researchList.childNodes.length != 1) {
-            researchList.removeChild(researchList.lastChild);
+    function nameCompare(a, b) {
+        return b.name < a.name;
+    }
+    function priorityCompare(a, b) {
+        return b.basePriority - a.basePriority;
+    }
+    function powerCompare(a, b) {
+        let bPP = (b instanceof PoweredBuilding) ? b.powerPriority : -1;
+        let aPP = (a instanceof PoweredBuilding) ? a.powerPriority : -1;
+        return bPP - aPP;
+    }
+    function getActionFromId(id) {
+        let [a, t] = id.split('-');
+        let action = null;
+        if (t === undefined) {
+            if (a == "Container" || a == "Crate") {
+                action = storages[a];
+            } else {
+                action = arpas[a];
+            }
+        } else {
+            if (a == 'tech') {
+                action = researches[id];
+            } else {
+                action = buildings[id];
+            }
         }
-        //console.log("Populating Research List");
+        return action;
+    }
+    function updatePriorityList() {
+        console.log("Updating Priority List");
+        let search = $('#priorityInput')[0];
+        let sort = $('#prioritySort')[0];
+        let showToggle = $('#show_toggle')[0];
+        let showBuildingsToggle = $('#show_buildings_toggle')[0];
+        let showResearchesToggle = $('#show_researches_toggle')[0];
+        let showMiscToggle = $('#show_misc_toggle')[0];
+        let priorityList = $('#priorityList')[0];
+
+        // Finding search parameters
         let terms = search.value.split(' ');
         let names = [];
-        let tags = [];
+        let locs = [];
         let res = [];
         for (let i = 0;i < terms.length;i++) {
-            let tagCheck = /tag:(.+)/.exec(terms[i]);
+            let locCheck = /loc:(.+)/.exec(terms[i]);
             let resCheck = /res:(.+)/.exec(terms[i]);
             //console.log(terms[i], tagCheck, resCheck);
-            if (tagCheck !== null) {
-                tags.push(tagCheck[1]);
+            if (locCheck !== null) {
+                locs.push(locCheck[1]);
             } else if (resCheck !== null) {
                 res.push(resCheck[1]);
             } else {
                 names.push(terms[i]);
             }
         }
-        //console.log(names, tags, res);
-        shownResearches = [];
-        let temp_r = [];
-        for (var x in researches) {temp_r.push(researches[x])}
-        for (x in arpas) {temp_r.push(arpas[x]);}
-        for (let i = 0;i < temp_r.length;i++) {
-            let research = temp_r[i];
+
+        // Sorting if necessary
+        let sortMethod = null;
+        if (sort.value == 'name') {
+            sortMethod = nameCompare;
+        } else if (sort.value == 'priority') {
+            sortMethod = priorityCompare;
+        } else if (sort.value == 'powerPriority') {
+            sortMethod = powerCompare;
+        }
+        if (sortMethod !== null) {
+            var newPriorityList = priorityList.cloneNode(false);
+
+            let header = priorityList.childNodes[0];
+            // Add all lis to an array
+            var divs = [];
+            for(let i = 1;i < priorityList.childNodes.length;i++){
+                    divs.push(priorityList.childNodes[i]);
+            }
+            // Sort the lis in descending order
+            divs.sort(function(a, b){
+                let bAction = getActionFromId(b.id.split('=')[0]);
+                let aAction = getActionFromId(a.id.split('=')[0]);
+                return sortMethod(aAction, bAction);
+            });
+            console.log(divs[0]);
+
+            // Add them into the ul in order
+            newPriorityList.appendChild(header);
+            for (let i = 0; i < divs.length; i++) {
+                newPriorityList.appendChild(divs[i]);
+            }
+            priorityList.parentNode.replaceChild(newPriorityList, priorityList);
+            priorityList = newPriorityList;
+        }
+
+        for (let i = 1;i < priorityList.children.length;i++) {
+            // Getting action
+            let div = priorityList.children[i];
+            let id = div.id.split('=')[0];
+            let action = getActionFromId(id);
 
             // Checking if available
-            if (showToggle.children[0].value == 'false' &&!research.unlocked) {
+            if (showToggle.children[0].value == 'false' && !action.unlocked) {
+                div.style.display = 'none';
+                continue;
+            }
+            // Checking if type shown
+            if (showBuildingsToggle.children[0].value == 'false' && action instanceof Building) {
+                div.style.display = 'none';
+                continue;
+            }
+            if (showResearchesToggle.children[0].value == 'false' && action instanceof Research) {
+                div.style.display = 'none';
+                continue;
+            }
+            if (showMiscToggle.children[0].value == 'false' && (action instanceof ArpaAction || action instanceof StorageAction)) {
+                div.style.display = 'none';
                 continue;
             }
             // Searching for if any names appear in building name
@@ -5844,10 +3868,10 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                 let pass = false;
                 for (let i = 0;i < names.length;i++) {
                     var name;
-                    if (research.name !== null) {
-                        name = research.name;
+                    if (action.name !== null) {
+                        name = action.name;
                     } else {
-                        name = research.id.split('-')[1];
+                        name = action.id.split('-')[1];
                     }
                     if (name.toLowerCase().indexOf(names[i]) >= 0) {
                         pass = true;
@@ -5855,132 +3879,392 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
                     }
                 }
                 if (!pass) {
+                    div.style.display = 'none';
                     continue;
                 }
             }
             // Searching for if any tags appear in research name
-            if (tags.length != 0) {
+            if (locs.length != 0) {
                 let pass = false;
-                for (let i = 0;i < tags.length;i++) {
-                    if (research.tags.includes(tags[i])) {
+                for (let i = 0;i < locs.length;i++) {
+                    if (action.loc.includes(locs[i])) {
                         pass = true;
                         break;
                     }
                 }
                 if (!pass) {
+                    div.style.display = 'none';
                     continue;
                 }
             }
             // Searching for if any resources appear in research requirements
-            if (res.length != 0 && research.res !== null) {
+            if (res.length != 0 && action.res !== null) {
                 let pass = false;
                 for (let i = 0;i < res.length;i++) {
-                    if (research.getResDep(res[i]) !== null && research.getResDep(res[i]) > 0) {
+                    console.log(action.id, res, action.def.cost, action.getResDep(res[i]));
+                    if (action.getResDep(res[i]) !== null && action.getResDep(res[i]) > 0) {
                         pass = true;
                         break;
                     }
                 }
                 if (!pass) {
+                    div.style.display = 'none';
                     continue;
                 }
             }
 
-            shownResearches.push(research);
-        }
+            div.style.display = 'flex';
 
-        // Sorting if necessary
-        if (sort.value == 'name') {
-            shownResearches.sort(nameCompare);
-        } else if (sort.value == 'priority') {
-            shownResearches.sort(priorityCompare);
-        }
-
-        // Drawing buildings into list
-        for (let i = 0;i < shownResearches.length;i++) {
-            let research = shownResearches[i];
-            var researchDiv;
-            if (i % 2) {
-                researchDiv = $('<div style="display:flex" class="market-item"></div>');
-            } else {
-                researchDiv = $('<div style="display:flex" class="resource alt market-item"></div>');
-            }
-            researchList.appendChild(researchDiv[0]);
-
-            // Name Label
-            if (research.name === null) {
-                name = research.id.split('-')[1];
-            } else {
-                name = research.name;
-            }
-            researchDiv.append($('<span style="width:30%;">'+name+'</span>'));
-
-            // Research Priority
-            let prioSub = $('<span role="button" aria-label="Decrease Research Priority" class="sub ea-research-tab">«</span>');
-            prioSub.on('mouseup', function(e) {
-                if (research.tags.includes('arpa')) {
-                    arpas[research.id].decPriority();
-                } else {
-                    researches[research.id].decPriority();
-                }
-                let count = $('#'+research.id+'-prio')[0];
-                count.removeChild(count.firstChild);
-                if (research.tags.includes('arpa')) {
-                    count.appendChild(document.createTextNode(arpas[research.id].priority));
-                } else {
-                    count.appendChild(document.createTextNode(researches[research.id].priority));
-                }
-            });
-            let prioAdd = $('<span role="button" aria-label="Increase Research Priority" class="add ea-research-tab">»</span>');
-            prioAdd.on('mouseup', function(e) {
-                if (research.tags.includes('arpa')) {
-                    arpas[research.id].incPriority();
-                } else {
-                    researches[research.id].incPriority();
-                }
-
-                let count = $('#'+research.id+'-prio')[0];
-                count.removeChild(count.firstChild);
-                if (research.tags.includes('arpa')) {
-                    count.appendChild(document.createTextNode(arpas[research.id].priority));
-                } else {
-                    count.appendChild(document.createTextNode(researches[research.id].priority));
-                }
-            });
-            let temp = (research.tags.includes('arpa')) ? arpas[research.id].priority : researches[research.id].priority;
-            let prioLabel = $('<span class="count current" id="'+research.id+'-prio" >'+temp+'</span>');
-            let prioControls = $('<div class="trade controls ea-research-tab" style="margin-left:0;text-align:center;">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
-            researchDiv.append(prioControls);
         }
 
         // Set focus back on search
         search.focus();
     }
+    function drawBuildingItem(building, buildingDiv) {
+        // Building Limit
+        let limSub = $('<span role="button" aria-label="Decrease Build Limit" class="sub ea-settings-tab">«</span>');
+        limSub.on('mouseup', function(e) {
+            buildings[building.id].decLimit();
+            let count = $('#'+building.id+'-limit')[0];
+            count.removeChild(count.firstChild);
+            count.appendChild(document.createTextNode(buildings[building.id].limit));
+        });
+        let limAdd = $('<span role="button" aria-label="Increase Build Limit" class="add ea-buildings-tab">»</span>');
+        limAdd.on('mouseup', function(e) {
+            buildings[building.id].incLimit();
+            let count = $('#'+building.id+'-limit')[0];
+            count.removeChild(count.firstChild);
+            count.appendChild(document.createTextNode(buildings[building.id].limit));
+        });
+        let limLabel = $('<span class="count current" id="'+building.id+'-limit" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].limit+'</span>');
+        let limControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(limSub).append(limLabel).append(limAdd).append('</div>');
+        buildingDiv.append(limControls);
 
-    function createArpaToggle(name){
-        let arpaDiv = $('#arpa'+name +' .head');
-        let toggle = $('<label tabindex="0" class="switch ea-arpa-toggle" style="position:relative; max-width:75px;margin-top: -36px;left:45%;float:left;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
-        arpaDiv.append(toggle);
-        if(settings.arpa[name]){
-            toggle.click();
-            toggle.children('input').attr('value', true);
+        // Building SoftCap
+        let softCapSub = $('<span role="button" aria-label="Decrease SoftCap Limit" class="sub ea-buildings-tab">«</span>');
+        softCapSub.on('mouseup', function(e) {
+            buildings[building.id].decSoftCap();
+            let count = $('#'+building.id+'-softcap')[0];
+            count.removeChild(count.firstChild);
+            count.appendChild(document.createTextNode(buildings[building.id].softCap));
+        });
+        let softCapAdd = $('<span role="button" aria-label="Increase SoftCap Limit" class="add ea-buildings-tab">»</span>');
+        softCapAdd.on('mouseup', function(e) {
+            buildings[building.id].incSoftCap();
+            let count = $('#'+building.id+'-softcap')[0];
+            count.removeChild(count.firstChild);
+            count.appendChild(document.createTextNode(buildings[building.id].softCap));
+        });
+        let softCapLabel = $('<span class="count current" id="'+building.id+'-softcap" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].softCap+'</span>');
+        let softCapControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(softCapSub).append(softCapLabel).append(softCapAdd).append('</div>');
+        buildingDiv.append(softCapControls);
+
+        // Power Priority
+        if (building instanceof PoweredBuilding) {
+            let powerSub = $('<span role="button" aria-label="Decrease Power Priority" class="sub ea-buildings-tab">«</span>');
+            powerSub.on('mouseup', function(e) {
+                buildings[building.id].decPowerPriority();
+                let count = $('#'+building.id+'-power-prio')[0];
+                count.removeChild(count.firstChild);
+                count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
+            });
+            let powerAdd = $('<span role="button" aria-label="Increase Power Priority" class="add ea-buildings-tab">»</span>');
+            powerAdd.on('mouseup', function(e) {
+                buildings[building.id].incPowerPriority();
+                let count = $('#'+building.id+'-power-prio')[0];
+                count.removeChild(count.firstChild);
+                count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
+            });
+            let powerLabel = $('<span class="count current" id="'+building.id+'-power-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].powerPriority+'</span>');
+            let powerControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(powerSub).append(powerLabel).append(powerAdd).append('</div>');
+            buildingDiv.append(powerControls);
+        } else {
+            let temp = $('<div class="ea-buildings-tab" style="width:20%;">');
+            buildingDiv.append(temp);
         }
-        toggle.on('mouseup', function(e){
+    }
+    function populatePriorityList() {
+        let priorityList = $('#priorityList')[0];
+        var x;
+        var name;
+        let temp_l = [];
+        for (x in buildings) {temp_l.push(buildings[x]);}
+        for (x in researches) {temp_l.push(researches[x]);}
+        for (x in arpas) {temp_l.push(arpas[x]);}
+        for (x in storages) {temp_l.push(storages[x]);}
+        while(priorityList.childNodes.length != 1) {
+            priorityList.removeChild(priorityList.lastChild);
+        }
+        // Drawing buildings into list
+        for (let i = 0;i < temp_l.length;i++) {
+            let action = temp_l[i];
+            var actionDiv;
+            if (i % 2) {
+                actionDiv = $('<div id="'+action.id+'=prio" style="display:flex" class="market-item"></div>');
+            } else {
+                actionDiv = $('<div id="'+action.id+'=prio" style="display:flex" class="resource alt market-item"></div>');
+            }
+            priorityList.appendChild(actionDiv[0]);
+
+            // Name Label
+            if (action.name === null) {
+                name = action.id.split('-')[1];
+            } else {
+                name = action.name;
+            }
+            if (action instanceof Building) {
+                actionDiv.append($('<span class="has-text-warning" style="width:30%;">'+name+'</span>'));
+            } else if (action instanceof Research) {
+                actionDiv.append($('<span class="has-text-danger" style="width:30%;">'+name+'</span>'));
+            } else {
+                actionDiv.append($('<span class="has-text-special" style="width:30%;">'+name+'</span>'));
+            }
+
+            // Research Priority
+            let prioSub = $('<span role="button" aria-label="Decrease Priority" class="sub ea-settings-tab">«</span>');
+            prioSub.on('mouseup', function(e) {
+                if (action.loc.includes('arpa')) {
+                    arpas[action.id].decBasePriority();
+                } else if (action.loc.includes('storage')) {
+                    storages[action.id].decBasePriority();
+                } else if (action.loc.includes('tech')) {
+                    researches[action.id].decBasePriority();
+                } else {
+                    buildings[action.id].decBasePriority();
+                }
+                let count = $('#'+action.id+'-prio')[0];
+                count.removeChild(count.firstChild);
+                if (action.loc.includes('arpa')) {
+                    count.appendChild(document.createTextNode(arpas[action.id].basePriority));
+                } else if (action.loc.includes('storage')) {
+                    count.appendChild(document.createTextNode(storages[action.id].basePriority));
+                } else if (action.loc.includes('tech')) {
+                    count.appendChild(document.createTextNode(researches[action.id].basePriority));
+                } else {
+                    count.appendChild(document.createTextNode(buildings[action.id].basePriority));
+                }
+            });
+            let prioAdd = $('<span role="button" aria-label="Increase Priority" class="add ea-settings-tab">»</span>');
+            prioAdd.on('mouseup', function(e) {
+                if (action.loc.includes('arpa')) {
+                    arpas[action.id].incBasePriority();
+                } else if (action.loc.includes('storage')) {
+                    storages[action.id].incBasePriority();
+                } else if (action.loc.includes('tech')) {
+                    researches[action.id].incBasePriority();
+                } else {
+                    buildings[action.id].incBasePriority();
+                }
+                let count = $('#'+action.id+'-prio')[0];
+                count.removeChild(count.firstChild);
+                if (action.loc.includes('arpa')) {
+                    count.appendChild(document.createTextNode(arpas[action.id].basePriority));
+                } else if (action.loc.includes('storage')) {
+                    count.appendChild(document.createTextNode(storages[action.id].basePriority));
+                } else if (action.loc.includes('tech')) {
+                    count.appendChild(document.createTextNode(researches[action.id].basePriority));
+                } else {
+                    count.appendChild(document.createTextNode(buildings[action.id].basePriority));
+                }
+            });
+            let temp = "";
+            if (action.loc.includes('arpa')) {
+                temp = arpas[action.id].basePriority;
+            } else if (action.loc.includes('storage')) {
+                temp = storages[action.id].basePriority;
+            } else if (action.loc.includes('tech')) {
+                temp = researches[action.id].basePriority;
+            } else {
+                temp = buildings[action.id].basePriority;
+            }
+            let prioLabel = $('<span class="count current" id="'+action.id+'-prio" >'+temp+'</span>');
+            let prioControls = $('<div class="trade controls ea-settings-tab" style="margin-left:0;text-align:center;">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
+            actionDiv.append(prioControls);
+
+            // Enable Toggle
+            let toggle = $('<label tabindex="0" class="switch ea-settings-tab" style="margin-top: 4px;width:10%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
+            actionDiv.append(toggle);
+            if(action.enabled){
+                toggle.click();
+                toggle.children('input').attr('value', true);
+            }
+            toggle.on('mouseup', function(e){
+                if (e.which != 1) {return;}
+                let input = e.currentTarget.children[0];
+                let state = !(input.getAttribute('value') === "true");
+                console.log("Updated build state", action.id, state);
+                input.setAttribute('value', state);
+                action.enabled = state;
+            });
+
+            if (action instanceof Building) {
+                drawBuildingItem(action,actionDiv);
+            }
+        }
+    }
+    function createPriorityList(settingsTab) {
+        // Creation Priority List
+        let priorityLabel = $('<div><h3 class="name has-text-warning" title="Set the Priority settings">Actions:</h3></div></br>');
+        settingsTab.append(priorityLabel);
+        let prioritySettingsDiv = $('<div id="prioritySettingsDiv" style="overflow:auto"></div>');
+        let prioritySettingsLeft = $('<div id="prioritySettingsLeft" style="float:left"></div>');
+        let prioritySettingsRight = $('<div id="prioritySettingsRight" style="float:right"></div>');
+
+        let topLeft = $('<div id="prioritySettingsTopLeft"></div>');
+        let bottomLeft = $('<div id="prioritySettingsBottomLeft"></div>');
+        let topRight = $('<div id="prioritySettingsTopRight" style="float:right"></div>');
+        let bottomRight = $('<div id="prioritySettingsBottomRight"></div>');
+
+        let search = $('<input type="text" id="priorityInput" placeholder="Search for actions (ex: \'iron loc:city res:money\')" style="width:400px;">');
+        search.on('input', updatePriorityList);
+        let sortLabel = $('<span style="padding-left:20px;padding-right:20px;">Sort:</span>');
+        let sort = $('<select style="width:110px;" id="prioritySort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option><option value="power_priority">Power Priority</option></select>');
+        sort.on('change', updatePriorityList);
+        topLeft.append(search).append(sortLabel).append(sort);
+
+        let showToggle = $('<label tabindex="0" class="switch" id="show_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show All</span></label>');
+        showToggle.on('change', updatePriorityList);
+        showToggle.on('mouseup', function(e){
+            if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
             let state = !(input.getAttribute('value') === "true");
             input.setAttribute('value', state);
-            settings.arpa[name] = state;
-            updateSettings();
         });
+        bottomLeft.append(showToggle);
+        let showBuildingToggle = $('<label tabindex="0" class="switch" id="show_buildings_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show Buildings</span></label>');
+        showBuildingToggle.on('change', updatePriorityList);
+        showBuildingToggle.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let input = e.currentTarget.children[0];
+            let state = !(input.getAttribute('value') === "true");
+            input.setAttribute('value', state);
+        });
+        bottomLeft.append(showBuildingToggle);
+        let showResearchToggle = $('<label tabindex="0" class="switch" id="show_researches_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show Researches</span></label>');
+        showResearchToggle.on('change', updatePriorityList);
+        showResearchToggle.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let input = e.currentTarget.children[0];
+            let state = !(input.getAttribute('value') === "true");
+            input.setAttribute('value', state);
+        });
+        bottomLeft.append(showResearchToggle);
+        let showMiscToggle = $('<label tabindex="0" class="switch" id="show_misc_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show Misc.</span></label>');
+        showMiscToggle.on('change', updatePriorityList);
+        showMiscToggle.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let input = e.currentTarget.children[0];
+            let state = !(input.getAttribute('value') === "true");
+            input.setAttribute('value', state);
+        });
+        bottomLeft.append(showMiscToggle);
+
+        let enableLabel = $('<span style="padding-right:10px;">Enable:</span>');
+        let enableAllBtn = $('<a class="button is-dark is-small" id="enable-all-btn"><span>All</span></a>');
+        enableAllBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let priorityList = $('#priorityList')[0];
+            for (let i = 1;i < priorityList.childNodes.length;i++) {
+                getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = true;
+            }
+            populatePriorityList();
+            updatePriorityList();
+        });
+        let enableVisBtn = $('<a class="button is-dark is-small" id="enable-vis-btn"><span>Visible</span></a>');
+        enableVisBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let priorityList = $('#priorityList')[0];
+            for (let i = 1;i < priorityList.childNodes.length;i++) {
+                if (priorityList.childNodes[i].style.display !== 'none') {
+                    getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = true;
+                }
+            }
+            populatePriorityList();
+            updatePriorityList();
+        });
+        topRight.append(enableLabel).append(enableAllBtn).append(enableVisBtn);
+
+        let disableLabel = $('<span style="padding-right:10px;">Disable:</span>');
+        let disableAllBtn = $('<a class="button is-dark is-small" id="disable-all-btn"><span>All</span></a>');
+        disableAllBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let priorityList = $('#priorityList')[0];
+            for (let i = 1;i < priorityList.childNodes.length;i++) {
+                getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = false;
+            }
+            populatePriorityList();
+            updatePriorityList();
+        });
+        let disableVisBtn = $('<a class="button is-dark is-small" id="disable-vis-btn"><span>Visible</span></a>');
+        disableVisBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            let priorityList = $('#priorityList')[0];
+            for (let i = 1;i < priorityList.childNodes.length;i++) {
+                if (priorityList.childNodes[i].style.display !== 'none') {
+                    getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = false;
+                }
+            }
+            populatePriorityList();
+            updatePriorityList();
+        });
+        bottomRight.append(disableLabel).append(disableAllBtn).append(disableVisBtn);
+
+        prioritySettingsLeft.append(topLeft).append(bottomLeft);
+        prioritySettingsRight.append(topRight).append(bottomRight);
+        prioritySettingsDiv.append(prioritySettingsLeft).append(prioritySettingsRight);
+        settingsTab.append(prioritySettingsDiv);
+
+        let priorityList = $('<div id="priorityList"></div>');
+        let priorityListLabel = $(`<div style="display:flex;">
+                                    <span class="name has-text-warning" style="width:20%;" title="Action Name. Can be lowercase id if not currently available">Action</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this action">Priority</span>
+                                    <span class="name has-text-warning" style="width:10%;" title="Enables this action for being automatically taken">Enabled</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will stop building this building after reaching this limit">Limit</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority for powering this building">Power Priority</span>
+                                    </div>`);
+        priorityList.append(priorityListLabel);
+        settingsTab.append(priorityList);
+        populatePriorityList();
+        updatePriorityList();
     }
-    function createArpaToggles(){
-        removeArpaToggles();
-        createArpaToggle('lhc');
-        createArpaToggle('stock_exchange');
-        createArpaToggle('monument');
-        createArpaToggle('launch_facility');
-    }
-    function removeArpaToggles(){
-        $('.ea-arpa-toggle').remove();
+    function createSettingTab() {
+        let settingTabLabel = $('<li class="ea-settings"><a><span>Auto Settings</span></a></li>');
+        let settingTab = $('<div id="autoSettingTab" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">Auto Settings</h2></div>');
+        // Creating click functions for other tabs
+        for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
+            let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
+            let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
+            tabLabel.on('mouseup',function(e) {
+                if (e.which != 1) {return;}
+                if (settingTabLabel.hasClass("is-active")) {
+                    settingTabLabel.removeClass("is-active");
+                    tabItem.style.display = '';
+                }
+                settingTab[0].style.display = 'none';
+                if (!tabLabel.hasClass("is-active")) {tabLabel.addClass("is-active");}
+            });
+        }
+        $('#mainColumn > .content > .b-tabs > .tabs > ul').append(settingTabLabel);
+        $('#mainColumn > .content > .b-tabs > .tab-content').append(settingTab);
+        settingTabLabel.on('mouseup',function(e) {
+            if (e.which != 1) {return;}
+            // For every other tab
+            for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length-1;i++) {
+                let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
+                let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
+                tabLabel.removeClass("is-active");
+                tabItem.style.display = 'none';
+            }
+            settingTabLabel.addClass("is-active");
+            settingTab[0].style.display = '';
+        });
+
+        populateSmelterSettings(settingTab);
+        populateFactorySettings(settingTab);
+        populateResearchSettings(settingTab);
+        createPriorityList(settingTab);
+
     }
 
     function createAutoLog() {
@@ -6176,4 +4460,5 @@ window.dispatchEvent(new CustomEvent('customModuleAdded'));
     function wouldBreakMoneyFloor(buyValue){
         return resources.Money.amount - buyValue < getMinMoney();
     }
-})($);
+}
+
