@@ -591,11 +591,18 @@ function main() {
             if (this.id == 'tech-energy_lab') {
                 return details['exotic_lab'];
             }
+            // Because city-basic_housing has a different key than id
+            if (this.id == 'city-house') {
+                return details['basic_housing'];
+            }
             return details[this.id.split('-')[1]];
         }
 
         get data() {
             let [type, action] = this.id.split('-');
+            if (window.game.global[type] === undefined || window.game.global[type][action] == undefined) {
+                return null;
+            }
             return window.game.global[type][action];
         }
 
@@ -624,21 +631,50 @@ function main() {
     class Building extends Action {
         constructor(id, loc) {
             super(id, loc);
+            if (!settings.actions[this.id].hasOwnProperty('atLeast')) {settings.actions[this.id].atLeast = 0;}
             if (!settings.actions[this.id].hasOwnProperty('limit')) {settings.actions[this.id].limit = -1;}
             if (!settings.actions[this.id].hasOwnProperty('softCap')) {settings.actions[this.id].softCap = -1;}
         }
 
+        get atLeast() {return settings.actions[this.id].atLeast;}
+        set atLeast(atLeast) {settings.actions[this.id].atLeast = atLeast;}
         get limit() {return settings.actions[this.id].limit;}
         set limit(limit) {settings.actions[this.id].limit = limit;}
         get softCap() {return settings.actions[this.id].softCap;}
         set softCap(softCap) {settings.actions[this.id].softCap = softCap;}
 
+        get priority() {
+            // Setting priority to 100 if building hasn't reached the At Least value
+            if (this.atLeast != 0 && this.numTotal < this.atLeast) {
+                return 100;
+            }
+            return this.basePriority;
+        }
+
         get numTotal() {
+            if (this.data === null) {
+                return 0;
+            }
             return this.data.count;
         }
 
         get numOn() {
+            if (this.data === null) {
+                return 0;
+            }
             return this.data.on;
+        }
+
+        decAtLeast() {
+            if (this.atLeast == 0) {return;}
+            this.atLeast -= 1;
+            updateSettings();
+            console.log("Decrementing At Least", this.id, this.atLeast);
+        }
+        incAtLeast() {
+            this.atLeast += 1;
+            updateSettings();
+            console.log("Incrementing At Least", this.id, this.atLeast);
         }
 
         decLimit() {
@@ -734,8 +770,13 @@ function main() {
             return buildings['space-star_dock'].numTotal > 0;
         }
 
+        get data() {
+            let [type, action] = this.id.split('-');
+            return window.game.global['starDock'][action];
+        }
+
         click() {
-            if (buildings['space-star_dock'].numTotal < 1) {return false;}
+            if (!this.unlocked) {return false;}
             // Checking if modal already open
             if ($('.modal').length != 0) {
                 return;
@@ -750,10 +791,6 @@ function main() {
             let tempID = this.id;
             setTimeout(function() {
                 // Getting info
-                buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
-                buildings['spcdock-probes'].loadRes();
-                buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
-                buildings['spcdock-seeder'].loadRes();
                 let build = buildings[tempID];
                 // Buying
                 if (build.btn !== null) {
@@ -773,6 +810,10 @@ function main() {
         for (var action in window.game.actions.city) {
             // Remove manual buttons
             if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter') {continue;}
+            if (action == 'basic_housing') {
+                buildings['city-house'] = new Building('city-house', ['city']);
+                continue;
+            }
             buildings['city-'+action] = new Building('city-'+action, ['city']);
         }
         // Space
@@ -787,7 +828,7 @@ function main() {
         for (var action in window.game.actions.starDock) {
             // Remove reset actions
             if (action == 'prep_ship' || action == 'launch_ship') {continue;}
-            buildings['spcdock-'+action] = new Building('spcdock-'+action, ['starDock']);
+            buildings['spcdock-'+action] = new SpaceDockBuilding('spcdock-'+action, ['starDock']);
         }
         console.log(buildings);
     }
@@ -929,7 +970,7 @@ function main() {
         }
 
         get unlocked() {
-            if (this.id == 'crate') {
+            if (this.id == 'Crate') {
                 return researched('tech-containerization');
             } else {
                 return researched('tech-steel_containers');
@@ -954,7 +995,7 @@ function main() {
             if (this.res === null) {
                 return null;
             }
-            return this.res[resid.toLowerCase()];
+            return this.res[resid];
         }
 
         click() {
@@ -1252,6 +1293,7 @@ function main() {
 
     function loadSettings() {
         console.log("Loading Settings");
+        try {
         // Evolution
         loadEvolution();
         // Farm
@@ -1273,6 +1315,9 @@ function main() {
         loadSmelter();
         // Factory
         loadFactory();
+        } catch(e) {
+
+        }
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
         }
@@ -2025,6 +2070,8 @@ function main() {
     function autoFactory(limits) {
         // Don't Auto factory if not unlocked
         if (!researched('tech-industrialization')) {return;}
+        // Don't Auto factory if you don't have any
+        if (buildings['city-factory'].numTotal < 1) {return;}
         // Checking if modal already open
         if ($('.modal').length != 0) {
             return;
@@ -2091,11 +2138,11 @@ function main() {
             let wantedPolymer = 0; let polymerPriority = 0;
             let wantedNanoTube = 0; let nanoTubePriority = 0;
             let totalPriority = 0;
-            if (limits.Money !== null && limits.Money !== undefined) {luxPriority = limits.Money.priority * settings.factorySettings.Luxury_Goods; totalPriority += luxPriority; }
-            if (limits.Alloy !== null && limits.Alloy !== undefined) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
-            if (limits.Polymer !== null && limits.Polymer !== undefined) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
-            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
-            //console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
+            if (limits.Money !== null && limits.Money !== undefined && !settings.factorySettings.Luxury_Goods) {luxPriority = limits.Money.priority * settings.factorySettings.Luxury_Goods; totalPriority += luxPriority; }
+            if (limits.Alloy !== null && limits.Alloy !== undefined && !settings.factorySettings.Alloy) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
+            if (limits.Polymer !== null && limits.Polymer !== undefined && !settings.factorySettings.Polymer) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
+            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined && !settings.factorySettings.Nano_Tube) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
+            console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
             // Creating allocation list
             let prioMultipliers = [settings.factorySettings.Luxury_Goods, settings.factorySettings.Alloy, settings.factorySettings.Polymer, settings.factorySettings.Nano_Tube];
             let allocation = [];
@@ -2182,7 +2229,7 @@ function main() {
                     }
                 }
             }
-            //console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
+            console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
             //console.log(allocation);
             // Removing all settings
             for (let i = 0;i < totalFactories;i++) {
@@ -2903,6 +2950,9 @@ function main() {
                         choice = j;
                     }
                 }
+                if (choice == -1) {
+                    break;
+                }
                 focusSequence[i] = focusList[choice].res;
                 curNum[focusList[choice].res] += 1;
             }
@@ -3021,6 +3071,21 @@ function main() {
             }
         });
     }
+    function createNumControl(settingVal,settingName,subFunc,addFunc) {
+        let subBtn = $('<span role="button" aria-label="Decrease '+settingName+'" class="sub">«</span>');
+        let label = $('<span id="'+settingName+'_control" class="count current" style="width:2rem;">'+settingVal+'</span>');
+        subBtn.on('mouseup', function(e) {
+            document.getElementById(settingName+'_control').innerText = subFunc();
+            updateSettings();
+        });
+        let addBtn = $('<span role="button" aria-label="Increase '+settingName+'" class="add">»</span>');
+        addBtn.on('mouseup', function(e) {
+            document.getElementById(settingName+'_control').innerText = addFunc();
+            updateSettings();
+        });
+        let control = $('<div class="controls ea-'+settingName+'-settings" style="display:flex">').append(subBtn).append(label).append(addBtn).append('</div>');
+        return control;
+    }
 
     function updateUI(){
         if ($('#autoPrint').length == 0) {
@@ -3134,7 +3199,6 @@ function main() {
         removeCraftSettings();
         removeSmelterSettings();
         removeFactorySettings();
-        removeSupportSettings();
         removeMarketSettings();
         removeEmploySettings();
         removeTaxSettings();
@@ -3253,48 +3317,37 @@ function main() {
         if (!resources[id].unlocked) {return;}
         if (!resources[id].crateable) {return;}
         let resourceSpan = $('#stack-'+resources[id].id);
-        let prioritySub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Priority" class="sub ea-storage-settings">«</span>');
-        prioritySub.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
+        let div = $('<div class="ea-storage-settings" style="display:flex"></div>');
+        let prioritySub = function() {
             resources[id].decStorePriority();
-            priorityLabel[0].removeChild(priorityLabel[0].firstChild);
-            priorityLabel[0].appendChild(document.createTextNode(resources[id].storePriority));
-        });
-        let priorityAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Priority" class="add ea-storage-settings">»</span>');
-        priorityAdd.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
+            return resources[id].storePriority;
+        }
+        let priorityAdd = function() {
             resources[id].incStorePriority();
-            priorityLabel[0].removeChild(priorityLabel[0].firstChild);
-            priorityLabel[0].appendChild(document.createTextNode(resources[id].storePriority));
-        });
-        let priorityLabel = $('<span class="count current" style="width:2rem;">'+resources[id].storePriority+'</span>');
-        let priorityControls = $('<div class="trade controls ea-storage-settings" style="min-width:0;">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
-        resourceSpan.append(priorityControls)
+            return resources[id].storePriority;
+        }
+        let priorityControls = createNumControl(resources[id].storePriority, id+"-store-priority", prioritySub, priorityAdd);
+        div.append(priorityControls)
 
-        let minSub = $('<span role="button" aria-label="Decrease '+resources[id].name+' Minimum" class="sub ea-storage-settings">«</span>');
-        minSub.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
+        let minSub = function() {
             resources[id].decStoreMin();
-            minLabel[0].removeChild(minLabel[0].firstChild);
-            minLabel[0].appendChild(document.createTextNode(resources[id].storeMin));
-        });
-        let minAdd = $('<span role="button" aria-label="Increase '+resources[id].name+' Minimum" class="add ea-storage-settings">»</span>');
-        minAdd.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
+            return resources[id].storeMin;
+        }
+        let minAdd = function() {
             resources[id].incStoreMin();
-            minLabel[0].removeChild(minLabel[0].firstChild);
-            minLabel[0].appendChild(document.createTextNode(resources[id].storeMin));
-        });
-        let minLabel = $('<span class="count current" style="width:2rem;">'+resources[id].storeMin+'</span>');
-        let minControls = $('<div class="controls trade ea-storage-settings" style="min-width:0;">').append(minSub).append(minLabel).append(minAdd).append('</div>');
-        resourceSpan.append(minControls)
+            return resources[id].storeMin;
+        }
+        let minControls = createNumControl(resources[id].storeMin, id+"-store-min", minSub, minAdd);
+        div.append(minControls)
+
+        resourceSpan.append(div);
     }
     function createStorageSettings() {
         removeStorageSettings();
         // Creating labels
         let labelSpan = $('#createHead');
-        let prioLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:2.8rem"><span class="has-text-warning">Priority</span></div>');
-        let minLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:3.8rem"><span class="has-text-warning">Min</span></div>');
+        let prioLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:2rem"><span class="has-text-warning">Priority</span></div>');
+        let minLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:3rem"><span class="has-text-warning">Min</span></div>');
         labelSpan.append(prioLabel).append(minLabel);
         // Creating individual counters
         for (var x in resources) {
@@ -3338,7 +3391,7 @@ function main() {
         let autoSmelterBtn = $('<a class="button is-dark is-small ea-smelter-settings" id="smelter-manual" title="Manually trigger Auto Smelting"><span>Manual</span></a>');
         autoSmelterBtn.on('mouseup', function(e){
             if (e.which != 1) {return;}
-            count = 0;
+            count = settings.smelterSettings.interval-1;
         });
         $('#autoSmelter_right').append(autoSmelterBtn);
     }
@@ -3351,7 +3404,7 @@ function main() {
         let autoFactoryBtn = $('<a class="button is-dark is-small ea-factory-settings" id="factory-manual" title="Manually trigger Auto Factory"><span>Manual</span></a>');
         autoFactoryBtn.on('mouseup', function(e){
             if (e.which != 1) {return;}
-            count = 0;
+            count = settings.factorySettings.interval-1;
         });
         $('#autoFactory_right').append(autoFactoryBtn);
     }
@@ -3363,67 +3416,10 @@ function main() {
         let marketRow = $('#market-'+resource.id);
 
         let toggleBuy = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
-        let buyRatioLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">(&lt'+resource.buyRatio+')</span>');
-        let buyRatioSub = $('<span role="button" aria-label="Decrease '+resource.name+' Buy Ratio" class="sub ea-market-settings">«</span>');
-        buyRatioSub.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
-            resource.buyDec();
-            buyRatioLabel[0].removeChild(buyRatioLabel[0].firstChild);
-            buyRatioLabel[0].appendChild(document.createTextNode('(<'+resource.buyRatio+')'));
-        });
-        let buyRatioAdd = $('<span role="button" aria-label="Increase '+resource.name+' Buy Ratio" class="add ea-market-settings">»</span>');
-        buyRatioAdd.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
-            resource.buyInc();
-            buyRatioLabel[0].removeChild(buyRatioLabel[0].firstChild);
-            buyRatioLabel[0].appendChild(document.createTextNode('(<'+resource.buyRatio+')'));
-        });
         marketRow.append(toggleBuy);
-        marketRow.append(buyRatioSub).append(buyRatioLabel).append(buyRatioAdd);
-
-        let toggleSell = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
-        let sellRatioLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">(&gt'+resource.sellRatio+')</span>');
-        let sellRatioSub = $('<span role="button" aria-label="Decrease '+resource.name+' Sell Ratio" class="sub ea-market-settings">«</span>');
-        sellRatioSub.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
-            resource.sellDec();
-            sellRatioLabel[0].removeChild(sellRatioLabel[0].firstChild);
-            sellRatioLabel[0].appendChild(document.createTextNode('(>'+resource.sellRatio+')'));
-        });
-        let sellRatioAdd = $('<span role="button" aria-label="Increase '+resource.name+' Sell Ratio" class="add ea-market-settings">»</span>');
-        sellRatioAdd.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
-            resource.sellInc();
-            sellRatioLabel[0].removeChild(sellRatioLabel[0].firstChild);
-            sellRatioLabel[0].appendChild(document.createTextNode('(>'+resource.sellRatio+')'));
-        });
-        marketRow.append(toggleSell);
-        marketRow.append(sellRatioSub).append(sellRatioLabel).append(sellRatioAdd);
-
-        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resource.basePriority+'</span>');
-        let prioritySub = $('<span role="button" aria-label="Decrease '+resource.name+' Priority" class="sub ea-market-settings">«</span>');
-        prioritySub.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
-            resource.decBasePriority();
-            priorityLabel[0].removeChild(priorityLabel[0].firstChild);
-            priorityLabel[0].appendChild(document.createTextNode(resource.basePriority));
-        });
-        let priorityAdd = $('<span role="button" aria-label="Increase '+resource.name+' Priority" class="add ea-market-settings">»</span>');
-        priorityAdd.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
-            resource.incBasePriority();
-            priorityLabel[0].removeChild(priorityLabel[0].firstChild);
-            priorityLabel[0].appendChild(document.createTextNode(resource.basePriority));
-        });
-        marketRow.append(prioritySub).append(priorityLabel).append(priorityAdd);
-
         if(resource.autoBuy){
             toggleBuy.click();
             toggleBuy.children('input').attr('value', true);
-        }
-        if(resource.autoSell){
-            toggleSell.click();
-            toggleSell.children('input').attr('value', true);
         }
         toggleBuy.on('mouseup', function(e){
             if (e.which != 1) {return;}
@@ -3442,6 +3438,22 @@ function main() {
             resources[resource.id].autoBuy = state;
             updateSettings();
         });
+
+        let buyRatioSub = function() {
+            resource.buyDec();
+            return resource.buyRatio;
+        }
+        let buyRatioAdd = function() {
+            resource.buyInc();
+            return resource.buyRatio;
+        }
+        let buyRatioControl = createNumControl(resource.buyRatio, resource.id+'-buy-ratio',buyRatioSub,buyRatioAdd);
+        let div = $('<div class="ea-market-settings" style="display:flex"></div>');
+        div.append(buyRatioControl);
+        marketRow.append(div);
+
+        let toggleSell = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
+        marketRow.append(toggleSell);
         toggleSell.on('mouseup', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
@@ -3457,20 +3469,39 @@ function main() {
             }
             updateSettings();
         });
-
-        if($('#bulk-sell').length == 0 && researched('tech-market')){
-            let bulkSell = $('<a class="ea-market-settings button is-dark is-small" id="bulk-sell"><span>Bulk Sell</span></a>');
-            $('#autoMarket_right').append(bulkSell);
-            bulkSell.on('mouseup', function(e){
-                if (e.which != 1) {return;}
-                autoMarket(true, true);
-            });
+        if(resource.autoSell){
+            toggleSell.click();
+            toggleSell.children('input').attr('value', true);
         }
+        let sellRatioSub = function() {
+            resource.sellDec();
+            return resource.sellRatio;
+        }
+        let sellRatioAdd = function() {
+            resource.sellInc();
+            return resource.sellRatio;
+        }
+        let sellRatioControl = createNumControl(resource.sellRatio, resource.id+'-sell-ratio',sellRatioSub,sellRatioAdd);
+        div = $('<div class="ea-market-settings" style="display:flex"></div>');
+        div.append(sellRatioControl);
+        marketRow.append(div);
+        let prioritySub = function() {
+            resource.decBasePriority();
+            return resource.basePriority;
+        }
+        let priorityAdd = function() {
+            resource.incBasePriority();
+            return resource.basePriority;
+        }
+        let priorityControl = createNumControl(resource.basePriority, resource.id+'-priority',prioritySub,priorityAdd);
+        div = $('<div class="ea-market-settings" style="display:flex"></div>');
+        div.append(priorityControl);
+        marketRow.append(div);
     }
     function createMarketSettings(){
         removeMarketSettings();
         let mainDiv = document.getElementById('market');
-        let div = $('<div class="market-item alt"></div>');
+        let div = $('<div class="market-item alt ea-market-settings"></div>');
         let manualBuyLabel = $('<span style="text-align:right;display:flex;margin-left:23rem;width:6rem;" title="Toggle to auto buy resources when under this ratio. Only buys when money is over minimum amount.">Manual Buy</span>')[0];
         let manualSellLabel = $('<span style="text-align:right;display:flex;margin-left:2rem;width:6rem;" title="Toggle to auto sell resources when over this ratio. Only sells when money is not capped.">Manual Sell</span>')[0];
         let tradePriorityLabel = $('<span style="text-align:right;display:flex;margin-left:2rem;width:6rem;" title="Priority for importing this resource through trade routes.">Priority</span>')[0];
@@ -3484,22 +3515,27 @@ function main() {
         // Creating trade setting for money
         let tradeRow = document.getElementById("tradeTotal");
         let moneyLabel = $('<span title="Priority of money when allocating trade routes">Money Priority</span>');
-        let priorityControl = $('<div style="display:flex;margin-left:6rem;"</div>');
-        let priorityLabel = $('<span class="ea-market-settings count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2.5rem;font-size:.8rem">'+resources.Money.basePriority+'</span>');
-        let prioritySub = $('<span role="button" aria-label="Decrease '+resources.Money.name+' Priority" class="sub ea-market-settings">«</span>');
-        prioritySub.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
+        let priorityDiv = $('<div class="ea-market-settings" style="display:flex;margin-left:6rem;"</div>');
+        let prioritySub = function() {
             resources.Money.decBasePriority();
-            priorityLabel[0].innerText = resources.Money.basePriority;
-        });
-        let priorityAdd = $('<span role="button" aria-label="Increase '+resources.Money.name+' Priority" class="add ea-market-settings">»</span>');
-        priorityAdd.on('mouseup', function(e) {
-            if (e.which != 1) {return;}
+            return resources.Money.basePriority;
+        }
+        let priorityAdd = function() {
             resources.Money.incBasePriority();
-            priorityLabel[0].innerText = resources.Money.basePriority;
-        });
-        priorityControl.append(moneyLabel).append(prioritySub).append(priorityLabel).append(priorityAdd);
-        tradeRow.append(priorityControl[0]);
+            return resources.Money.basePriority;
+        }
+        let priorityControl = createNumControl(resources.Money.basePriority,"Money-trade-priority",prioritySub,priorityAdd);
+        priorityDiv.append(moneyLabel).append(priorityControl);
+        tradeRow.append(priorityDiv[0]);
+
+        if($('#bulk-sell').length == 0 && researched('tech-market')){
+            let bulkSell = $('<a class="ea-market-settings button is-dark is-small" id="bulk-sell"><span>Bulk Sell</span></a>');
+            $('#autoMarket_right').append(bulkSell);
+            bulkSell.on('mouseup', function(e){
+                if (e.which != 1) {return;}
+                autoMarket(true, true);
+            });
+        }
     }
     function removeMarketSettings(){
         $('.ea-market-settings').remove();
@@ -3611,7 +3647,6 @@ function main() {
         $('.ea-tax-settings').remove();
     }
 
-
     function populateSmelterSettings(settingsTab) {
         let smelterLabel = $('<div><h3 class="name has-text-warning" title="Set the smelter settings">Smelter:</h3></div></br>');
         settingsTab.append(smelterLabel);
@@ -3622,23 +3657,15 @@ function main() {
             } else {
                 resText = $('<div style="width:12rem">'+res+' Priority:</div>');
             }
-
-            let resLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:3rem;">'+settings.smelterSettings[res]+'</span>');
-            let resSub = $('<span role="button" aria-label="Decrease '+res+' Priority" class="sub ea-smelter-settings">«</span>');
-            resSub.on('mouseup', function(e) {
+            let resSub = function() {
                 settings.smelterSettings[res] -= 1;
-                resLabel[0].removeChild(resLabel[0].firstChild);
-                resLabel[0].appendChild(document.createTextNode(settings.smelterSettings[res]));
-                updateSettings();
-            });
-            let resAdd = $('<span role="button" aria-label="Increase '+res+' Priority" class="add ea-smelter-settings">»</span>');
-            resAdd.on('mouseup', function(e) {
+                return settings.smelterSettings[res];
+            }
+            let resAdd = function() {
                 settings.smelterSettings[res] += 1;
-                resLabel[0].removeChild(resLabel[0].firstChild);
-                resLabel[0].appendChild(document.createTextNode(settings.smelterSettings[res]));
-                updateSettings();
-            });
-            let resControls = $('<div class="controls ea-smelter-settings">').append(resSub).append(resLabel).append(resAdd).append('</div>');
+                return settings.smelterSettings[res];
+            }
+            let resControls = createNumControl(settings.smelterSettings[res], "smelter_"+res+"_priority", resSub, resAdd);
             let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
             settingsTab.append(newDiv);
         });
@@ -3653,22 +3680,15 @@ function main() {
             } else {
                 resText = $('<div style="width:12rem">'+res+' Priority:</div>');
             }
-            let resLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:3rem;">'+settings.factorySettings[res]+'</span>');
-            let resSub = $('<span role="button" aria-label="Decrease '+res+' Priority" class="sub ea-factory-settings">«</span>');
-            resSub.on('mouseup', function(e) {
+            let resSub = function() {
                 settings.factorySettings[res] -= 1;
-                resLabel[0].removeChild(resLabel[0].firstChild);
-                resLabel[0].appendChild(document.createTextNode(settings.factorySettings[res]));
-                updateSettings();
-            });
-            let resAdd = $('<span role="button" aria-label="Increase '+res+' Priority" class="add ea-factory-settings">»</span>');
-            resAdd.on('mouseup', function(e) {
+                return settings.factorySettings[res];
+            }
+            let resAdd = function() {
                 settings.factorySettings[res] += 1;
-                resLabel[0].removeChild(resLabel[0].firstChild);
-                resLabel[0].appendChild(document.createTextNode(settings.factorySettings[res]));
-                updateSettings();
-            });
-            let resControls = $('<div class="controls ea-factory-settings">').append(resSub).append(resLabel).append(resAdd).append('</div>');
+                return settings.factorySettings[res];
+            }
+            let resControls = createNumControl(settings.factorySettings[res], "factory_"+res+"_priority", resSub, resAdd);
             let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
             settingsTab.append(newDiv);
         });
@@ -3921,66 +3941,64 @@ function main() {
         search.focus();
     }
     function drawBuildingItem(building, buildingDiv) {
+
+        // Building At Least
+        let atLeastSub = function() {
+            buildings[building.id].decAtLeast();
+            return buildings[building.id].atLeast;
+        }
+        let atLeastAdd = function() {
+            buildings[building.id].incAtLeast();
+            return buildings[building.id].atLeast;
+        }
+        let atLeastControls = createNumControl(buildings[building.id].atLeast, building.id+'-at-least', atLeastSub, atLeastAdd);
+        let atLeastDiv = $('<div style="width:10%;" title="'+building.id+' At Least"></div>');
+        atLeastDiv.append(atLeastControls);
+        buildingDiv.append(atLeastDiv);
+
         // Building Limit
-        let limSub = $('<span role="button" aria-label="Decrease Build Limit" class="sub ea-settings-tab">«</span>');
-        limSub.on('mouseup', function(e) {
+        let limSub = function() {
             buildings[building.id].decLimit();
-            let count = $('#'+building.id+'-limit')[0];
-            count.removeChild(count.firstChild);
-            count.appendChild(document.createTextNode(buildings[building.id].limit));
-        });
-        let limAdd = $('<span role="button" aria-label="Increase Build Limit" class="add ea-buildings-tab">»</span>');
-        limAdd.on('mouseup', function(e) {
+            return buildings[building.id].limit;
+        }
+        let limAdd = function() {
             buildings[building.id].incLimit();
-            let count = $('#'+building.id+'-limit')[0];
-            count.removeChild(count.firstChild);
-            count.appendChild(document.createTextNode(buildings[building.id].limit));
-        });
-        let limLabel = $('<span class="count current" id="'+building.id+'-limit" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].limit+'</span>');
-        let limControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(limSub).append(limLabel).append(limAdd).append('</div>');
-        buildingDiv.append(limControls);
+            return buildings[building.id].limit;
+        }
+        let limControls = createNumControl(buildings[building.id].limit, building.id+'-limit', limSub, limAdd);
+        let limDiv = $('<div style="width:10%;" title="'+building.id+' Limit"></div>');
+        limDiv.append(limControls);
+        buildingDiv.append(limDiv);
 
         // Building SoftCap
-        let softCapSub = $('<span role="button" aria-label="Decrease SoftCap Limit" class="sub ea-buildings-tab">«</span>');
-        softCapSub.on('mouseup', function(e) {
+        let softCapSub = function() {
             buildings[building.id].decSoftCap();
-            let count = $('#'+building.id+'-softcap')[0];
-            count.removeChild(count.firstChild);
-            count.appendChild(document.createTextNode(buildings[building.id].softCap));
-        });
-        let softCapAdd = $('<span role="button" aria-label="Increase SoftCap Limit" class="add ea-buildings-tab">»</span>');
-        softCapAdd.on('mouseup', function(e) {
+            return buildings[building.id].softCap;
+        }
+        let softCapAdd = function() {
             buildings[building.id].incSoftCap();
-            let count = $('#'+building.id+'-softcap')[0];
-            count.removeChild(count.firstChild);
-            count.appendChild(document.createTextNode(buildings[building.id].softCap));
-        });
-        let softCapLabel = $('<span class="count current" id="'+building.id+'-softcap" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].softCap+'</span>');
-        let softCapControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(softCapSub).append(softCapLabel).append(softCapAdd).append('</div>');
-        buildingDiv.append(softCapControls);
+            return buildings[building.id].softCap;
+        }
+        let softCapControls = createNumControl(buildings[building.id].softCap, building.id+'-softcap', softCapSub, softCapAdd);
+        let softCapDiv = $('<div style="width:10%;" title="'+building.id+' Soft Cap"></div>');
+        softCapDiv.append(softCapControls);
+        buildingDiv.append(softCapDiv);
 
         // Power Priority
         if (building instanceof PoweredBuilding) {
-            let powerSub = $('<span role="button" aria-label="Decrease Power Priority" class="sub ea-buildings-tab">«</span>');
-            powerSub.on('mouseup', function(e) {
-                buildings[building.id].decPowerPriority();
-                let count = $('#'+building.id+'-power-prio')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
-            });
-            let powerAdd = $('<span role="button" aria-label="Increase Power Priority" class="add ea-buildings-tab">»</span>');
-            powerAdd.on('mouseup', function(e) {
-                buildings[building.id].incPowerPriority();
-                let count = $('#'+building.id+'-power-prio')[0];
-                count.removeChild(count.firstChild);
-                count.appendChild(document.createTextNode(buildings[building.id].powerPriority));
-            });
-            let powerLabel = $('<span class="count current" id="'+building.id+'-power-prio" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:2rem;">'+buildings[building.id].powerPriority+'</span>');
-            let powerControls = $('<div class="controls trade ea-buildings-tab" style="width:20%;text-align:center;margin-left:0">').append(powerSub).append(powerLabel).append(powerAdd).append('</div>');
             buildingDiv.append(powerControls);
-        } else {
-            let temp = $('<div class="ea-buildings-tab" style="width:20%;">');
-            buildingDiv.append(temp);
+            let powerSub = function() {
+                buildings[building.id].decPowerPriority();
+                return buildings[building.id].powerPriority;
+            }
+            let powerAdd = function() {
+                buildings[building.id].incPowerPriority();
+                return buildings[building.id].powerPriority;
+            }
+            let powerControls = createNumControl(buildings[building.id].powerPriority, building.id+'-power-prio', powerSub, powerAdd);
+            let powerDiv = $('<div style="width:10%;" title="'+building.id+' Power Priority"></div>');
+            powerDiv.append(powerControls);
+            buildingDiv.append(powerDiv);
         }
     }
     function populatePriorityList() {
@@ -4012,74 +4030,61 @@ function main() {
             } else {
                 name = action.name;
             }
+            let nameDiv = $('<span style="width:20%;" title="'+action.id+'">'+name+'</span>');
             if (action instanceof Building) {
-                actionDiv.append($('<span class="has-text-warning" style="width:30%;">'+name+'</span>'));
+                nameDiv[0].classList.add('has-text-warning');
             } else if (action instanceof Research) {
-                actionDiv.append($('<span class="has-text-danger" style="width:30%;">'+name+'</span>'));
+                nameDiv[0].classList.add('has-text-danger');
             } else {
-                actionDiv.append($('<span class="has-text-special" style="width:30%;">'+name+'</span>'));
+                nameDiv[0].classList.add('has-text-special');
             }
+            actionDiv.append(nameDiv);
 
-            // Research Priority
-            let prioSub = $('<span role="button" aria-label="Decrease Priority" class="sub ea-settings-tab">«</span>');
-            prioSub.on('mouseup', function(e) {
+            // Priority
+            let prioSub = function() {
                 if (action.loc.includes('arpa')) {
                     arpas[action.id].decBasePriority();
+                    return arpas[action.id].basePriority;
                 } else if (action.loc.includes('storage')) {
                     storages[action.id].decBasePriority();
+                    return storages[action.id].basePriority;
                 } else if (action.loc.includes('tech')) {
                     researches[action.id].decBasePriority();
+                    return researches[action.id].basePriority;
                 } else {
                     buildings[action.id].decBasePriority();
+                    return buildings[action.id].basePriority;
                 }
-                let count = $('#'+action.id+'-prio')[0];
-                count.removeChild(count.firstChild);
-                if (action.loc.includes('arpa')) {
-                    count.appendChild(document.createTextNode(arpas[action.id].basePriority));
-                } else if (action.loc.includes('storage')) {
-                    count.appendChild(document.createTextNode(storages[action.id].basePriority));
-                } else if (action.loc.includes('tech')) {
-                    count.appendChild(document.createTextNode(researches[action.id].basePriority));
-                } else {
-                    count.appendChild(document.createTextNode(buildings[action.id].basePriority));
-                }
-            });
-            let prioAdd = $('<span role="button" aria-label="Increase Priority" class="add ea-settings-tab">»</span>');
-            prioAdd.on('mouseup', function(e) {
+            }
+            let prioAdd = function() {
                 if (action.loc.includes('arpa')) {
                     arpas[action.id].incBasePriority();
+                    return arpas[action.id].basePriority;
                 } else if (action.loc.includes('storage')) {
                     storages[action.id].incBasePriority();
+                    return storages[action.id].basePriority;
                 } else if (action.loc.includes('tech')) {
                     researches[action.id].incBasePriority();
+                    return researches[action.id].basePriority;
                 } else {
                     buildings[action.id].incBasePriority();
+                    return buildings[action.id].basePriority;
                 }
-                let count = $('#'+action.id+'-prio')[0];
-                count.removeChild(count.firstChild);
-                if (action.loc.includes('arpa')) {
-                    count.appendChild(document.createTextNode(arpas[action.id].basePriority));
-                } else if (action.loc.includes('storage')) {
-                    count.appendChild(document.createTextNode(storages[action.id].basePriority));
-                } else if (action.loc.includes('tech')) {
-                    count.appendChild(document.createTextNode(researches[action.id].basePriority));
-                } else {
-                    count.appendChild(document.createTextNode(buildings[action.id].basePriority));
-                }
-            });
-            let temp = "";
-            if (action.loc.includes('arpa')) {
-                temp = arpas[action.id].basePriority;
-            } else if (action.loc.includes('storage')) {
-                temp = storages[action.id].basePriority;
-            } else if (action.loc.includes('tech')) {
-                temp = researches[action.id].basePriority;
-            } else {
-                temp = buildings[action.id].basePriority;
             }
-            let prioLabel = $('<span class="count current" id="'+action.id+'-prio" >'+temp+'</span>');
-            let prioControls = $('<div class="trade controls ea-settings-tab" style="margin-left:0;text-align:center;">').append(prioSub).append(prioLabel).append(prioAdd).append('</div>');
-            actionDiv.append(prioControls);
+            let settingVal = "";
+            if (action.loc.includes('arpa')) {
+                settingVal = arpas[action.id].basePriority;
+            } else if (action.loc.includes('storage')) {
+                settingVal = storages[action.id].basePriority;
+            } else if (action.loc.includes('tech')) {
+                settingVal = researches[action.id].basePriority;
+            } else {
+                settingVal = buildings[action.id].basePriority;
+            }
+            let prioControls = createNumControl(settingVal,"action_"+name+"_priority",prioSub,prioAdd);
+            let prioDiv = $('<div style="width:10%;" title="'+action.id+' Priority"></div>');
+            prioDiv.append(prioControls);
+            actionDiv.append(prioDiv);
 
             // Enable Toggle
             let toggle = $('<label tabindex="0" class="switch ea-settings-tab" style="margin-top: 4px;width:10%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
@@ -4216,12 +4221,13 @@ function main() {
 
         let priorityList = $('<div id="priorityList"></div>');
         let priorityListLabel = $(`<div style="display:flex;">
-                                    <span class="name has-text-warning" style="width:20%;" title="Action Name. Can be lowercase id if not currently available">Action</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority of this action">Priority</span>
-                                    <span class="name has-text-warning" style="width:10%;" title="Enables this action for being automatically taken">Enabled</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will stop building this building after reaching this limit">Limit</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
-                                    <span class="name has-text-warning" style="width:20%;text-align:center;" title="Sets the priority for powering this building">Power Priority</span>
+                                    <span class="name has-text-warning" style="width:20%;text-align:left;padding-left:1rem;" title="Action Name. Can be lowercase id if not currently available">Action</span>
+                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Sets the priority of this action">Priority</span>
+                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Enables this action for being automatically taken">Enabled</span>
+                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Will focus on buying this amount of this building before anything else.">At Least</span>
+                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Will stop building this building after reaching this limit">Limit</span>
+                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
+                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Sets the priority for powering this building">Power</span>
                                     </div>`);
         priorityList.append(priorityListLabel);
         settingsTab.append(priorityList);
