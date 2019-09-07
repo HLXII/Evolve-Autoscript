@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.16
+// @version      1.1.17
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -25,12 +25,13 @@ unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
 
 $(document).ready(function() {
     let injectScript = `
-import { global } from './vars.js';
+import { global, vues } from './vars.js';
 import { actions } from './actions.js';
 import { races } from './races.js';
 import {tradeRatio, craftCost } from './resources.js';
 window.game =  {
     global: global,
+    vues: vues,
     actions: actions,
     races: races,
     tradeRatio: tradeRatio,
@@ -905,30 +906,23 @@ function main() {
         }
 
     }
+    class MonumentAction extends ArpaAction {
+        constructor(id) {
+            super(id, {});
+        }
+
+        click() {
+            if (this.btn !== null) {
+                this.btn.click();
+                setTimeout(loadMonumentRes, 500);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
     var arpas = {};
-    function loadArpas() {
-        if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
-        arpas.lhc = new ArpaAction('lhc',
-                                   {Money:2500000,
-                                   Knowledge:500000,
-                                   Copper:125000,
-                                   Cement:250000,
-                                   Steel:187500,
-                                   Titanium:50000,
-                                   Polymer:12000});
-        arpas.stock_exchange = new ArpaAction('stock_exchange',
-                                              {Money:3000000,
-                                               Plywood:25000,
-                                               Brick:20000,
-                                               Wrought_Iron:10000});
-        arpas.launch_facility = new ArpaAction('launch_facility',
-                                        {Money:2000000,
-                                        Knowledge:500000,
-                                        Cement:150000,
-                                        Oil:20000,
-                                        Sheet_Metal:15000,
-                                        Alloy:25000});
-        arpas.monument = new ArpaAction('monument', ['arpa'], 5);
+    function loadMonumentRes() {
         if (arpas.monument.label !== null) {
             switch(arpas.monument.label.innerText) {
                 case "Obelisk":
@@ -953,6 +947,31 @@ function main() {
                     }
             }
         }
+    }
+    function loadArpas() {
+        if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
+        arpas.lhc = new ArpaAction('lhc',
+                                   {Money:2500000,
+                                   Knowledge:500000,
+                                   Copper:125000,
+                                   Cement:250000,
+                                   Steel:187500,
+                                   Titanium:50000,
+                                   Polymer:12000});
+        arpas.stock_exchange = new ArpaAction('stock_exchange',
+                                              {Money:3000000,
+                                               Plywood:25000,
+                                               Brick:20000,
+                                               Wrought_Iron:10000});
+        arpas.launch_facility = new ArpaAction('launch_facility',
+                                        {Money:2000000,
+                                        Knowledge:500000,
+                                        Cement:150000,
+                                        Oil:20000,
+                                        Sheet_Metal:15000,
+                                        Alloy:25000});
+        arpas.monument = new MonumentAction('monument');
+        loadMonumentRes();
     }
     class StorageAction extends Action {
         constructor(id, res) {
@@ -1881,9 +1900,6 @@ function main() {
         if ($('.modal').length != 0) {
             return;
         }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
 
         console.log("Auto Smelting");
         // Opening modal
@@ -2063,7 +2079,6 @@ function main() {
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
         }, 100);
     }
 
@@ -2076,9 +2091,6 @@ function main() {
         if ($('.modal').length != 0) {
             return;
         }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
 
         console.log("Auto Factory");
         // Opening modal
@@ -2138,10 +2150,10 @@ function main() {
             let wantedPolymer = 0; let polymerPriority = 0;
             let wantedNanoTube = 0; let nanoTubePriority = 0;
             let totalPriority = 0;
-            if (limits.Money !== null && limits.Money !== undefined && !settings.factorySettings.Luxury_Goods) {luxPriority = limits.Money.priority * settings.factorySettings.Luxury_Goods; totalPriority += luxPriority; }
-            if (limits.Alloy !== null && limits.Alloy !== undefined && !settings.factorySettings.Alloy) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
-            if (limits.Polymer !== null && limits.Polymer !== undefined && !settings.factorySettings.Polymer) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
-            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined && !settings.factorySettings.Nano_Tube) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
+            if (limits.Money !== null && limits.Money !== undefined && settings.factorySettings.Luxury_Goods) {luxPriority = limits.Money.priority * settings.factorySettings.Luxury_Goods; totalPriority += luxPriority; }
+            if (limits.Alloy !== null && limits.Alloy !== undefined && settings.factorySettings.Alloy) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
+            if (limits.Polymer !== null && limits.Polymer !== undefined && settings.factorySettings.Polymer) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
+            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined && settings.factorySettings.Nano_Tube) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
             console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
             // Creating allocation list
             let prioMultipliers = [settings.factorySettings.Luxury_Goods, settings.factorySettings.Alloy, settings.factorySettings.Polymer, settings.factorySettings.Nano_Tube];
@@ -2156,7 +2168,7 @@ function main() {
                     switch(j) {
                         case 0: {
                             // Luxury Goods
-                            if (limits.Money !== null && resources.Furs.temp_rate > luxFurCost) {
+                            if (luxPriority > 0 && resources.Furs.temp_rate > luxFurCost) {
                                 tempError += ((wantedLux+1)/(i+1) - luxPriority/totalPriority)**2
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
@@ -2168,7 +2180,7 @@ function main() {
                         }
                         case 1: {
                             // Alloy
-                            if (limits.Alloy !== null && resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
+                            if (alloyPriority > 0 && resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
                                 tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
                                 tempError += ((wantedAlloy+1)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
@@ -2180,7 +2192,7 @@ function main() {
                         }
                         case 2: {
                             // Polymer
-                            if (limits.Polymer !== null && resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
+                            if (polymerPriority > 0 && resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
                                 tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer+1)/(i+1) - polymerPriority/totalPriority)**2
@@ -2192,7 +2204,7 @@ function main() {
                         }
                         case 3: {
                             // Nano Tubes
-                            if (limits.Nano_Tube !== null && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
+                            if (nanoTubePriority > 0 && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
                                 tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
@@ -2241,7 +2253,6 @@ function main() {
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
         }, 100);
     }
 
