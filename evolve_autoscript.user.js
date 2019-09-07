@@ -782,10 +782,6 @@ function main() {
             if ($('.modal').length != 0) {
                 return;
             }
-            // Ensuring no modal conflicts
-            if (modal) {return;}
-            modal = true;
-
             // Opening modal
             $('#space-star_dock > .special').click();
             // Delaying for modal animation
@@ -800,7 +796,6 @@ function main() {
                 // Closing modal
                 let closeBtn = $('.modal-close')[0];
                 if (closeBtn !== undefined) {closeBtn.click();}
-                modal = false;
             }, 100);
         }
     }
@@ -2891,7 +2886,6 @@ function main() {
         console.log("SELL SEQ:", sellSequence);
 
         // Finding resource to focus on
-        let buyRes = null;
         let focusList = [];
         for (x in limits) {
             // There exists an action that requires this resource
@@ -2902,17 +2896,6 @@ function main() {
             if (!(resources[x] instanceof TradeableResource) && x != 'Money') {continue;}
             // Excluding actions whose resource is already filled
             if (limits[x].completion[x] == true) {continue;}
-            if (buyRes === null) {
-                buyRes = x;
-            } else {
-                let curPriority = isFinite(limits[buyRes].completionTime[buyRes]) ? limits[buyRes].completionTime[buyRes] : 10000;
-                let nextPriority = isFinite(limits[x].completionTime[x]) ? limits[x].completionTime[x] : 10000;
-                curPriority = priorityScale(Math.log(curPriority), limits[buyRes].priority);
-                nextPriority = priorityScale(Math.log(nextPriority), limits[x].priority);
-                //if (limits[buyRes].priority <= limits[x].priority) {buyRes = x;}
-                if (curPriority > nextPriority) {buyRes = x;}
-                //if (limits[buyRes].completionTime[buyRes] < limits[x].completionTime[x]) {buyRes = x;}
-            }
             focusList.push({action:limits[x], res:x});
             //console.log(x, limits[x].id, limits[x].completionTime, priorityScale(Math.log(limits[x].completionTime[x]), limits[x].priority), limits[x].priority);
         }
@@ -2930,12 +2913,13 @@ function main() {
         if (focusList.length > 0) {
             // Creating sequence of trade route allocations to match priority ratios
             let curError = 0;
-            for (let i = 0;i < focusList.length;i++) {totalPriority += resources[focusList[i].res].priority * focusList[i].action.priority;}
+            for (let i = 0;i < focusList.length;i++) {totalPriority += (resources[focusList[i].res].priority * focusList[i].action.priority)**2;}
             for (let i = 0;i < focusList.length;i++) {
                 curNum[focusList[i].res] = 0;
-                wantedRatio[focusList[i].res] = resources[focusList[i].res].priority * focusList[i].action.priority / totalPriority;
+                wantedRatio[focusList[i].res] = (resources[focusList[i].res].priority * focusList[i].action.priority)**2 / totalPriority;
+                if (wantedRatio[focusList[i].res] * totalTradeRoutes < 1) {wantedRatio[focusList[i].res] = 0;}
                 //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
-                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res], totalPriority);
+                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
@@ -2945,6 +2929,7 @@ function main() {
                     // There is no trade route for money
                     if (focusList[j].res == 'Money') {continue;}
                     if (resources[focusList[j].res].priority == 0) {continue;}
+                    if (wantedRatio[focusList[j].res] == 0) {continue;}
                     let total = i+1;
                     let tempError = 0;
                     // Finding new error based on adding this trade route
