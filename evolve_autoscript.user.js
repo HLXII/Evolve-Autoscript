@@ -25,14 +25,13 @@ unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
 
 $(document).ready(function() {
     let injectScript = `
-import { global, vues, breakdown } from './vars.js';
+import { global, vues } from './vars.js';
 import { actions } from './actions.js';
 import { races } from './races.js';
 import {tradeRatio, craftCost } from './resources.js';
 window.game =  {
     global: global,
     vues: vues,
-    breakdown: breakdown,
     actions: actions,
     races: races,
     tradeRatio: tradeRatio,
@@ -528,13 +527,6 @@ function main() {
         }
     }
 
-    function getMultiplier(res) {
-        let multiplier = 1;
-        for (let val in window.game.breakdown.p[res]) {
-            console.log(val, window.game.breakdown.p[res][val]);
-        }
-    }
-
     function priorityScale(value, priority, action) {
         let scale = Math.exp(-0.25 * priority);
         if (action !== null && action !== undefined) {
@@ -667,6 +659,13 @@ function main() {
             return this.data.count;
         }
 
+        get numOn() {
+            if (this.data === null) {
+                return 0;
+            }
+            return this.data.on;
+        }
+
         decAtLeast() {
             if (this.atLeast == 0) {return;}
             this.atLeast -= 1;
@@ -704,251 +703,28 @@ function main() {
         }
 
     }
-    function checkPowerRequirements(c_action){
-        var isMet = true;
-        if (c_action['power_reqs']){
-            Object.keys(c_action.power_reqs).forEach(function (req){
-                if (window.game.global.tech[req] || window.game.global.tech[req] < c_action.power_reqs[req]){
-                    isMet = false;
-                }
-            });
-        }
-        return isMet;
-    }
-    function getPowerData(id, def) {
-        //console.log("Getting Power Data for", id);
-        let produce = [];
-        let consume = [];
-        let effectStr = "";
-        let test = null;
-        // Finding Production
-        switch(id) {
-            case "city-apartment":
-            case "city-sawmill":
-            case "city-rock_quarry":
-            case "city-cement_plant":
-            case "city-factory":
-            case "city-metal_refinery":
-            case "city-mine":
-            case "city-coal_mine":
-            case "city-tourist_center":
-            case "city-wardenclyffe":
-            case "city-biolab":
-            case "city-mass_driver":
-            case "space-observatory":
-            case "space-living_quarters":
-            case "space-vr_center": //TODO I haven't seen this yet so idk
-            case "space-red_mine":
-            case "space-fabrication":
-            case "space-red_factory":
-            case "space-biodome":
-            case "space-exotic_lab":
-            case "space-space_barracks":
-            case "space-elerium_contain":
-            case "space-world_controller":
-                break;
-            case "city-casino":
-                effectStr = def.effect();
-                test = /generates\s\$([\d\.]+)/.exec(effectStr);
-                if (test) {produce = [{res:"Money",cost:+test[1]}];}
-                break;
-            case "city-mill":
-            case "city-coal_power":
-            case "city-oil_power":
-            case "city-fission_power":
-            case "space-geothermal":
-            case "space-e_reactor":
-                produce = [{res:"electricity",cost:-def.powered}];
-                break;
-            case "space-nav_beacon":
-                produce = [{res:"moon_support",cost:1}];
-                break;
-            case "space-moon_base":
-                produce = [{res:"moon_support",cost:3}];
-                break;
-            case "space-iridium_mine":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Iridium/.exec(effectStr);
-                produce = [{res:"Iridium",cost:+test[1]}];
-                break;
-            case "space-helium_mine":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Helium/.exec(effectStr);
-                produce = [{res:"Helium_3",cost:+test[1]}];
-                break;
-            case "space-spaceport":
-                produce = [{res:"red_support",cost:3}];
-                break;
-            case "space-red_tower":
-                produce = [{res:"red_support",cost:1}];
-                break;
-            case "space-swarm_control":
-                produce = [{res:"swarm_support",cost:def.support}];
-                break;
-            case "space-swarm_satellite":
-                produce = [{res:"electricity",cost:1}];
-                break;
-            case "space-gas_mining":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Helium/.exec(effectStr);
-                produce = [{res:"Helium_3",cost:+test[1]}];
-                break;
-            case "space-outpost":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Neutronium/.exec(effectStr);
-                produce = [{res:"Neutronium",cost:+test[1]}];
-                break;
-            case "space-oil_extractor":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Oil/.exec(effectStr);
-                produce = [{res:"Oil",cost:+test[1]}];
-                break;
-            case "space-space_station":
-                produce = [{res:"belt_support",cost:3}];
-                break;
-            case "space-elerium_ship":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Elerium/.exec(effectStr);
-                produce = [{res:"Elerium",cost:+test[1]}];
-                break;
-            case "space-iridium_ship":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Iridium/.exec(effectStr);
-                produce = [{res:"Iridium",cost:+test[1]}];
-                break;
-            case "space-iron_ship":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Iron/.exec(effectStr);
-                produce = [{res:"Iron",cost:+test[1]}];
-                break;
-            default:
-                break;
-        }
-        // Finding Consumption
-        switch(id) {
-            case "city-apartment":
-            case "city-sawmill":
-            case "city-rock_quarry":
-            case "city-cement_plant":
-            case "city-factory":
-            case "city-metal_refinery":
-            case "city-mine":
-            case "city-coal_mine":
-            case "city-casino":
-            case "city-wardenclyffe":
-            case "city-biolab":
-            case "city-mass_driver":
-            case "space-nav_beacon":
-            case "space-red_tower":
-            case "space-gas_mining":
-            case "space-oil_extractor":
-            case "space-elerium_contain":
-            case "space-world_controller":
-                consume = [{res:"electricity",cost:def.powered}];
-                break;
-            case "space-iridium_mine":
-            case "space-helium_mine":
-            case "space-observatory":
-                consume= [{res:"moon_support",cost:-def.support}];
-                break;
-            case "space-living_quarters":
-            case "space-vr_center": //TODO I haven't seen this yet so idk
-            case "space-red_mine":
-            case "space-fabrication":
-            case "space-biodome":
-            case "space-exotic_lab":
-                consume = [{res:"red_support",cost:-def.support}];
-                break;
-            case "space-red_factory":
-                consume = [{res:"electricity",cost:def.powered}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume.push({res:"Helium",cost:+test[1]});
-                break;
-            case "space-space_barracks":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Oil/.exec(effectStr);
-                consume = [{res:"Oil",cost:+test[1]}];
-                test = /-([\d\.]+) Food/.exec(effectStr);
-                consume.push({res:"Food",cost:+test[1]});
-                break;
-            case "city-mill":
-                consume = [{res:"Food",cost:0.1}];
-                break;
-            case "city-tourist_center":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Food/.exec(effectStr);
-                consume = [{res:"Food",cost:+test[1]}];
-                break;
-            case "city-coal_power":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Coal/.exec(effectStr);
-                consume = [{res:"Coal",cost:+test[1]}];
-                break;
-            case "city-oil_power":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Oil/.exec(effectStr);
-                consume = [{res:"Oil",cost:+test[1]}];
-                break;
-            case "city-fission_power":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Uranium/.exec(effectStr);
-                consume = [{res:"Uranium",cost:+test[1]}];
-                break;
-            case "space-geothermal":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume = [{res:"Helium_3",cost:+test[1]}];
-                break;
-            case "space-e_reactor":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Elerium/.exec(effectStr);
-                consume = [{res:"Elerium",cost:+test[1]}];
-                break;
-            case "space-moon_base":
-            case "space-outpost":
-                consume = [{res:"electricity",cost:def.powered}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Oil/.exec(effectStr);
-                consume.push({res:"Oil",cost:test[1]});
-                break
-            case "space-spaceport":
-            case "space-space_station":
-                consume = [{res:"electricity",cost:def.powered}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume.push({res:"Helium",cost:test[1]});
-                test = /-([\d\.]+) Food/.exec(effectStr);
-                consume.push({res:"Food",cost:test[1]});
-                break
-            case "space-swarm_control":
-                break;
-            case "space-swarm_satellite":
-                consume = [{res:"swarm_support",cost:1}];
-                break;
-            case "space-elerium_ship":
-            case "space-iridium_ship":
-            case "space-iron_ship":
-                consume = [{res:"belt_support",cost:-def.support}];
-                break;
-            default:
-                break;
-        }
-        return [consume,produce];
-    }
     class PoweredBuilding extends Building {
-        constructor(id, loc) {
+        constructor(id, loc, powerPriority, consume, produce, unlockResearch) {
             super(id, loc);
-            if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = 0;}
-            [this.consume,this.produce] = getPowerData(id, this.def);
-            console.log(this.consume, this.produce);
+            this.produce = produce;
+            this.consume = consume;
+            if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = powerPriority;}
+            this.unlockResearch = unlockResearch;
         }
 
         get powerPriority() {return settings.actions[this.id].powerPriority;}
         set powerPriority(powerPriority) {settings.actions[this.id].powerPriority = powerPriority;}
 
         get powerUnlocked() {
-            return checkPowerRequirements(this.def);
+            try {
+                if (this.unlockResearch !== undefined) {
+                    return $('#'+this.id).length > 0 && researched(this.unlockResearch);
+                }
+                return $('#'+this.id).length > 0;
+            } catch(e) {
+                console.log("Error:", this.id, "powerUnlocked");
+                return false;
+            }
         }
 
         get incBtn() {
@@ -959,9 +735,6 @@ function main() {
         }
 
         get numOn() {
-            if (this.data === null) {
-                return 0;
-            }
             return this.data.on;
         }
 
@@ -1037,11 +810,6 @@ function main() {
                 buildings['city-house'] = new Building('city-house', ['city']);
                 continue;
             }
-            if (window.game.actions.city[action].powered || window.game.actions.city[action].support) {
-                console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
-                buildings['city-'+action] = new PoweredBuilding('city-'+action, ['city']);
-                continue;
-            }
             buildings['city-'+action] = new Building('city-'+action, ['city']);
         }
         // Space
@@ -1049,11 +817,6 @@ function main() {
             for (var action in window.game.actions.space[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
-                if (window.game.actions.space[location][action].powered || window.game.actions.space[location][action].support) {
-                    console.log(action,"POWER", window.game.actions.space[location][action].powered, "SUPPORT", window.game.actions.space[location][action].support);
-                    buildings['space-'+action] = new PoweredBuilding('space-'+action, ['space', location]);
-                    continue;
-                }
                 buildings['space-'+action] = new Building('space-'+action, ['space', location]);
             }
         }
@@ -2133,7 +1896,7 @@ function main() {
             return;
         }
 
-        //console.log("Auto Smelting");
+        console.log("Auto Smelting");
         // Opening modal
         $('#city-smelter > .special').click();
         // Delaying for modal animation
@@ -2324,7 +2087,7 @@ function main() {
             return;
         }
 
-        //console.log("Auto Factory");
+        console.log("Auto Factory");
         // Opening modal
         $('#city-factory > .special').click();
         // Delaying for modal animation
@@ -2386,7 +2149,7 @@ function main() {
             if (limits.Alloy !== null && limits.Alloy !== undefined && settings.factorySettings.Alloy) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
             if (limits.Polymer !== null && limits.Polymer !== undefined && settings.factorySettings.Polymer) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
             if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined && settings.factorySettings.Nano_Tube) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
-            //console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
+            console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
             // Creating allocation list
             let prioMultipliers = [settings.factorySettings.Luxury_Goods, settings.factorySettings.Alloy, settings.factorySettings.Polymer, settings.factorySettings.Nano_Tube];
             let allocation = [];
@@ -2473,7 +2236,7 @@ function main() {
                     }
                 }
             }
-            //console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
+            console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
             //console.log(allocation);
             // Removing all settings
             for (let i = 0;i < totalFactories;i++) {
@@ -2655,14 +2418,14 @@ function main() {
                 swarmConsumers.push(buildings[x]);
             }
         }
-        
+        /*
         console.log("Max",maximize);
         console.log("Passive",passiveProducers);
         console.log("Electricity", electricityConsumers);
         console.log("Moon", moonConsumers);
         console.log("Red", redConsumers);
         console.log("Belt", beltConsumers);
-        
+        */
         let support = {
             electricity:0,
             moon:0,
@@ -2670,7 +2433,6 @@ function main() {
             swarm:0,
             belt:0
         }
-        /*
         // Add all passive producers
         for (let i = 0;i < passiveProducers.length;i++) {
             let pp = passiveProducers[i];
@@ -2819,7 +2581,6 @@ function main() {
                 }
             }
         }
-        */
     }
 
     function getAvailableBuildings() {
@@ -2978,7 +2739,13 @@ function main() {
                 if (curRes.amount >= action.getResDep(curRes.id)) {
                     action.completionTime[curRes.id] = 0;
                 } else {
-                    let time = (action.getResDep(curRes.id) - curRes.amount) / curRes.temp_rate;
+                    let time = 0;
+                    if (researched('tech-trade') && res instanceof TradeableResource) {
+                        time = (action.getResDep(curRes.id) - curRes.amount) / curRes.temp_rate;
+                    } else {
+                        time = (action.getResDep(curRes.id) - curRes.amount) / curRes.rate;
+                    }
+
                     time = (time < 0) ? 1 : time;
                     action.completionTime[curRes.id] = time;
                     //console.log(action.id, curRes.id, action.getResDep(curRes.id), curRes.amount, curRes.temp_rate, time);
@@ -3015,15 +2782,11 @@ function main() {
                         // Action can be achieved with this resource
                         action.completion[curRes.id.toLowerCase()] = true;
                         // Determining how much of the resource to save for this action
-                        let giveAmount = (action.maxCompletionTime - action.completionTime[curRes.id]) * curRes.temp_rate;
-                        let give = Math.min(giveAmount,curAmount);
-                        action.keptRes[curRes.id] = curAmount - give;
-                        curAmount = give;
-                        /*
                         if (action.limitingRes == curRes.id) {
                             // This resource is the limiting factor, give nothing to the next actions
                             action.keptRes[curRes.id] = action.getResDep(curRes.id);
                             curAmount -= action.keptRes[curRes.id];
+
                         } else {
                             // This resource isn't the limiting factor, give some leeway
                             // Higher priority, less leeway given
@@ -3033,7 +2796,6 @@ function main() {
                             action.keptRes[curRes.id] = priorityFactor * timeFactor * action.getResDep(curRes.id)/(i+1);
                             curAmount -= action.keptRes[curRes.id];
                         }
-                        */
                     } else {
                         // Action cannot be achieved with this resource
                         limits[curRes.id] = action;
@@ -3121,7 +2883,7 @@ function main() {
             let sellRoutes = (maxRoutes < totalTradeRoutes) ? maxRoutes : totalTradeRoutes;
             for (let j = 0;j < sellRoutes;j++) {sellSequence.push(res.id);}
         }
-        //console.log("SELL SEQ:", sellSequence);
+        console.log("SELL SEQ:", sellSequence);
 
         // Finding resource to focus on
         let focusList = [];
@@ -3142,7 +2904,7 @@ function main() {
                 return prioCompare(a.action, b.action);
             });
         }
-        //console.log("FOC LIST:", focusList);
+        console.log("FOC LIST:", focusList);
         let focusSequence = [];
         let curNum = {};
         let curRatio = {};
@@ -3157,7 +2919,7 @@ function main() {
                 wantedRatio[focusList[i].res] = (resources[focusList[i].res].priority * focusList[i].action.priority)**2 / totalPriority;
                 if (wantedRatio[focusList[i].res] * totalTradeRoutes < 1) {wantedRatio[focusList[i].res] = 0;}
                 //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
-                //console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
+                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
             }
             for (let i = 0;i < totalTradeRoutes;i++) {
                 // Calculating error based on next value choice
@@ -3190,7 +2952,7 @@ function main() {
                 focusSequence[i] = focusList[choice].res;
                 curNum[focusList[choice].res] += 1;
             }
-            //console.log("FOC SEQ:", focusSequence);
+            console.log("FOC SEQ:", focusSequence);
         }
 
         // Allocating trade routes
@@ -3201,11 +2963,11 @@ function main() {
             let curFreeTradeRoutes = totalTradeRoutes;
             // Keeping fraction of base money for money
             if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
-            //console.log(wantedRatio.Money,resources.Money.temp_rate);
+            console.log(wantedRatio.Money,resources.Money.temp_rate);
             // Begin allocating algorithm
             while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
                 // Checking if can buy trade route
-                if (focusSequence.length > 0 && resources.Money.temp_rate > resources[focusSequence[curFocus]].tradeBuyCost) {
+                if (resources.Money.temp_rate > resources[focusSequence[curFocus]].tradeBuyCost) {
                     // Can buy trade route
                     //console.log("Buying", focusSequence[curFocus], curFocus);
                     resources[focusSequence[curFocus]].tradeInc();
@@ -3228,7 +2990,7 @@ function main() {
     function fastAutomate() {
         console.clear();
         //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
-        //console.log(count);
+        console.log(count);
         updateUI();
         updateSettings();
         autoFarm();
@@ -4220,6 +3982,7 @@ function main() {
 
         // Power Priority
         if (building instanceof PoweredBuilding) {
+            buildingDiv.append(powerControls);
             let powerSub = function() {
                 buildings[building.id].decPowerPriority();
                 return buildings[building.id].powerPriority;
