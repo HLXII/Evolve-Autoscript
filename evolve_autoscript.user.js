@@ -2656,6 +2656,8 @@ function main() {
         let passiveProducers = [];
         let moonConsumers = []; let moonConsumers_want = [];
         let redConsumers = []; let redConsumers_want = [];
+        let beltConsumers = []; let beltConsumers_want = [];
+        let swarmConsumers = []; let swarmConsumers_want = [];
         for (x in buildings) {
             // Ignore not unlocked buildings
             if (!buildings[x].unlocked) {continue;}
