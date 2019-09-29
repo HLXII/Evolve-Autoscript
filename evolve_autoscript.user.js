@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.17
+// @version      1.1.18
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -25,13 +25,14 @@ unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
 
 $(document).ready(function() {
     let injectScript = `
-import { global, vues } from './vars.js';
+import { global, vues, breakdown } from './vars.js';
 import { actions } from './actions.js';
 import { races } from './races.js';
 import {tradeRatio, craftCost } from './resources.js';
 window.game =  {
     global: global,
     vues: vues,
+    breakdown: breakdown,
     actions: actions,
     races: races,
     tradeRatio: tradeRatio,
@@ -150,6 +151,8 @@ function main() {
             this.id = id;
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
             if (!settings.resources[this.id].hasOwnProperty('basePriority')) {settings.resources[this.id].basePriority = 0;}
+            if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = 0;}
+            if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = 0;}
         }
 
         get mainDiv() {
@@ -183,6 +186,120 @@ function main() {
             return window.game.global.resource[this.id].diff;
         }
 
+        get storePriority() {return settings.resources[this.id].storePriority};
+        set storePriority(storePriority) {settings.resources[this.id].storePriority = storePriority;}
+        get storeMin() {return settings.resources[this.id].storeMin;}
+        set storeMin(storeMin) {settings.resources[this.id].storeMin = storeMin;}
+
+        get crateIncBtn() {
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
+            if (storageDiv.length > 0) {
+                return storageDiv[0].children[3]
+            } else {
+                return null;
+            }
+        }
+        get crateDecBtn() {
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
+            if (storageDiv.length > 0) {
+                return storageDiv[0].children[1]
+            } else {
+                return null;
+            }
+        }
+        get containerIncBtn() {
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
+            if (storageDiv.length > 1) {
+                return storageDiv[1].children[3]
+            } else {
+                return null;
+            }
+        }
+        get containerDecBtn() {
+            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
+            if (storageDiv.length > 1) {
+                return storageDiv[1].children[1]
+            } else {
+                return null;
+            }
+        }
+        get crateNum() {
+            return window.game.global.resource[this.id].crates;
+        }
+        get containerNum() {
+            return window.game.global.resource[this.id].containers;
+        }
+        get crateable() {
+            return window.game.global.resource[this.id].stackable;
+        }
+        crateInc(num) {
+            let crateIncBtn = this.crateIncBtn;
+            if (crateIncBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    crateIncBtn.click();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+        crateDec(num) {
+            let crateDecBtn = this.crateDecBtn;
+            if (crateDecBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    crateDecBtn.click();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+        containerInc(num) {
+            let containerIncBtn = this.containerIncBtn;
+            if (containerIncBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    containerIncBtn.click();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+        containerDec(num) {
+            let containerDecBtn = this.containerDecBtn;
+            if (containerDecBtn !== null) {
+                for (let i = 0;i < num;i++) {
+                    containerDecBtn.click();
+                }
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        decStorePriority() {
+            if (this.storePriority == 0) {return;}
+            this.storePriority -= 1;
+            updateSettings();
+            console.log("Decrementing Store Priority", this.id, this.storePriority);
+        }
+        incStorePriority() {
+            this.storePriority += 1;
+            updateSettings();
+            console.log("Incrementing Store Priority", this.id, this.storePriority);
+        }
+        decStoreMin() {
+            if (this.storeMin == 0) {return;}
+            this.storeMin -= 1;
+            updateSettings();
+            console.log("Decrementing Store Minimum", this.id, this.storeMin);
+        }
+        incStoreMin() {
+            this.storeMin += 1;
+            updateSettings();
+            console.log("Incrementing Store Minimum", this.id, this.storeMin);
+        }
+
         get basePriority() {return settings.resources[this.id].basePriority;}
         set basePriority(basePriority) {settings.resources[this.id].basePriority = basePriority;}
         get priority() {return settings.resources[this.id].basePriority;}
@@ -207,8 +324,6 @@ function main() {
             if (!settings.resources[this.id].hasOwnProperty('autoBuy')) {settings.resources[this.id].autoBuy = false;}
             if (!settings.resources[this.id].hasOwnProperty('buyRatio')) {settings.resources[this.id].buyRatio = 0.5;}
             if (!settings.resources[this.id].hasOwnProperty('sellRatio')) {settings.resources[this.id].sellRatio = 0.9;}
-            if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = 0;}
-            if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = 0;}
         }
 
         get autoSell() {return settings.resources[this.id].autoSell};
@@ -219,10 +334,6 @@ function main() {
         set buyRatio(buyRatio) {settings.resources[this.id].buyRatio = buyRatio;}
         get sellRatio() {return settings.resources[this.id].sellRatio};
         set sellRatio(sellRatio) {settings.resources[this.id].sellRatio = sellRatio;}
-        get storePriority() {return settings.resources[this.id].storePriority};
-        set storePriority(storePriority) {settings.resources[this.id].storePriority = storePriority;}
-        get storeMin() {return settings.resources[this.id].storeMin;}
-        set storeMin(storeMin) {settings.resources[this.id].storeMin = storeMin;}
 
         buyDec() {
             if (this.buyRatio > 0) {
@@ -295,38 +406,6 @@ function main() {
                 return null;
             }
         }
-        get crateIncBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 0) {
-                return storageDiv[0].children[3]
-            } else {
-                return null;
-            }
-        }
-        get crateDecBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 0) {
-                return storageDiv[0].children[1]
-            } else {
-                return null;
-            }
-        }
-        get containerIncBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 1) {
-                return storageDiv[1].children[3]
-            } else {
-                return null;
-            }
-        }
-        get containerDecBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 1) {
-                return storageDiv[1].children[1]
-            } else {
-                return null;
-            }
-        }
 
         tradeDec() {
             if (this.tradeDecBtn !== null) {
@@ -372,84 +451,6 @@ function main() {
         }
         get tradeAmount() {
             return window.game.tradeRatio[this.id];
-        }
-
-        crateInc(num) {
-            let crateIncBtn = this.crateIncBtn;
-            if (crateIncBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    crateIncBtn.click();
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-        crateDec(num) {
-            let crateDecBtn = this.crateDecBtn;
-            if (crateDecBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    crateDecBtn.click();
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-        containerInc(num) {
-            let containerIncBtn = this.containerIncBtn;
-            if (containerIncBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    containerIncBtn.click();
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-        containerDec(num) {
-            let containerDecBtn = this.containerDecBtn;
-            if (containerDecBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    containerDecBtn.click();
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        get crateNum() {
-            return window.game.global.resource[this.id].crates;
-        }
-        get containerNum() {
-            return window.game.global.resource[this.id].containers;
-        }
-        get crateable() {
-            return window.game.global.resource[this.id].stackable;
-        }
-
-        decStorePriority() {
-            if (this.storePriority == 0) {return;}
-            this.storePriority -= 1;
-            updateSettings();
-            console.log("Decrementing Store Priority", this.id, this.storePriority);
-        }
-        incStorePriority() {
-            this.storePriority += 1;
-            updateSettings();
-            console.log("Incrementing Store Priority", this.id, this.storePriority);
-        }
-        decStoreMin() {
-            if (this.storeMin == 0) {return;}
-            this.storeMin -= 1;
-            updateSettings();
-            console.log("Decrementing Store Minimum", this.id, this.storeMin);
-        }
-        incStoreMin() {
-            this.storeMin += 1;
-            updateSettings();
-            console.log("Incrementing Store Minimum", this.id, this.storeMin);
         }
     }
     var resources = [];
@@ -525,6 +526,17 @@ function main() {
             }
             return false;
         }
+    }
+
+    function getMultiplier(res) {
+        let multiplier = 1;
+        for (let val in window.game.breakdown.p[res]) {
+            let data = window.game.breakdown.p[res][val];
+            if (data[data.length-1] == '%') {
+                multiplier *= 1 + (+data.substring(0, data.length - 1)/100)
+            }
+        }
+        return multiplier;
     }
 
     function priorityScale(value, priority, action) {
@@ -659,13 +671,6 @@ function main() {
             return this.data.count;
         }
 
-        get numOn() {
-            if (this.data === null) {
-                return 0;
-            }
-            return this.data.on;
-        }
-
         decAtLeast() {
             if (this.atLeast == 0) {return;}
             this.atLeast -= 1;
@@ -703,28 +708,266 @@ function main() {
         }
 
     }
+    function checkPowerRequirements(c_action){
+        var isMet = true;
+        if (c_action['power_reqs']){
+            Object.keys(c_action.power_reqs).forEach(function (req){
+                if (window.game.global.tech[req] && window.game.global.tech[req] < c_action.power_reqs[req]){
+                    isMet = false;
+                }
+            });
+        }
+        return isMet;
+    }
+    function getPowerData(id, def) {
+        //console.log("Getting Power Data for", id);
+        let produce = [];
+        let consume = [];
+        let effectStr = "";
+        let test = null;
+        // Finding Production
+        switch(id) {
+            case "city-apartment":
+            case "city-sawmill":
+            case "city-rock_quarry":
+            case "city-cement_plant":
+            case "city-factory":
+            case "city-metal_refinery":
+            case "city-mine":
+            case "city-coal_mine":
+            case "city-tourist_center":
+            case "city-wardenclyffe":
+            case "city-biolab":
+            case "city-mass_driver":
+            case "space-observatory":
+            case "space-living_quarters":
+            case "space-vr_center": //TODO I haven't seen this yet so idk
+            case "space-red_mine":
+            case "space-fabrication":
+            case "space-red_factory":
+            case "space-biodome":
+            case "space-exotic_lab":
+            case "space-space_barracks":
+            case "space-elerium_contain":
+            case "space-world_controller":
+                break;
+            case "city-windmill":
+                produce = [{res:"electricity",cost:1}];
+                break;
+            case "city-casino":
+                effectStr = def.effect();
+                test = /generates\s\$([\d\.]+)/.exec(effectStr);
+                if (test) {produce = [{res:"Money",cost:+test[1]}];}
+                break;
+            case "city-mill":
+            case "city-coal_power":
+            case "city-oil_power":
+            case "city-fission_power":
+            case "space-geothermal":
+            case "space-e_reactor":
+                produce = [{res:"electricity",cost:-def.powered()}];
+                break;
+            case "space-nav_beacon":
+                produce = [{res:"moon_support",cost:1}];
+                break;
+            case "space-moon_base":
+                produce = [{res:"moon_support",cost:3}];
+                break;
+            case "space-iridium_mine":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Iridium/.exec(effectStr);
+                produce = [{res:"Iridium",cost:+test[1]}];
+                break;
+            case "space-helium_mine":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Helium/.exec(effectStr);
+                produce = [{res:"Helium_3",cost:+test[1]}];
+                break;
+            case "space-spaceport":
+                produce = [{res:"red_support",cost:3}];
+                break;
+            case "space-red_tower":
+                produce = [{res:"red_support",cost:1}];
+                break;
+            case "space-swarm_control":
+                produce = [{res:"swarm_support",cost:def.support}];
+                break;
+            case "space-swarm_satellite":
+                produce = [{res:"electricity",cost:1}];
+                break;
+            case "space-gas_mining":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Helium/.exec(effectStr);
+                produce = [{res:"Helium_3",cost:+test[1]}];
+                break;
+            case "space-outpost":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Neutronium/.exec(effectStr);
+                produce = [{res:"Neutronium",cost:+test[1]}];
+                break;
+            case "space-oil_extractor":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Oil/.exec(effectStr);
+                produce = [{res:"Oil",cost:+test[1]}];
+                break;
+            case "space-space_station":
+                produce = [{res:"belt_support",cost:3}];
+                break;
+            case "space-elerium_ship":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Elerium/.exec(effectStr);
+                produce = [{res:"Elerium",cost:+test[1]}];
+                break;
+            case "space-iridium_ship":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Iridium/.exec(effectStr);
+                produce = [{res:"Iridium",cost:+test[1]}];
+                break;
+            case "space-iron_ship":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Iron/.exec(effectStr);
+                produce = [{res:"Iron",cost:+test[1]}];
+                break;
+            case "interstellar-starport":
+                produce = [{res:"alpha_support",cost:5}];
+                break;
+            default:
+                break;
+        }
+        // Finding Consumption
+        switch(id) {
+            case "city-apartment":
+            case "city-sawmill":
+            case "city-rock_quarry":
+            case "city-cement_plant":
+            case "city-factory":
+            case "city-metal_refinery":
+            case "city-mine":
+            case "city-coal_mine":
+            case "city-casino":
+            case "city-wardenclyffe":
+            case "city-biolab":
+            case "city-mass_driver":
+            case "space-nav_beacon":
+            case "space-red_tower":
+            case "space-gas_mining":
+            case "space-oil_extractor":
+            case "space-elerium_contain":
+            case "space-world_controller":
+                consume = [{res:"electricity",cost:def.powered()}];
+                break;
+            case "space-iridium_mine":
+            case "space-helium_mine":
+            case "space-observatory":
+                consume= [{res:"moon_support",cost:-def.support}];
+                break;
+            case "space-living_quarters":
+            case "space-vr_center": //TODO I haven't seen this yet so idk
+            case "space-red_mine":
+            case "space-fabrication":
+            case "space-biodome":
+            case "space-exotic_lab":
+                consume = [{res:"red_support",cost:-def.support}];
+                break;
+            case "space-red_factory":
+                consume = [{res:"electricity",cost:def.powered()}];
+                effectStr = def.effect();
+                test = /-([\d\.]+) Helium/.exec(effectStr);
+                consume.push({res:"Helium_3",cost:+test[1]});
+                break;
+            case "space-space_barracks":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Oil/.exec(effectStr);
+                consume = [{res:"Oil",cost:+test[1]}];
+                test = /-([\d\.]+) (Food|Souls)/.exec(effectStr);
+                consume.push({res:"Food",cost:+test[1]});
+                break;
+            case "city-mill":
+                consume = [{res:"Food",cost:0.1}];
+                break;
+            case "city-tourist_center":
+                effectStr = def.effect();
+                test = /-([\d\.]+) (Food|Souls)/.exec(effectStr);
+                consume = [{res:"Food",cost:+test[1]}];
+                break;
+            case "city-coal_power":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Coal/.exec(effectStr);
+                consume = [{res:"Coal",cost:+test[1]}];
+                break;
+            case "city-oil_power":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Oil/.exec(effectStr);
+                consume = [{res:"Oil",cost:+test[1]}];
+                break;
+            case "city-fission_power":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Uranium/.exec(effectStr);
+                consume = [{res:"Uranium",cost:+test[1]}];
+                break;
+            case "space-geothermal":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Helium/.exec(effectStr);
+                consume = [{res:"Helium_3",cost:+test[1]}];
+                break;
+            case "space-e_reactor":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Elerium/.exec(effectStr);
+                consume = [{res:"Elerium",cost:+test[1]}];
+                break;
+            case "space-moon_base":
+            case "space-outpost":
+                consume = [{res:"electricity",cost:def.powered()}];
+                effectStr = def.effect();
+                test = /-([\d\.]+) Oil/.exec(effectStr);
+                consume.push({res:"Oil",cost:test[1]});
+                break
+            case "space-spaceport":
+            case "space-space_station":
+            case "interstellar-starport":
+                consume = [{res:"electricity",cost:def.powered()}];
+                effectStr = def.effect();
+                test = /-([\d\.]+) Helium/.exec(effectStr);
+                consume.push({res:"Helium_3",cost:test[1]});
+                test = /-([\d\.]+) (Food|Souls)/.exec(effectStr);
+                consume.push({res:"Food",cost:test[1]});
+                break
+            case "space-swarm_control":
+                break;
+            case "space-swarm_satellite":
+                consume = [{res:"swarm_support",cost:1}];
+                break;
+            case "space-elerium_ship":
+            case "space-iridium_ship":
+            case "space-iron_ship":
+                consume = [{res:"belt_support",cost:-def.support}];
+                break;
+            case "interstellar-mining_droid":
+            case "interstellar-laboratory":
+                consume = [{res:"alpha_support",cost:-def.support}];
+                break;
+            default:
+                break;
+        }
+        return [consume,produce];
+    }
     class PoweredBuilding extends Building {
-        constructor(id, loc, powerPriority, consume, produce, unlockResearch) {
+        constructor(id, loc) {
             super(id, loc);
-            this.produce = produce;
-            this.consume = consume;
-            if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = powerPriority;}
-            this.unlockResearch = unlockResearch;
+            if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = 0;}
+            try {
+            [this.consume,this.produce] = getPowerData(id, this.def);
+            //console.log(this.consume, this.produce);
+            } catch(e) {
+                console.log("Error loading power for ",this.id);
+            }
         }
 
         get powerPriority() {return settings.actions[this.id].powerPriority;}
         set powerPriority(powerPriority) {settings.actions[this.id].powerPriority = powerPriority;}
 
         get powerUnlocked() {
-            try {
-                if (this.unlockResearch !== undefined) {
-                    return $('#'+this.id).length > 0 && researched(this.unlockResearch);
-                }
-                return $('#'+this.id).length > 0;
-            } catch(e) {
-                console.log("Error:", this.id, "powerUnlocked");
-                return false;
-            }
+            return checkPowerRequirements(this.def);
         }
 
         get incBtn() {
@@ -735,6 +978,9 @@ function main() {
         }
 
         get numOn() {
+            if (this.data === null) {
+                return 0;
+            }
             return this.data.on;
         }
 
@@ -782,6 +1028,9 @@ function main() {
             if ($('.modal').length != 0) {
                 return;
             }
+            // Ensuring no modal conflicts
+            if (modal) {return;}
+            modal = true;
             // Opening modal
             $('#space-star_dock > .special').click();
             // Delaying for modal animation
@@ -796,6 +1045,7 @@ function main() {
                 // Closing modal
                 let closeBtn = $('.modal-close')[0];
                 if (closeBtn !== undefined) {closeBtn.click();}
+                modal = false;
             }, 100);
         }
     }
@@ -810,6 +1060,16 @@ function main() {
                 buildings['city-house'] = new Building('city-house', ['city']);
                 continue;
             }
+            if (window.game.actions.city[action].powered || window.game.actions.city[action].support) {
+                //console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
+                buildings['city-'+action] = new PoweredBuilding('city-'+action, ['city']);
+                continue;
+            }
+            if (action == 'windmill') {
+                //console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
+                buildings['city-'+action] = new PoweredBuilding('city-'+action, ['city']);
+                continue;
+            }
             buildings['city-'+action] = new Building('city-'+action, ['city']);
         }
         // Space
@@ -817,6 +1077,11 @@ function main() {
             for (var action in window.game.actions.space[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
+                if (window.game.actions.space[location][action].powered || window.game.actions.space[location][action].support) {
+                    //console.log(action,"POWER", window.game.actions.space[location][action].powered, "SUPPORT", window.game.actions.space[location][action].support);
+                    buildings['space-'+action] = new PoweredBuilding('space-'+action, ['space', location]);
+                    continue;
+                }
                 buildings['space-'+action] = new Building('space-'+action, ['space', location]);
             }
         }
@@ -825,6 +1090,30 @@ function main() {
             // Remove reset actions
             if (action == 'prep_ship' || action == 'launch_ship') {continue;}
             buildings['spcdock-'+action] = new SpaceDockBuilding('spcdock-'+action, ['starDock']);
+        }
+        // Interstellar
+        for (var location in window.game.actions.interstellar) {
+            for (var action in window.game.actions.interstellar[location]) {
+                // Remove info
+                if (action == 'info') {continue;}
+                if (window.game.actions.interstellar[location][action].powered || window.game.actions.interstellar[location][action].support) {
+                    buildings['interstellar-'+action] = new PoweredBuilding('interstellar-'+action, ['interstellar', location]);
+                    continue;
+                }
+                buildings['interstellar-'+action] = new Building('interstellar-'+action, ['interstellar', location]);
+            }
+        }
+        // Portal
+        for (var location in window.game.actions.portal) {
+            for (var action in window.game.actions.portal[location]) {
+                // Remove info
+                if (action == 'info') {continue;}
+                if (window.game.actions.portal[location][action].powered || window.game.actions.portal[location][action].support) {
+                    buildings['portal-'+action] = new PoweredBuilding('portal-'+action, ['portal', location]);
+                    continue;
+                }
+                buildings['portal-'+action] = new Building('portal-'+action, ['portal', location]);
+            }
         }
         console.log(buildings);
     }
@@ -1211,6 +1500,7 @@ function main() {
         jobs.banker = new Job("banker", 9);
         jobs.colonist = new Job("colonist", 7);
         jobs.space_miner = new Job("space_miner", 7);
+        jobs.surveyor = new Job("hell_surveyor",9);
         jobs.craftsman = new Craftsman("craftsman", 9);
     }
     class CraftJob extends Job {
@@ -1307,7 +1597,6 @@ function main() {
 
     function loadSettings() {
         console.log("Loading Settings");
-        try {
         // Evolution
         loadEvolution();
         // Farm
@@ -1315,7 +1604,7 @@ function main() {
         // Resources
         loadResources();
         // Storages
-        loadStorages();
+        try { loadStorages(); } catch(e) {}
         // Buildings
         loadBuildings();
         // Jobs
@@ -1329,9 +1618,6 @@ function main() {
         loadSmelter();
         // Factory
         loadFactory();
-        } catch(e) {
-
-        }
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
         }
@@ -1895,16 +2181,18 @@ function main() {
         if ($('.modal').length != 0) {
             return;
         }
-
-        console.log("Auto Smelting");
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+        //console.log("Auto Smelting");
         // Opening modal
         $('#city-smelter > .special').click();
         // Delaying for modal animation
         setTimeout(function() {
             // Finding relevent elements
-            let decBtns = $('#specialModal > div:nth-child(2) > .sub');
-            let incBtns = $('#specialModal > div:nth-child(2) > .add');
-            let labels = $('#specialModal > div:nth-child(2) > span > .current');
+            let decBtns = $('#specialModal > .fuels > .sub');
+            let incBtns = $('#specialModal > .fuels > .add');
+            let labels = $('#specialModal > .fuels > span > .current');
             let lumberInc = null; let lumberDec = null; let coalInc = null; let coalDec = null; let oilInc = null; let oilDec = null;
             let lumberNum = null; let coalNum = null; let oilNum = null; let lumberFuel = null; let coalFuel = null; let oilFuel = null;
             // Determining which fuel types are available
@@ -1958,14 +2246,14 @@ function main() {
             if (coalNum !== null) {resources.Coal.temp_rate += coalFuel * coalNum;}
             if (oilNum !== null) {resources.Oil.temp_rate += oilFuel * oilNum;}
             // Finding iron/steel buttons
-            let ironBtn = $('#specialModal > div:nth-child(3) > span > button')[0];
-            let steelBtn = $('#specialModal > div:nth-child(3) > span > button')[1];
-            let ironNum = $('#specialModal > div:nth-child(3) > span')[0].innerText;
-            let steelNum = $('#specialModal > div:nth-child(3) > span')[1].innerText;
+            let ironBtn = $('#specialModal > .smelting > span > button')[0];
+            let steelBtn = $('#specialModal > .smelting > span > button')[1];
+            let ironNum = $('#specialModal > .smelting > span')[0].innerText;
+            let steelNum = $('#specialModal > .smelting > span')[1].innerText;
             ironNum = parseInt(/Iron Smelting: ([\d]+)/.exec(ironNum)[1]);
             steelNum = parseInt(/Steel Smelting: ([\d]+)/.exec(steelNum)[1]);
-            let ironVal = $('#specialModal > div:nth-child(3) > span')[0].attributes[0].value;
-            let steelVal = $('#specialModal > div:nth-child(3) > span')[1].attributes[0].value;
+            let ironVal = $('#specialModal > .smelting > span')[0].attributes[0].value;
+            let steelVal = $('#specialModal > .smelting > span')[1].attributes[0].value;
             let ironPercent = parseInt(/[^\d]+([\d]+)%/.exec(ironVal)[1]);
             let temp = /[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*/.exec(steelVal);
             let steelCoalFuel = parseFloat(temp[1]);
@@ -2074,6 +2362,7 @@ function main() {
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
         }, 100);
     }
 
@@ -2086,8 +2375,10 @@ function main() {
         if ($('.modal').length != 0) {
             return;
         }
-
-        console.log("Auto Factory");
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+        //console.log("Auto Factory");
         // Opening modal
         $('#city-factory > .special').click();
         // Delaying for modal animation
@@ -2131,7 +2422,7 @@ function main() {
                 nanoTubeNeutroniumCost = temp[2];
                 nanoTubeNum = +labels[3].innerText
             }
-            //console.log("L", luxNum, luxFurCost, luxMoneyProduct, "A", alloyNum, alloyCopperCost, alloyAluminiumCost, "P", polymerNum, polymerOilCost, polymerLumberCost, "N", nanoTubeNum, nanoTubeCoalCost ,nanoTubeNeutroniumCost);
+            console.log("L", luxNum, luxFurCost, luxMoneyProduct, "A", alloyNum, alloyCopperCost, alloyAluminiumCost, "P", polymerNum, polymerOilCost, polymerLumberCost, "N", nanoTubeNum, nanoTubeCoalCost ,nanoTubeNeutroniumCost);
             // Resetting temp rates
             if (luxNum !== null) {resources.Money.temp_rate -= luxMoneyProduct * luxNum; resources.Furs.temp_rate += luxFurCost * luxNum;}
             if (alloyNum !== null) {resources.Copper.temp_rate += alloyCopperCost * alloyNum; resources.Aluminium.temp_rate += alloyAluminiumCost * alloyNum;}
@@ -2168,7 +2459,8 @@ function main() {
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
-                            } else if (resources.Furs.temp_rate > luxFurCost) {
+                                tempError += .0000000001;
+                            } else if (luxPriority > 0 && resources.Furs.temp_rate > luxFurCost) {
                                 tempError = 1e10 / prioMultipliers[0];
                             }
                             break;
@@ -2180,7 +2472,8 @@ function main() {
                                 tempError += ((wantedAlloy+1)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
-                            } else if (resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
+                                tempError += .0000000001;
+                            } else if (alloyPriority > 0 && resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
                                 tempError = 1e10 / prioMultipliers[1];
                             }
                             break;
@@ -2192,19 +2485,22 @@ function main() {
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer+1)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
-                            } else if (resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
+                                tempError += .0000000001;
+                            } else if (polymerPriority > 0 && resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
                                 tempError = 1e10 / prioMultipliers[2];
                             }
                             break;
                         }
                         case 3: {
                             // Nano Tubes
+                            console.log(nanoTubePriority, resources.Coal.temp_rate, resources.Neutronium.temp_rate);
                             if (nanoTubePriority > 0 && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
                                 tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
                                 tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
                                 tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
                                 tempError += ((wantedNanoTube+1)/(i+1) - nanoTubePriority/totalPriority)**2
-                            } else if (resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
+                                tempError += .0000000001;
+                            } else if (nanoTubePriority > 0 && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
                                 tempError = 1e10 / prioMultipliers[3];
                             }
                             break;
@@ -2213,7 +2509,7 @@ function main() {
                             break;
                     }
                     // Availible Choice
-                    //console.log(j, tempError)
+                    console.log(j, tempError)
                     if (tempError != 0) {
                         if (tempError < posAllocationError) {
                             posAllocation = j;
@@ -2237,7 +2533,7 @@ function main() {
                 }
             }
             console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
-            //console.log(allocation);
+            console.log(allocation);
             // Removing all settings
             for (let i = 0;i < totalFactories;i++) {
                 decBtns.click();
@@ -2248,6 +2544,7 @@ function main() {
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
         }, 100);
     }
 
@@ -2341,9 +2638,8 @@ function main() {
         let fuels = ['Coal', 'Oil', 'Uranium', 'Helium_3','Elerium'];
         let yes = false;
         for (let i = 0;i < building.produce.length;i++) {
-            if (building.produce[i].res instanceof Resource) {
-                let res = building.produce[i].res.id;
-                if (res in fuels) {
+            if (resources[building.produce[i].res] !== undefined) {
+                if (building.produce[i].res in fuels) {
                     yes = true;
                 }
             }
@@ -2358,10 +2654,8 @@ function main() {
         let maximize = []; let maximize_want = [];
         let electricityConsumers = []; let electricityConsumers_want = [];
         let passiveProducers = [];
-        let moonConsumers = [];
-        let redConsumers = [];
-        let beltConsumers = [];
-        let swarmConsumers = [];
+        let moonConsumers = []; let moonConsumers_want = [];
+        let redConsumers = []; let redConsumers_want = [];
         for (x in buildings) {
             // Ignore not unlocked buildings
             if (!buildings[x].unlocked) {continue;}
@@ -2371,17 +2665,19 @@ function main() {
             if (!(buildings[x] instanceof PoweredBuilding)) {continue;}
             // Reverting consumption/production
             for (let i = 0;i < buildings[x].consume.length;i++) {
-                if (buildings[x].consume[i].res instanceof Resource) {
-                    // Consuming a resource
-                    buildings[x].consume[i].res.temp_rate += buildings[x].numOn * buildings[x].consume[i].cost;
-                    //console.log(buildings[x].consume[i].res.id, buildings[x].consume[i].res.temp_rate);
-                } else {
-                    // Consuming a support, don't care for now I think
+                if (resources[buildings[x].consume[i].res] !== undefined) {
+                    resources[buildings[x].consume[i].res].temp_rate += buildings[x].numOn * buildings[x].consume[i].cost;
+                }
+                else {
+
                 }
             }
             for (let i = 0;i < buildings[x].produce.length;i++) {
-                if (buildings[x].produce[i].res instanceof Resource) {
-                    buildings[x].produce[i].res.temp_rate -= buildings[x].numOn * buildings[x].produce[i].cost;
+                if (resources[buildings[x].produce[i].res] !== undefined) {
+                    resources[buildings[x].produce[i].res].temp_rate -= buildings[x].numOn * buildings[x].produce[i].cost * getMultiplier(buildings[x].produce[i].res) * getMultiplier('Global');
+                }
+                else {
+
                 }
             }
             // Splitting buildings by type
@@ -2392,7 +2688,7 @@ function main() {
             } else if (buildings[x].consume.length == 0) {
                 // No consumption means building's always on
                 passiveProducers.push(buildings[x]);
-            } else if (buildings[x].consume[0].res instanceof Resource) {
+            } else if (resources[buildings[x].consume[0].res] !== undefined) {
                 // Resource consumer
                 maximize.push(buildings[x]);
                 maximize_want.push(0);
@@ -2407,43 +2703,50 @@ function main() {
             } else if (buildings[x].consume[0].res == "moon_support") {
                 // Moon Support consumer
                 moonConsumers.push(buildings[x]);
+                moonConsumers_want.push(0);
             } else if (buildings[x].consume[0].res == "red_support") {
                 // Red Support consumer
                 redConsumers.push(buildings[x]);
+                redConsumers_want.push(0);
             } else if (buildings[x].consume[0].res == "belt_support") {
                 // Belt Support consumer
                 beltConsumers.push(buildings[x]);
+                beltConsumers_want.push(0);
             } else if (buildings[x].consume[0].res == "swarm_support") {
                 // Swarm Support consumer
                 swarmConsumers.push(buildings[x]);
+                swarmConsumers_want.push(0);
             }
         }
-        /*
-        console.log("Max",maximize);
-        console.log("Passive",passiveProducers);
-        console.log("Electricity", electricityConsumers);
-        console.log("Moon", moonConsumers);
-        console.log("Red", redConsumers);
-        console.log("Belt", beltConsumers);
-        */
+
+        //console.log("Max",maximize);
+        //console.log("Passive",passiveProducers);
+        //console.log("Electricity", electricityConsumers);
+        //console.log("Moon", moonConsumers);
+        //console.log("Red", redConsumers);
+        //console.log("Belt", beltConsumers);
+
         let support = {
             electricity:0,
-            moon:0,
-            red:0,
-            swarm:0,
-            belt:0
+            moon_support:0,
+            red_support:0,
+            swarm_support:0,
+            belt_support:0
         }
+
         // Add all passive producers
         for (let i = 0;i < passiveProducers.length;i++) {
             let pp = passiveProducers[i];
             for (let j = 0;j < pp.produce.length;j++) {
-                if (pp.produce[j].res instanceof Resource) {
-                    pp.produce[j].res.temp_rate += pp.numTotal * pp.produce[j].cost;
+                if (resources[pp.produce[j].res] !== undefined) {
+                    resources[pp.produce[j].res].temp_rate += pp.numTotal * pp.produce[j].cost;
                 } else {
                     support[pp.produce[j].res] += pp.numTotal * pp.produce[j].cost;
                 }
             }
         }
+        // Add all swarm support (since it's only one thing
+
         // Maximizing the maximize category
         maximize.sort(function(a,b) {return b.powerPriority - a.powerPriority;});
         let update = true;
@@ -2459,7 +2762,7 @@ function main() {
                 for (let j = 0;j < building.consume.length;j++) {
                     let res = building.consume[j].res;
                     let cost = building.consume[j].cost;
-                    if (res instanceof Resource) {
+                    if (resources[res] !== undefined) {
                         //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
                         if (res.temp_rate < cost) {
                             canTurnOn = false;
@@ -2477,7 +2780,7 @@ function main() {
                     for (let j = 0;j < building.consume.length;j++) {
                         let res = building.consume[j].res;
                         let cost = building.consume[j].cost;
-                        if (res instanceof Resource) {
+                        if (resources[res] !== undefined) {
                             res.temp_rate -= cost;
                         } else {
                             support[res] -= cost;
@@ -2486,7 +2789,7 @@ function main() {
                     for (let j = 0;j < building.produce.length;j++) {
                         let res = building.produce[j].res;
                         let cost = building.produce[j].cost;
-                        if (res instanceof Resource) {
+                        if (resources[res] !== undefined) {
                             res.temp_rate += cost;
                         } else {
                             support[res] += cost;
@@ -2500,9 +2803,7 @@ function main() {
                 break;
             }
         }
-        //console.log(resources.Helium_3.temp_rate);
-        //console.log(maximize, maximize_want);
-        // Optimizing each support
+        console.log(maximize, maximize_want);
         electricityConsumers.sort(function(a,b) {return b.powerPriority - a.powerPriority;});
         if (electricityConsumers.length) {
             while (support.electricity > 0) {
@@ -2516,7 +2817,7 @@ function main() {
                     for (let j = 0;j < building.consume.length;j++) {
                         let res = building.consume[j].res;
                         let cost = building.consume[j].cost;
-                        if (res instanceof Resource) {
+                        if (resources[res] !== undefined) {
                             //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
                             if (res.temp_rate < cost) {
                                 canTurnOn = false;
@@ -2534,7 +2835,7 @@ function main() {
                         for (let j = 0;j < building.consume.length;j++) {
                             let res = building.consume[j].res;
                             let cost = building.consume[j].cost;
-                            if (res instanceof Resource) {
+                            if (resources[res] !== undefined) {
                                 res.temp_rate -= cost;
                             } else {
                                 support[res] -= cost;
@@ -2543,7 +2844,7 @@ function main() {
                         for (let j = 0;j < building.produce.length;j++) {
                             let res = building.produce[j].res;
                             let cost = building.produce[j].cost;
-                            if (res instanceof Resource) {
+                            if (resources[res] !== undefined) {
                                 res.temp_rate += cost;
                             } else {
                                 support[res] += cost;
@@ -2558,7 +2859,7 @@ function main() {
                 }
             }
         }
-        //console.log(electricityConsumers,electricityConsumers_want);
+        console.log(electricityConsumers,electricityConsumers_want);
         for (let i = 0;i < maximize.length;i++) {
             if (maximize[i].numOn < maximize_want[i]) {
                 for (let j = 0;j < maximize_want[i] - maximize[i].numOn;j++) {
@@ -2581,6 +2882,8 @@ function main() {
                 }
             }
         }
+        console.log(support)
+        // Optimizing each support
     }
 
     function getAvailableBuildings() {
@@ -2739,13 +3042,7 @@ function main() {
                 if (curRes.amount >= action.getResDep(curRes.id)) {
                     action.completionTime[curRes.id] = 0;
                 } else {
-                    let time = 0;
-                    if (researched('tech-trade') && res instanceof TradeableResource) {
-                        time = (action.getResDep(curRes.id) - curRes.amount) / curRes.temp_rate;
-                    } else {
-                        time = (action.getResDep(curRes.id) - curRes.amount) / curRes.rate;
-                    }
-
+                    let time = (action.getResDep(curRes.id) - curRes.amount) / curRes.temp_rate;
                     time = (time < 0) ? 1 : time;
                     action.completionTime[curRes.id] = time;
                     //console.log(action.id, curRes.id, action.getResDep(curRes.id), curRes.amount, curRes.temp_rate, time);
@@ -2782,11 +3079,17 @@ function main() {
                         // Action can be achieved with this resource
                         action.completion[curRes.id.toLowerCase()] = true;
                         // Determining how much of the resource to save for this action
+                        /*
+                        let giveAmount = (action.maxCompletionTime - action.completionTime[curRes.id]) * curRes.temp_rate;
+                        let give = Math.min(giveAmount,curAmount);
+                        action.keptRes[curRes.id] = curAmount - give;
+                        curAmount = give;
+                        */
+
                         if (action.limitingRes == curRes.id) {
                             // This resource is the limiting factor, give nothing to the next actions
                             action.keptRes[curRes.id] = action.getResDep(curRes.id);
                             curAmount -= action.keptRes[curRes.id];
-
                         } else {
                             // This resource isn't the limiting factor, give some leeway
                             // Higher priority, less leeway given
@@ -2796,6 +3099,7 @@ function main() {
                             action.keptRes[curRes.id] = priorityFactor * timeFactor * action.getResDep(curRes.id)/(i+1);
                             curAmount -= action.keptRes[curRes.id];
                         }
+
                     } else {
                         // Action cannot be achieved with this resource
                         limits[curRes.id] = action;
@@ -2836,14 +3140,14 @@ function main() {
                 }
             }
         }
-
         if (settings.autoSmelter && (count % settings.smelterSettings.interval == 0)) {
             autoSmelter(limits);
-            return {limits:limits,PQs:PQs}
         }
-        if (settings.autoFactory && (count % settings.factorySettings.interval == 0)) {
+        else if (settings.autoFactory && (count % settings.factorySettings.interval == 0)) {
             autoFactory(limits);
-            return {limits:limits,PQs:PQs}
+        }
+        else if (settings.autoSupport) {
+            autoSupport(limits);
         }
 
         // Determining rate priorities
@@ -2910,6 +3214,10 @@ function main() {
         let curRatio = {};
         let wantedRatio = {};
         let totalPriority = 0;
+        let priorities = [];
+        let ratios = [];
+        let keys = [];
+        let allocations = {};
         if (focusList.length > 0) {
             // Creating sequence of trade route allocations to match priority ratios
             let curError = 0;
@@ -2918,44 +3226,18 @@ function main() {
                 curNum[focusList[i].res] = 0;
                 wantedRatio[focusList[i].res] = (resources[focusList[i].res].priority * focusList[i].action.priority)**2 / totalPriority;
                 if (wantedRatio[focusList[i].res] * totalTradeRoutes < 1) {wantedRatio[focusList[i].res] = 0;}
+                if (focusList[i].res !== 'Money') {
+                    priorities.push(resources[focusList[i].res].priority);
+                    ratios.push(wantedRatio[focusList[i].res]);
+                    keys.push(focusList[i].res);
+                }
                 //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
-                console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
+                //console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
             }
-            for (let i = 0;i < totalTradeRoutes;i++) {
-                // Calculating error based on next value choice
-                let error = -1;
-                let choice = -1;
-                for (let j = 0;j < focusList.length;j++) {
-                    // There is no trade route for money
-                    if (focusList[j].res == 'Money') {continue;}
-                    if (resources[focusList[j].res].priority == 0) {continue;}
-                    if (wantedRatio[focusList[j].res] == 0) {continue;}
-                    let total = i+1;
-                    let tempError = 0;
-                    // Finding new error based on adding this trade route
-                    for (let k = 0;k < focusList.length;k++) {
-                        if (j == k) {
-                            // Currently attempting to add a trade route to this resource
-                            tempError += (((curNum[focusList[k].res]+1) / total) - wantedRatio[focusList[k].res]) ** 2;
-                        } else {
-                            tempError += ((curNum[focusList[k].res] / total) - wantedRatio[focusList[k].res]) ** 2;
-                        }
-                    }
-                    if (error == -1 || tempError < error) {
-                        error = tempError;
-                        choice = j;
-                    }
-                }
-                if (choice == -1) {
-                    break;
-                }
-                focusSequence[i] = focusList[choice].res;
-                curNum[focusList[choice].res] += 1;
-            }
-            console.log("FOC SEQ:", focusSequence);
+            allocations = allocate(totalTradeRoutes,priorities,ratios);
         }
-
         // Allocating trade routes
+        focusSequence = allocations['seq'];
         let curFocus = 0;
         let curSell = 0;
         if (focusList.length > 0) {
@@ -2963,15 +3245,15 @@ function main() {
             let curFreeTradeRoutes = totalTradeRoutes;
             // Keeping fraction of base money for money
             if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
-            console.log(wantedRatio.Money,resources.Money.temp_rate);
+            //console.log(wantedRatio.Money,resources.Money.temp_rate);
             // Begin allocating algorithm
             while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
                 // Checking if can buy trade route
-                if (resources.Money.temp_rate > resources[focusSequence[curFocus]].tradeBuyCost) {
+                if (focusSequence.length > 0 && resources.Money.temp_rate > resources[keys[focusSequence[curFocus]]].tradeBuyCost) {
                     // Can buy trade route
                     //console.log("Buying", focusSequence[curFocus], curFocus);
-                    resources[focusSequence[curFocus]].tradeInc();
-                    resources.Money.temp_rate -= resources[focusSequence[curFocus]].tradeBuyCost;
+                    resources[keys[focusSequence[curFocus]]].tradeInc();
+                    resources.Money.temp_rate -= resources[keys[focusSequence[curFocus]]].tradeBuyCost;
                     curFreeTradeRoutes -= 1;
                     curFocus += 1;
                 } else {
@@ -2984,6 +3266,41 @@ function main() {
                 }
             }
         }
+    }
+
+    function allocate(totalNum,priorities,ratios) {
+        let allocationList = [];
+        let curNum = [];
+        for (let i = 0;i < priorities.length;i++) {curNum.push(0);}
+        for (let i = 0;i < totalNum;i++) {
+            // Calculating error based on next value choice
+            let error = -1;
+            let choice = -1;
+            for (let j = 0;j < priorities.length;j++) {
+                if (priorities[j] == 0 || ratios[j] == 0) {continue;}
+                let total = i+1;
+                let tempError = 0;
+                // Finding new error based on adding this trade route
+                for (let k = 0;k < priorities.length;k++) {
+                    if (j == k) {
+                        // Currently attempting to add a trade route to this resource
+                        tempError += (((curNum[k]+1) / total) - ratios[k]) ** 2;
+                    } else {
+                        tempError += ((curNum[k] / total) - ratios[k]) ** 2;
+                    }
+                }
+                if (error == -1 || tempError < error) {
+                    error = tempError;
+                    choice = j;
+                }
+            }
+            if (choice == -1) {
+                break;
+            }
+            allocationList[i] = choice;
+            curNum[choice] += 1;
+        }
+        return {seq:allocationList,alloc:curNum};
     }
 
     let count = 1;
@@ -3009,9 +3326,6 @@ function main() {
             if(settings.autoCraft){
                 autoCraft();
             }
-            if(settings.autoSupport) {
-                autoSupport(priorityData);
-            }
             if(settings.autoEmploy){
                 autoEmploy(priorityData);
             }
@@ -3031,6 +3345,11 @@ function main() {
         count += 1;
     }
     setInterval(fastAutomate, 1000);
+
+
+    setInterval(function() {
+        location.reload();
+    }, 200*1000);
 
     /***
     *
@@ -3106,83 +3425,78 @@ function main() {
         if ($('#autoSettingTab').length == 0) {
             createSettingTab();
         }
-        // If not currently in the evolution stage (thus civilization stage
-        if(!inEvolution()) {
-            // Crafting requires foundries
-            if ($('#autoStorage').length == 0 && researched('tech-containerization')) {
-                createSettingToggle('autoStorage', 'Automatically assigns crates and containers to resources', createStorageSettings, removeStorageSettings);
-            } else if (settings.autoStorage && $('.ea-storage-settings').length == 0 && researched('tech-containerization')) {
-                createStorageSettings();
-            }
-            if ($('#autoCraft').length == 0 && researched('tech-foundry')) {
-                createSettingToggle('autoCraft', 'Automatically crafts craftable resources when resource ratio is above 0.9', createCraftSettings, removeCraftSettings);
-            } else if (settings.autoCraft && $('.ea-craft-settings').length == 0 && researched('tech-foundry')) {
-                createCraftSettings();
-            }
-            if ($('#autoSmelter').length == 0 && researched('tech-smelting')) {
-                createSettingToggle('autoSmelter', 'Automatically allocates resources in the smelter. See Buildings tab for more settings', createSmelterSettings, removeSmelterSettings);
-            } else if (settings.autoSmelter && $('.ea-smelter-settings').length == 0 && researched('tech-smelting')) {
-                createSmelterSettings();
-            }
-            if ($('#autoFactory').length == 0 && researched('tech-industrialization')) {
-                createSettingToggle('autoFactory', 'Automatically allocates resources in the factory. See Buildings tab for more settings', createFactorySettings, removeFactorySettings);
-            } else if (settings.autoFactory && $('.ea-factory-settings').length == 0 && researched('tech-industrialization')) {
-                createFactorySettings();
-            }
-            // Support requires electricity
-            if ($('#autoSupport').length == 0 && researched("tech-electricity")) {
-                createSettingToggle('autoSupport', 'Automatically powers buildings and supports space buildings. See the Support Tab for more settings');
-            }
-            if ($('#autoEmploy').length == 0) {
-                createSettingToggle('autoEmploy', 'Autoemploys workers. See Civics page for job priorities', createEmploySettings, removeEmploySettings);
-            } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
-                createEmploySettings();
-            }
-            // Tax requires tax rates researched
-            if ($('#autoTax').length == 0 && researched('tech-tax_rates')) {
-                createSettingToggle('autoTax', 'Automatically changes tax rate to match desired morale level', createTaxSettings, removeTaxSettings);
-            }
-            // Battles require garrisions
-            if ($('#autoBattle').length == 0 && researched('tech-garrison') && !(researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject'))) {
-                createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
-            }
-            // Markets require market researched
-            if ($('#autoMarket').length == 0 && researched('tech-market')) {
-                createSettingToggle('autoMarket', 'Auto buys/sells resources at certain ratios. See Market tab for more settings', createMarketSettings, removeMarketSettings);
-            } else if (settings.autoMarket > 0 && $('.ea-market-settings').length == 0 && researched('tech-market')) {
-                createMarketSettings()
-            }
-            if ($('#ea-settings').length == 0) {
-                let settingsDiv = $('<div id="ea-settings" style="overflow:auto;" title="Sets the minimum amount of money to keep. Can input real money value or ratio"></div>');
-                let minMoneyTxt = $('<div style="float:left;">Minimum money to keep :</div>')
-                let minMoneyInput = $('<input type="text" class="input is-small" style="width:20%;float:right;"/>');
-                minMoneyInput.val(settings.minimumMoney);
-                let setBtn = $('<a class="button is-dark is-small" id="set-min-money" style="float:right;"><span>set</span></a>');
-                settingsDiv.append(minMoneyTxt).append(setBtn).append(minMoneyInput);
-                $('#resources').append(settingsDiv);
-
-                setBtn.on('mouseup', function(e) {
-                    if (e.which != 1) {return;}
-                    let val = minMoneyInput.val();
-                    let minMoney = getRealValue(val);
-                    if(!isNaN(minMoney)){
-                        console.log("Setting minimum Money", minMoney);
-                        settings.minimumMoney = minMoney;
-                        updateSettings();
-                    }
-                });
-            }
-            if ($('#autoPrioritize').length == 0) {
-                createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
-            }
-        }else{
-            // Currently in the evolution stage, reset civilization settings
-            if ($('#autoEvolution').length == 0) {
-                createSettingToggle("autoEvolution", "Automatically plays the evolution stage", createEvolutionSettings, removeEvolutionSettings);
-            } else if (settings.autoEvolution && $('.ea-evolution-settings').length == 0) {
-                createEvolutionSettings();
-            }
+        if ($('#autoEvolution').length == 0) {
+            createSettingToggle("autoEvolution", "Automatically plays the evolution stage", createEvolutionSettings, removeEvolutionSettings);
+        } else if (settings.autoEvolution && $('.ea-evolution-settings').length == 0) {
+            createEvolutionSettings();
         }
+        // Crafting requires foundries
+        if ($('#autoStorage').length == 0) {
+            createSettingToggle('autoStorage', 'Automatically assigns crates and containers to resources', createStorageSettings, removeStorageSettings);
+        } else if (settings.autoStorage && $('.ea-storage-settings').length == 0 && researched('tech-containerization')) {
+            createStorageSettings();
+        }
+        if ($('#autoCraft').length == 0) {
+            createSettingToggle('autoCraft', 'Automatically crafts craftable resources when resource ratio is above 0.9', createCraftSettings, removeCraftSettings);
+        } else if (settings.autoCraft && $('.ea-craft-settings').length == 0 && researched('tech-foundry')) {
+            createCraftSettings();
+        }
+        if ($('#autoSmelter').length == 0) {
+            createSettingToggle('autoSmelter', 'Automatically allocates resources in the smelter. See Buildings tab for more settings', createSmelterSettings, removeSmelterSettings);
+        } else if (settings.autoSmelter && $('.ea-smelter-settings').length == 0 && researched('tech-smelting')) {
+            createSmelterSettings();
+        }
+        if ($('#autoFactory').length == 0) {
+            createSettingToggle('autoFactory', 'Automatically allocates resources in the factory. See Buildings tab for more settings', createFactorySettings, removeFactorySettings);
+        } else if (settings.autoFactory && $('.ea-factory-settings').length == 0 && researched('tech-industrialization')) {
+            createFactorySettings();
+        }
+        if ($('#autoSupport').length == 0) {
+            createSettingToggle('autoSupport', 'Automatically powers buildings and supports space buildings. See the Support Tab for more settings');
+        }
+        if ($('#autoEmploy').length == 0) {
+            createSettingToggle('autoEmploy', 'Autoemploys workers. See Civics page for job priorities', createEmploySettings, removeEmploySettings);
+        } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
+            createEmploySettings();
+        }
+        // Tax requires tax rates researched
+        if ($('#autoTax').length == 0) {
+            createSettingToggle('autoTax', 'Automatically changes tax rate to match desired morale level', createTaxSettings, removeTaxSettings);
+        }
+        // Battles require garrisions
+        if ($('#autoBattle').length == 0) {
+            createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
+        }
+        // Markets require market researched
+        if ($('#autoMarket').length == 0) {
+            createSettingToggle('autoMarket', 'Auto buys/sells resources at certain ratios. See Market tab for more settings', createMarketSettings, removeMarketSettings);
+        } else if (settings.autoMarket > 0 && $('.ea-market-settings').length == 0 && researched('tech-market')) {
+            createMarketSettings()
+        }
+        if ($('#ea-settings').length == 0) {
+            let settingsDiv = $('<div id="ea-settings" style="overflow:auto;" title="Sets the minimum amount of money to keep. Can input real money value or ratio"></div>');
+            let minMoneyTxt = $('<div style="float:left;">Minimum money to keep :</div>')
+            let minMoneyInput = $('<input type="text" class="input is-small" style="width:20%;float:right;"/>');
+            minMoneyInput.val(settings.minimumMoney);
+            let setBtn = $('<a class="button is-dark is-small" id="set-min-money" style="float:right;"><span>set</span></a>');
+            settingsDiv.append(minMoneyTxt).append(setBtn).append(minMoneyInput);
+            $('#resources').append(settingsDiv);
+
+            setBtn.on('mouseup', function(e) {
+                if (e.which != 1) {return;}
+                let val = minMoneyInput.val();
+                let minMoney = getRealValue(val);
+                if(!isNaN(minMoney)){
+                    console.log("Setting minimum Money", minMoney);
+                    settings.minimumMoney = minMoney;
+                    updateSettings();
+                }
+            });
+        }
+        if ($('#autoPrioritize').length == 0) {
+            createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
+        }
+
         if ($('#autoSettings').length == 0) {
             createAutoSettings();
         }
@@ -3982,7 +4296,6 @@ function main() {
 
         // Power Priority
         if (building instanceof PoweredBuilding) {
-            buildingDiv.append(powerControls);
             let powerSub = function() {
                 buildings[building.id].decPowerPriority();
                 return buildings[building.id].powerPriority;
