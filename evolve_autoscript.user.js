@@ -608,6 +608,10 @@ function main() {
             if (this.id == 'city-house') {
                 return details['basic_housing'];
             }
+            // Because tech-fort has a different key than id
+            if (this.id == 'tech-fort') {
+                return details['fortifications'];
+            }
             return details[this.id.split('-')[1]];
         }
 
@@ -1014,7 +1018,7 @@ function main() {
         }
 
         get unlocked() {
-            return buildings['space-star_dock'].numTotal > 0;
+            return this.data !== undefined;
         }
 
         get data() {
@@ -1140,6 +1144,10 @@ function main() {
             // Because tech-exotic_lab has a different key than id
             if (action == "exotic_lab") {
                 researches['tech-energy_lab'] = new Research('tech-energy_lab', ['tech']);
+                continue;
+            }
+            if (action == "fortifications") {
+                researches['tech-fort'] = new Research('tech-fort', ['tech']);
                 continue;
             }
             researches['tech-'+action] = new Research('tech-'+action, ['tech']);
@@ -2912,6 +2920,8 @@ function main() {
         for (var x in researches) {
             // Don't check researches that aren't unlocked
             if (!researches[x].unlocked) {continue;}
+            // Don't check researches that aren't enabled
+            if (!researches[x].enabled) {continue;}
             // Don't check researches that have already been researched
             if (researches[x].researched) {continue;}
             // Don't check researches that can't be bought
