@@ -617,10 +617,15 @@ function main() {
 
         get data() {
             let [type, action] = this.id.split('-');
-            if (window.game.global[type] === undefined || window.game.global[type][action] == undefined) {
+            let temp_action = action;
+            // Because city-basic_housing has a different key than id
+            if (this.id == 'city-house') {
+                temp_action = 'basic_housing';
+            }
+            if (window.game.global[type] === undefined || window.game.global[type][temp_action] == undefined) {
                 return null;
             }
-            return window.game.global[type][action];
+            return window.game.global[type][temp_action];
         }
 
         getResDep(resid) {
@@ -3413,6 +3418,35 @@ function main() {
         let control = $('<div class="controls ea-'+settingName+'-settings" style="display:flex">').append(subBtn).append(label).append(addBtn).append('</div>');
         return control;
     }
+    function createToggleControl(toggleVal, toggleId, toggleName, toggleChangeFunc) {
+        let toggle = $(`
+        <label class="switch" id="${toggleId}_toggle">
+        <input type="checkbox" true-value="true" value="false">
+        <span class="check"></span>
+        <span class="control-label"><span class="is-primary is-bottom is-small is-animated is-multiline"">${toggleName}</span>
+        </span>
+        </label>`);
+        if (typeof toggleChangeFunc === "function") {
+            toggle.on('change', toggleChangeFunc);
+        }
+        toggle.children('input').on('click', function(e){
+            if (e.which != 1) {return;}
+            let input = e.currentTarget;
+            let state = !(input.getAttribute('value') === "true");
+            input.setAttribute('value', state);
+            settings[toggleId] = state;
+            console.log("Setting", toggleId, "to", state);
+            updateSettings();
+        });
+        if(settings[toggleId]){
+            setTimeout( function() {
+                console.log("Setting initially to true");
+                toggle.children('span.check').click();
+                toggle.children('input').attr('value', true);
+            }, 1000);
+        }
+        return toggle;
+    }
 
     function updateUI(){
         if ($('#autoPrint').length == 0) {
@@ -4555,6 +4589,26 @@ function main() {
         populatePriorityList();
         updatePriorityList();
     }
+    function createAutoSettingPage(name, labelElm, contentElm) {
+        let label = $('<li class="ea-settings"><a><span>'+name+'</span></a></li>');
+        let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
+        label.on('mouseup',function(e) {
+            if (e.which != 1) {return;}
+            for (let i = 0;i < labelElm.children().length;i++) {
+                let tabLabel = labelElm.children()[i];
+                let tabItem = contentElm.children()[i];
+                if (tabLabel.classList.contains("is-active")) {
+                    tabLabel.classList.remove("is-active");
+                    tabItem.style.display = 'none';
+                }
+            }
+            label.addClass("is-active");
+            tab[0].style.display = '';
+        });
+        labelElm.append(label);
+        contentElm.append(tab);
+        return tab;
+    }
     function createSettingTab() {
         let settingTabLabel = $('<li class="ea-settings"><a><span>Auto Settings</span></a></li>');
         let settingTab = $('<div id="autoSettingTab" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">Auto Settings</h2></div>');
@@ -4587,10 +4641,47 @@ function main() {
             settingTab[0].style.display = '';
         });
 
+        let tabDiv = $('<div class="b-tabs resTabs"></div>');
+        let nav = $('<nav class="tabs"></nav>');
+        tabDiv.append(nav);
+        let section = $('<section class="tab-content"></section>');
+        tabDiv.append(section);
+        let ul = $('<ul></ul>');
+        nav.append(ul);
+        settingTab.append(tabDiv);
+
+        let generalTab = createAutoSettingPage("General", ul, section);
+        createAutoSettingGeneralPage(generalTab);
+
+        let evolutionTab = createAutoSettingPage("Evolution", ul, section);
+
         populateSmelterSettings(settingTab);
         populateFactorySettings(settingTab);
         populateResearchSettings(settingTab);
         createPriorityList(settingTab);
+
+    }
+    function createAutoSettingGeneralPage(tab) {
+
+        // Auto Print
+
+        let autoPrintToggle = createToggleControl(settings.autoPrint, 'autoPrint', 'Auto Print');
+        tab.append(autoPrintToggle);
+        let autoPrintDiv = $('<div></div>');
+        tab.append(autoPrintDiv);
+        let autoPrintDetails = $('<span></span>');
+        autoPrintDetails[0].innerText = 'This setting will print out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
+        autoPrintDiv.append(autoPrintDetails);
+        tab.append($('<br></br>'));
+
+        // Auto Farm
+        let autoFarmToggle = createToggleControl(settings.autoFarm, 'autoFarm', 'Auto Farm');
+        tab.append(autoFarmToggle);
+        let autoFarmDiv = $('<div></div>');
+        tab.append(autoFarmDiv);
+        let autoFarmDetails = $('<span></span>');
+        autoFarmDetails[0].innerText = 'This setting will auto-click the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
+        autoFarmDiv.append(autoFarmDetails);
 
     }
 
