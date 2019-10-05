@@ -11,6 +11,9 @@ My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.
 * Add click rate setting for Auto Farm
 * Add granularity to Auto Print (only Auto Priority right now, idk what else I could split it into)
 * Add install instructions to README
+* Add Mercenary button to action queue
+* Add Assemble Gene button to action queue
+* Maybe add sacrifical alter? Never played new mantis yet
 
 ## Large
 * Update Auto Support. Currently simplistic allocation, and support buildings not implemented
