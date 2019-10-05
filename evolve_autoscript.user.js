@@ -3568,11 +3568,6 @@ function main() {
         } else if (settings.autoStorage && $('.ea-storage-settings').length == 0 && researched('tech-containerization')) {
             createStorageSettings();
         }
-        if ($('#autoCraft').length == 0) {
-            createSettingToggle('autoCraft', 'Automatically crafts craftable resources when resource ratio is above 0.9', createCraftSettings, removeCraftSettings);
-        } else if (settings.autoCraft && $('.ea-craft-settings').length == 0 && researched('tech-foundry')) {
-            createCraftSettings();
-        }
         if ($('#autoEmploy').length == 0) {
             createSettingToggle('autoEmploy', 'Autoemploys workers. See Civics page for job priorities', createEmploySettings, removeEmploySettings);
         } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
@@ -3620,7 +3615,6 @@ function main() {
     function resetUI() {
         console.log("Resetting UI");
         removeStorageSettings();
-        removeCraftSettings();
         removeSmelterSettings();
         removeFactorySettings();
         removeMarketSettings();
@@ -3628,7 +3622,6 @@ function main() {
         removeTaxSettings();
         $('.ea-autolog').remove();
         $('#autoStorage').remove();
-        $('#autoCraft').remove();
         $('#autoPrioritize').remove();
         $('#autoEmploy').remove();
         $('#autoTax').remove();
@@ -3705,34 +3698,6 @@ function main() {
     }
     function removeStorageSettings() {
         $('.ea-storage-settings').remove();
-    }
-
-    function createCraftToggle(resource){
-        let resourceSpan = $('#res'+resource.id);
-        let toggle = $('<label tabindex="0" class="switch ea-craft-settings" style="position:absolute; max-width:75px;margin-top: 4px;left:8%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
-        resourceSpan.append(toggle);
-        if(resource.enabled){
-            toggle.click();
-            toggle.children('input').attr('value', true);
-        }
-        toggle.on('mouseup', function(e){
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-            resources[resource.id].enabled = state;
-        });
-    }
-    function createCraftSettings(){
-        removeCraftSettings();
-        var x;
-        for (x in resources) {
-            if (resources[x] instanceof CraftableResource) {
-                createCraftToggle(resources[x]);
-            }
-        }
-    }
-    function removeCraftSettings(){
-        $('.ea-craft-settings').remove();
     }
 
     function createMarketSetting(resource){
@@ -4177,6 +4142,39 @@ function main() {
         // Auto Craft
         let autoCraftDesc = 'Crafts resources if the required resources are above 90% full. Only works when Manual Crafting is enabled (disabled in No Craft challenge).';
         let [autoCraftTitle, autoCraftContent] = createAutoSettingToggle('autoCraft', 'Auto Craft', autoCraftDesc, true, tab);
+        let i = 0;
+        let labelDiv = $('<div style="display:flex" class="alt market-item"></div>');
+        autoCraftContent.append(labelDiv);
+        let resourceLabel = $('<span class="has-text-warning" style="width:12rem;">Craftable Resource</h3>');
+        labelDiv.append(resourceLabel);
+        let enableLabel = $('<span class="has-text-warning" style="width:12rem;">Enable</h3>');
+        labelDiv.append(enableLabel);
+        for (var x in resources) {
+            if (!(resources[x] instanceof CraftableResource)) {continue;}
+            let div = null;
+            i += 1;
+            if (i % 2) {
+                div = $('<div style="display:flex" class="market-item"></div>');
+            } else {
+                div = $('<div style="display:flex" class="alt market-item"></div>');
+            }
+            autoCraftContent.append(div);
+            let label = $(`<span class="has-text-danger" style="width:12rem;">${resources[x].name}</h3>`);
+            div.append(label);
+            let toggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
+            div.append(toggle);
+            let id = x;
+            if(resources[id].enabled){
+                toggle.click();
+                toggle.children('input').attr('value', true);
+            }
+            toggle.on('mouseup', function(e){
+                let input = e.currentTarget.children[0];
+                let state = !(input.getAttribute('value') === "true");
+                input.setAttribute('value', state);
+                resources[id].enabled = state;
+            });
+        }
 
         // Auto Market
         let autoMarketDesc = 'Buys/sells resources when they are below/above a certain storage ratio. This also makes sure when buying that the money never goes under the minimum value. Only works when Manual Trading is enabled (disabled in No Trade challenge).';
