@@ -523,9 +523,7 @@ function main() {
             let btn = this.craftBtn.children[0];
             for (let j = 0;j < this.canCraft;j++) {
                 btn.click();
-                return true;
             }
-            return false;
         }
     }
 
