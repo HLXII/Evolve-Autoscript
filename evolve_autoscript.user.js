@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.18
+// @version      1.1.19
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
