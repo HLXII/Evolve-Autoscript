@@ -79,6 +79,7 @@ function main() {
                           "evo-cath", "evo-wolven", "evo-centuar",
                           "evo-mantis", "evo-scorpid", "evo-antid",
                           "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp"];
+    let evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
     let evoRaceTrees = {
         "entish":["evo-chloroplasts", "evo-entish"],
         "cacti":["evo-chloroplasts", "evo-cacti"],
@@ -1722,11 +1723,19 @@ function main() {
         if (!settings.hasOwnProperty('autoFarm')) {
             settings.autoFarm = false;
         }
-        if (!settings.hasOwnProperty('autoReset')) {
-            settings.autoReset = false;
+        if (!settings.hasOwnProperty('autoRefresh')) {
+            settings.autoRefresh = false;
+        }
+        if (!settings.hasOwnProperty('autoPrestige')) {
+            settings.autoPrestige = false;
         }
         if (!settings.hasOwnProperty('autoEvolution')) {
             settings.autoEvolution = false;
+        }
+        for (let i = 0;i < evoChallengeActions.length;i++) {
+            if (!settings.hasOwnProperty(evoChallengeActions[i])) {
+                settings[evoChallengeActions[i]] = false;
+            }
         }
         if (!settings.hasOwnProperty('evolution')) {
             settings.evolution = "antid";
@@ -1806,7 +1815,6 @@ function main() {
     function updateSettings(){
         localStorage.setItem('settings', JSON.stringify(settings));
     }
-
     function importSettings() {
         console.log("Importing Settings");
         if ($('textarea#settingsImportExport').val().length > 0){
@@ -1816,7 +1824,6 @@ function main() {
             resetUI();
         }
     }
-
     function exportSettings() {
         console.log("Exporting Settings");
         $('textarea#settingsImportExport').val(LZString.compressToBase64(JSON.stringify(settings)));
@@ -1865,33 +1872,40 @@ function main() {
 
     function autoEvolution() {
         let actions = document.querySelectorAll('#evolution .action');
-        for(let i = 0; i < actions.length; i++){
+        let chosenAction = null;
+        let chosenPriority = 0;
+        for (let i = 0; i < actions.length; i++) {
             // Checking if purchasable
             let action = actions[i];
-            if(action.className.indexOf("cna") < 0){
-                // Checking if farming button
-                if(action.id == "evo-rna" || action.id == "evo-dna") {continue;}
-                // Stop buying garbage you idiot
-                if(action.id in maxEvo && parseInt($('#'+action.id+' > a > .count')[0].innerText) >= maxEvo[action.id]) {continue;}
-                // Don't take sentience
-                if(action.id == "evo-sentience") {continue;}
-                // Don't take junker
-                if(action.id == "evo-junker") {continue;}
-                // Don't take joyless
-                if(action.id == "evo-joyless") {continue;}
-                // Don't take planets
-                if(/\w+\d+/.exec(action.id) !== null) {continue;}
-                // Check for challenge runs
-                if(action.id == "evo-plasmid" && !settings.Plasmid) {continue;}
-                if(action.id == "evo-craft" && !settings.Craft) {continue;}
-                if(action.id == "evo-crispr" && !settings.CRISPR) {continue;}
-                if(action.id == "evo-trade" && !settings.Trade) {continue;}
-                // Checking for race decision tree
-                if(evoRaceActions.includes(action.id) && !evoRaceTrees[settings.evolution].includes(action.id)) {continue;}
-                action.children[0].click();
-                if(settings.autoPrint){messageQueue("[AUTO-EVOLVE] " + action.children[0].children[0].innerText,'dark');}
-                return;
+            // Not purchasable
+            if (action.className.indexOf("cna") >= 0) {continue;}
+            // Farming button
+            if(evoFarmActions.uncludes(action.id)) {continue;}
+            // Reached max in maxEvo
+            if(action.id in maxEvo && parseInt($('#'+action.id+' > a > .count')[0].innerText) >= maxEvo[action.id]) {continue;}
+            // Don't take planets
+            if(/\w+\d+/.exec(action.id) !== null) {continue;}
+            // Check for challenge runs
+            if (evoChallengeActions.includes(action.id) && !settings[action.id]) {continue;}
+            // Checking for race decision tree
+            if(evoRaceActions.includes(action.id) && !evoRaceTrees[settings.evolution].includes(action.id)) {continue;}
+            let newPriority = 0;
+            if (evoChallengeActions.includes(action.id)) {
+                newPriority = 10;
+            } else if (evoRaceActions.includes(action.id)) {
+                newPriority = 5;
+            } else if (action.id == 'evo-sentience') {
+                newPriority = 1;
+            } else {
+                newPriority = 20;
             }
+            if (newPriority > chosenPriority) {
+                chosenPriority = newPriority;
+                chosenAction = action;
+            }
+        }
+        if (chosenAction !== null) {
+            chosenAction.children[0].click();
         }
     }
 
@@ -3546,34 +3560,12 @@ function main() {
     }
 
     function updateUI(){
-        if ($('#autoPrint').length == 0) {
-            createSettingToggle('autoPrint', 'Turns on print statements for autoscript messages');
-        }
         if ($('.ea-autolog').length == 0) {
             createAutoLog();
-        }
-        if ($('#reload').length == 0) {
-            let reloadBtn = $('<a class="button is-dark is-small" id="reload" title="Resets UI and internal data"><span>Reload</span></a>');
-            reloadBtn.on('mouseup', function(e){
-                if (e.which != 1) {return;}
-                resetUI();
-                updateSettings();
-                loadSettings();
-            });
-            $('#autoPrint_right').append(reloadBtn);
-        }
-        if ($('#autoFarm').length == 0){
-            createSettingToggle('autoFarm', 'Turns on autofarming of resources');
         }
         if ($('#autoSettingTab').length == 0) {
             createSettingTab();
         }
-        if ($('#autoEvolution').length == 0) {
-            createSettingToggle("autoEvolution", "Automatically plays the evolution stage", createEvolutionSettings, removeEvolutionSettings);
-        } else if (settings.autoEvolution && $('.ea-evolution-settings').length == 0) {
-            createEvolutionSettings();
-        }
-        // Crafting requires foundries
         if ($('#autoStorage').length == 0) {
             createSettingToggle('autoStorage', 'Automatically assigns crates and containers to resources', createStorageSettings, removeStorageSettings);
         } else if (settings.autoStorage && $('.ea-storage-settings').length == 0 && researched('tech-containerization')) {
@@ -3602,15 +3594,12 @@ function main() {
         } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
             createEmploySettings();
         }
-        // Tax requires tax rates researched
         if ($('#autoTax').length == 0) {
             createSettingToggle('autoTax', 'Automatically changes tax rate to match desired morale level', createTaxSettings, removeTaxSettings);
         }
-        // Battles require garrisions
         if ($('#autoBattle').length == 0) {
             createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
         }
-        // Markets require market researched
         if ($('#autoMarket').length == 0) {
             createSettingToggle('autoMarket', 'Auto buys/sells resources at certain ratios. See Market tab for more settings', createMarketSettings, removeMarketSettings);
         } else if (settings.autoMarket > 0 && $('.ea-market-settings').length == 0 && researched('tech-market')) {
@@ -3639,7 +3628,6 @@ function main() {
         if ($('#autoPrioritize').length == 0) {
             createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
         }
-
         if ($('#autoSettings').length == 0) {
             createAutoSettings();
         }
@@ -3647,7 +3635,6 @@ function main() {
 
     function resetUI() {
         console.log("Resetting UI");
-        removeEvolutionSettings();
         removeStorageSettings();
         removeCraftSettings();
         removeSmelterSettings();
@@ -3696,74 +3683,6 @@ function main() {
         });
         mainDiv.append(control).append(importBtn).append(exportBtn);
         parent.append(mainDiv[0]);
-    }
-
-    function createEvolutionToggle(name) {
-        let parent = $('#resources');
-        let toggle = $('<label tabindex="0" class="switch" id="'+name+'_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>'+name+'</span></label>');
-        let box = $('<div id="'+name+'" class="ea-evolution-settings" style="padding-left:20px;"></div>');
-        box.append(toggle);
-        parent.append(box);
-        if(settings[name]){
-            toggle.click();
-            toggle.children('input').attr('value', true);
-        }
-        toggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-            settings[name] = state;
-            updateSettings();
-        });
-    }
-    function createEvolutionSettings() {
-        removeEvolutionSettings();
-        let evoDecision = $(`<select class="ea-evolution-settings" style="width:150px;">
-                            <option value="elven">Elven</option>
-                            <option value="orc">Orc</option>
-                            <option value="human">Human</option>
-                            <option value="troll">Troll</option>
-                            <option value="orge">Ogre</option>
-                            <option value="cyclops">Cyclops</option>
-                            <option value="kobold">Kobold</option>
-                            <option value="goblin">Goblin</option>
-                            <option value="gnome">Gnome</option>
-                            <option value="cath">Cath</option>
-                            <option value="wolven">Wolven</option>
-                            <option value="centuar">Centuar</option>
-                            <option value="tortoisan">Tortoisan</option>
-                            <option value="gecko">Gecko</option>
-                            <option value="slitheryn">Slitheryn</option>
-                            <option value="arraak">Arraak</option>
-                            <option value="pterodacti">Pterodacti</option>
-                            <option value="dracnid">Dracnid</option>
-                            <option value="sporgar">Sporgar</option>
-                            <option value="shroomi">Shroomi</option>
-                            <option value="mantis">Mantis</option>
-                            <option value="scorpid">Scorpid</option>
-                            <option value="antid">Antid</option>
-                            <option value="entish">Entish</option>
-                            <option value="cacti">Cacti</option>
-                            <option value="sharkin">Sharkin</option>
-                            <option value="octigoran">Octigoran</option>
-                            <option value="balorg">Balorg</option>
-                            <option value="imp">Imp</option>
-                            </select>`);
-        evoDecision[0].value = settings.evolution;
-        evoDecision[0].onchange = function(){
-            settings.evolution = evoDecision[0].value;
-            console.log("Changing target to ", settings.evolution);
-            updateSettings();
-        };
-        $('#autoEvolution_right').append(evoDecision);
-        createEvolutionToggle('Plasmid');
-        createEvolutionToggle('Craft');
-        createEvolutionToggle('CRISPR');
-        createEvolutionToggle('Trade');
-    }
-    function removeEvolutionSettings() {
-        $('.ea-evolution-settings').remove();
     }
 
     function createStorageSetting(id) {
@@ -4176,39 +4095,35 @@ function main() {
         let priorityTab = createAutoSettingPage("Priority", ul, section);
         createAutoSettingPriorityPage(priorityTab);
     }
+    function createAutoSettingToggle(id, name, description, hasContent, tab) {
+        let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
+        tab.append(titleDiv);
+        let toggle = createToggleControl(settings[id], id, name);
+        titleDiv.append(toggle);
+        let details = $(`<div><span>${description}</span></div>`);
+        tab.append(details);
+        tab.append($('<br></br>'));
+        let content = null;
+        if (hasContent) {
+            content = $('<div style="margin-left:2em;"></div>');
+            tab.append(content);
+            tab.append($('<br></br>'));
+        }
+        return [titleDiv, content];
+    }
     function createAutoSettingGeneralPage(tab) {
 
         // Auto Print
-
-        let autoPrintToggle = createToggleControl(settings.autoPrint, 'autoPrint', 'Auto Print');
-        tab.append(autoPrintToggle);
-        let autoPrintDiv = $('<div></div>');
-        tab.append(autoPrintDiv);
-        let autoPrintDetails = $('<span></span>');
-        autoPrintDetails[0].innerText = 'This setting will print out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
-        autoPrintDiv.append(autoPrintDetails);
-        tab.append($('<br></br>'));
+        let autoPrintDesc = 'This setting will print out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
+        let [autoPrintTitle, autoPrintContent] = createAutoSettingToggle('autoPrint', 'Auto Print', autoPrintDesc, false, tab);
 
         // Auto Farm
-        let autoFarmToggle = createToggleControl(settings.autoFarm, 'autoFarm', 'Auto Farm');
-        tab.append(autoFarmToggle);
-        let autoFarmDiv = $('<div></div>');
-        tab.append(autoFarmDiv);
-        let autoFarmDetails = $('<span></span>');
-        autoFarmDetails[0].innerText = 'This setting will auto-click the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
-        autoFarmDiv.append(autoFarmDetails);
-        tab.append($('<br></br>'));
+        let autoFarmDesc = 'This setting will auto-click the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
+        let [autoFarmTitle, autoFarmContent] = createAutoSettingToggle('autoFarm', 'Auto Farm', autoFarmDesc, false, tab);
 
-        // Auto Reset
-        let autoResetTitleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
-        tab.append(autoResetTitleDiv);
-        let autoResetToggle = createToggleControl(settings.autoReset, 'autoReset', 'Auto Reset');
-        autoResetTitleDiv.append(autoResetToggle);
-        let autoResetDiv = $('<div></div>');
-        tab.append(autoResetDiv);
-        let autoResetDetails = $('<span></span>');
-        autoResetDetails[0].innerText = 'This setting will automatically reload the page every 200 seconds, due to the modal windows lagging after too many launches.';
-        autoResetDiv.append(autoResetDetails);
+        // Auto Refresh
+        let autoRefreshDesc = 'This setting will automatically reload the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
+        let [autoRefreshTitle, autoRefreshContent] = createAutoSettingToggle('autoRefresh', 'Auto Refresh', autoRefreshDesc, false, tab);
         let reloadBtnDetails = 'Resets the UI and reloads the backend variables.';
         let reloadBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${reloadBtnDetails}"><button class="button is-primary"><span>Reset UI</span></button></div>`);
         reloadBtn.on('mouseup', function(e){
@@ -4217,16 +4132,80 @@ function main() {
             updateSettings();
             loadSettings();
         });
-        autoResetTitleDiv.append(reloadBtn);
-        tab.append($('<br></br>'));
+        autoRefreshTitle.append(reloadBtn);
+
+        // Auto Prestige
+        let autoPrestigeDesc = 'This setting will automatically prestige when the options are availible. Currently not implemented.';
+        let [autoPrestigeTitle, autoPrestigeContent] = createAutoSettingToggle('autoPrestige', 'Auto Prestige', autoPrestigeDesc, true, tab);
 
         // Advanced
 
     }
+
     function createAutoSettingEvolutionPage(tab) {
 
         // Auto Evolution/Challenge
+        let autoEvolutionDesc = 'This setting will automatically play the Evolution stage. It will buy the mininum amount of RNA/DNA storage for evolving, as well as automatically purchase challenges.';
+        let [autoEvolutionTitle, autoEvolutionContent] = createAutoSettingToggle('autoEvolution', 'Auto Evolution', autoEvolutionDesc, true, tab);
 
+        let raceOption = $('<div style="display:flex;"></div>');
+        autoEvolutionContent.append(raceOption);
+        autoEvolutionContent.append($('<br></br>'));
+        raceOption.append($('<h3 class="has-text-warning" style="width:12rem;">Evolution Decision:</h3>'));
+        let evoDecision = $(`<select style="width:150px;">
+                            <option value="elven">Elven</option>
+                            <option value="orc">Orc</option>
+                            <option value="human">Human</option>
+                            <option value="troll">Troll</option>
+                            <option value="orge">Ogre</option>
+                            <option value="cyclops">Cyclops</option>
+                            <option value="kobold">Kobold</option>
+                            <option value="goblin">Goblin</option>
+                            <option value="gnome">Gnome</option>
+                            <option value="cath">Cath</option>
+                            <option value="wolven">Wolven</option>
+                            <option value="centuar">Centuar</option>
+                            <option value="tortoisan">Tortoisan</option>
+                            <option value="gecko">Gecko</option>
+                            <option value="slitheryn">Slitheryn</option>
+                            <option value="arraak">Arraak</option>
+                            <option value="pterodacti">Pterodacti</option>
+                            <option value="dracnid">Dracnid</option>
+                            <option value="sporgar">Sporgar</option>
+                            <option value="shroomi">Shroomi</option>
+                            <option value="mantis">Mantis</option>
+                            <option value="scorpid">Scorpid</option>
+                            <option value="antid">Antid</option>
+                            <option value="entish">Entish</option>
+                            <option value="cacti">Cacti</option>
+                            <option value="sharkin">Sharkin</option>
+                            <option value="octigoran">Octigoran</option>
+                            <option value="balorg">Balorg</option>
+                            <option value="imp">Imp</option>
+                            </select>`);
+        evoDecision[0].value = settings.evolution;
+        evoDecision[0].onchange = function(){
+            settings.evolution = evoDecision[0].value;
+            console.log("Changing target to ", settings.evolution);
+            updateSettings();
+        };
+        raceOption.append(evoDecision);
+
+        let challengeOption = $('<div style="display:flex;"></div>');
+        autoEvolutionContent.append(challengeOption);
+        challengeOption.append($('<h3 class="has-text-warning" style="width:12rem;">Challenges:</h3>'));
+        let challengeToggles = $('<div></div>');
+        challengeOption.append(challengeToggles);
+        for (let i = 0;i < evoChallengeActions.length;i++) {
+            let toggleVal = settings[evoChallengeActions[i]];
+            let toggleId = evoChallengeActions[i];
+            let str = evoChallengeActions[i].split('-')[1];
+            let toggleName = str.charAt(0).toUpperCase() + str.slice(1);
+            let toggle = createToggleControl(toggleVal, toggleId, toggleName);
+            let toggleDiv = $('<div></div>');
+            toggleDiv.append(toggle);
+            challengeToggles.append(toggleDiv);
+        }
     }
     function createAutoSettingJobPage(tab) {
 

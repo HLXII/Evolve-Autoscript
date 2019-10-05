@@ -13,7 +13,6 @@ My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.
 * Add install instructions to README
 * Maybe add sacrifical alter? Never played new mantis yet
 * Split Auto Market into Auto Market and Auto Trade
-* Fix Auto Evolution to prioritize Challenges before Sentience/Races, as well as Races before Sentience (also add new decay and mastery challenges)
 * Fix UI Labels on flex divs in game tabs to float above accurately (looking at u Market tab)
 * Add multiplier functionality to custom UI
 
