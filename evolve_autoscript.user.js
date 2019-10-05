@@ -1717,6 +1717,7 @@ function main() {
         loadSmelter();
         // Factory
         loadFactory();
+
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
         }
@@ -1729,6 +1730,7 @@ function main() {
         if (!settings.hasOwnProperty('autoPrestige')) {
             settings.autoPrestige = false;
         }
+
         if (!settings.hasOwnProperty('autoEvolution')) {
             settings.autoEvolution = false;
         }
@@ -1740,23 +1742,41 @@ function main() {
         if (!settings.hasOwnProperty('evolution')) {
             settings.evolution = "antid";
         }
-        if (!settings.hasOwnProperty('Plasmid')) {
-            settings.Plasmid = false;
+
+        if (!settings.hasOwnProperty('autoTax')) {
+            settings.autoTax = false;
         }
-        if (!settings.hasOwnProperty('Craft')) {
-            settings.Craft = false;
+        if (!settings.hasOwnProperty('defaultMorale')) {
+            settings.defaultMorale = 100;
         }
-        if (!settings.hasOwnProperty('CRISPR')) {
-            settings.CRISPR = false;
+        if (!settings.hasOwnProperty('autoEmploy')) {
+            settings.autoEmploy = false;
         }
-        if (!settings.hasOwnProperty('Trade')) {
-            settings.Trade = false;
+        if (!settings.hasOwnProperty('autoBattle')) {
+            settings.autoBattle = false;
         }
+        if (!settings.hasOwnProperty('autoFortress')) {
+            settings.autoFortress = false;
+        }
+
         if (!settings.hasOwnProperty('autoCraft')) {
             settings.autoCraft = false;
         }
-        if (!settings.hasOwnProperty('autoBuild')) {
-            settings.autoBuild = false;
+        if (!settings.hasOwnProperty('autoMarket')) {
+            settings.autoMarket = false;
+        }
+        if (!settings.hasOwnProperty('minimumMoney')) {
+            settings.minimumMoney = 0;
+        }
+        if (!settings.hasOwnProperty('autoTrade')) {
+            settings.autoTrade = false;
+        }
+        if (!settings.hasOwnProperty('autoStorage')) {
+            settings.autoStorage = false;
+        }
+
+        if (!settings.hasOwnProperty('autoSupport')) {
+            settings.autoSupport = false;
         }
         if (!settings.hasOwnProperty('autoSmelter')) {
             settings.autoSmelter = false;
@@ -1764,24 +1784,13 @@ function main() {
         if (!settings.hasOwnProperty('autoFactory')) {
             settings.autoFactory = false;
         }
-        if (!settings.hasOwnProperty('autoSupport')) {
-            settings.autoSupport = false;
+        if (!settings.hasOwnProperty('autoDroid')) {
+            settings.autoDroid = false;
         }
-        if (!settings.hasOwnProperty('autoEmploy')) {
-            settings.autoEmploy = false;
+        if (!settings.hasOwnProperty('autoGraphene')) {
+            settings.autoGraphene = false;
         }
-        if (!settings.hasOwnProperty('autoTax')) {
-            settings.autoTax = false;
-        }
-        if (!settings.hasOwnProperty('defaultMorale')) {
-            settings.defaultMorale = 100;
-        }
-        if (!settings.hasOwnProperty('autoBattle')) {
-            settings.autoBattle = false;
-        }
-        if (!settings.hasOwnProperty('autoResearch')) {
-            settings.autoResearch = false;
-        }
+
         if (!settings.hasOwnProperty('fanORanth')) {
             settings.fanORanth = "fanaticism";
         }
@@ -1791,24 +1800,12 @@ function main() {
         if (!settings.hasOwnProperty('uniChoice')) {
             settings.uniChoice = 'unify';
         }
-        if (!settings.hasOwnProperty('autoMarket')) {
-            settings.autoMarket = false;
+
+        if (!settings.hasOwnProperty('autoPrioritize')) {
+            settings.autoPrioritize = false;
         }
-        if (!settings.hasOwnProperty('minimumMoney')) {
-            settings.minimumMoney = 0;
-        }
-        if (!settings.hasOwnProperty('autoARPA')) {
-            settings.autoARPA = false;
-        }
-        if (!settings.hasOwnProperty('arpa')) {
-            settings.arpa = {
-                lhc: false,
-                stock_exchange: false,
-                monument: false
-            };
-        }
+
         if (!settings.hasOwnProperty('log')) {settings.log = []};
-        //console.log("Finished loading settings");
     }
     loadSettings();
 
@@ -3120,7 +3117,7 @@ function main() {
         }
 
         // Removing trade routes (if exists) for accurate rate
-        if (researched('tech-trade')) {
+        if (settings.autoTrade && researched('tech-trade')) {
             // Clearing out trade routes
             for (x in resources) {
                 let resource = resources[x];
@@ -3455,7 +3452,7 @@ function main() {
             if(settings.autoPrioritize) {
                 priorityData = autoPrioritize(count);
             }
-            autoTrade(priorityData);
+            if(settings.autoTrade){autoTrade(priorityData);}
             if(settings.autoCraft){
                 autoCraft();
             }
@@ -3576,19 +3573,6 @@ function main() {
         } else if (settings.autoCraft && $('.ea-craft-settings').length == 0 && researched('tech-foundry')) {
             createCraftSettings();
         }
-        if ($('#autoSmelter').length == 0) {
-            createSettingToggle('autoSmelter', 'Automatically allocates resources in the smelter. See Buildings tab for more settings', createSmelterSettings, removeSmelterSettings);
-        } else if (settings.autoSmelter && $('.ea-smelter-settings').length == 0 && researched('tech-smelting')) {
-            createSmelterSettings();
-        }
-        if ($('#autoFactory').length == 0) {
-            createSettingToggle('autoFactory', 'Automatically allocates resources in the factory. See Buildings tab for more settings', createFactorySettings, removeFactorySettings);
-        } else if (settings.autoFactory && $('.ea-factory-settings').length == 0 && researched('tech-industrialization')) {
-            createFactorySettings();
-        }
-        if ($('#autoSupport').length == 0) {
-            createSettingToggle('autoSupport', 'Automatically powers buildings and supports space buildings. See the Support Tab for more settings');
-        }
         if ($('#autoEmploy').length == 0) {
             createSettingToggle('autoEmploy', 'Autoemploys workers. See Civics page for job priorities', createEmploySettings, removeEmploySettings);
         } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
@@ -3643,15 +3627,8 @@ function main() {
         removeEmploySettings();
         removeTaxSettings();
         $('.ea-autolog').remove();
-        $('#reload').remove();
-        $('#autoPrint').remove();
-        $('#autoFarm').remove();
-        $('#autoEvolution').remove();
         $('#autoStorage').remove();
         $('#autoCraft').remove();
-        $('#autoSmelter').remove();
-        $('#autoFactory').remove();
-        $('#autoSupport').remove();
         $('#autoPrioritize').remove();
         $('#autoEmploy').remove();
         $('#autoTax').remove();
@@ -3756,32 +3733,6 @@ function main() {
     }
     function removeCraftSettings(){
         $('.ea-craft-settings').remove();
-    }
-
-    function createSmelterSettings() {
-        // Create manual button for Auto Smelting
-        let autoSmelterBtn = $('<a class="button is-dark is-small ea-smelter-settings" id="smelter-manual" title="Manually trigger Auto Smelting"><span>Manual</span></a>');
-        autoSmelterBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            count = settings.smelterSettings.interval-1;
-        });
-        $('#autoSmelter_right').append(autoSmelterBtn);
-    }
-    function removeSmelterSettings() {
-        $('.ea-smelter-settings').remove();
-    }
-
-    function createFactorySettings() {
-        // Create manual button for Auto Factory
-        let autoFactoryBtn = $('<a class="button is-dark is-small ea-factory-settings" id="factory-manual" title="Manually trigger Auto Factory"><span>Manual</span></a>');
-        autoFactoryBtn.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            count = settings.factorySettings.interval-1;
-        });
-        $('#autoFactory_right').append(autoFactoryBtn);
-    }
-    function removeFactorySettings() {
-        $('.ea-factory-settings').remove();
     }
 
     function createMarketSetting(resource){
@@ -4111,6 +4062,7 @@ function main() {
         }
         return [titleDiv, content];
     }
+
     function createAutoSettingGeneralPage(tab) {
 
         // Auto Print
@@ -4207,6 +4159,7 @@ function main() {
             challengeToggles.append(toggleDiv);
         }
     }
+
     function createAutoSettingJobPage(tab) {
 
         // Auto Tax
@@ -4218,37 +4171,41 @@ function main() {
         // Auto Fortress
 
     }
+
     function createAutoSettingResourcePage(tab) {
 
         // Auto Craft
+        let autoCraftDesc = 'Crafts resources if the required resources are above 90% full. Only works when Manual Crafting is enabled (disabled in No Craft challenge).';
+        let [autoCraftTitle, autoCraftContent] = createAutoSettingToggle('autoCraft', 'Auto Craft', autoCraftDesc, true, tab);
 
         // Auto Market
+        let autoMarketDesc = 'Buys/sells resources when they are below/above a certain storage ratio. This also makes sure when buying that the money never goes under the minimum value. Only works when Manual Trading is enabled (disabled in No Trade challenge).';
+        let [autoMarketTitle, autoMarketContent] = createAutoSettingToggle('autoMarket', 'Auto Market', autoMarketDesc, false, tab);
 
         // Auto Trade
+        let autoTradeDesc = 'Allocates trade routes based on the trade priority (as well as Auto Prioritize).';
+        let [autoTradeTitle, autoTradeContent] = createAutoSettingToggle('autoTrade', 'Auto Trade', autoTradeDesc, false, tab);
 
         // Auto Storage
-
+        let autoStorageDesc = 'Allocates crates and containers to resources based on priority. Also as a minimum storage setting for steel and other resources that need initial storage.';
+        let [autoStorageTitle, autoStorageContent] = createAutoSettingToggle('autoStorage', 'Auto Storage', autoStorageDesc, false, tab);
     }
+
     function createAutoSettingBuildingPage(tab) {
 
         // Auto Support
+        let autoSupportDesc = 'Powers buildings and allocates support. Currently not very smart and half done. Support power is not implemented yet. Power Priority can be changed in the Priority Tab.';
+        let [autoSupportTitle, autoSupportContent] = createAutoSettingToggle('autoSupport', 'Auto Support', autoSupportDesc, false, tab);
 
         // Auto Smelter
-
-        let autoSmelterToggle = createToggleControl(settings.autoSmelter, 'autoSmelter', 'Auto Smelter');
-        tab.append(autoSmelterToggle);
-        let autoSmelterDiv = $('<div></div>');
-        tab.append(autoSmelterDiv);
-        let autoSmelterDetails = $('<span></span>');
-        autoSmelterDetails[0].innerText = "Automatically allocates the smelter building. The timing for allocating the smelter is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
-        autoSmelterDiv.append(autoSmelterDetails);
-        tab.append($('<br></br>'));
+        let autoSmelterDesc = "Allocates the smelter building. The timing for allocating the smelter is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
+        let [autoSmelterTitle, autoSmelterContent] = createAutoSettingToggle('autoSmelter', 'Auto Smelter', autoSmelterDesc, true, tab);
         Object.keys(settings.smelterSettings).forEach(function(res) {
             let resText = null;
             if (res == 'interval') {
-                resText = $('<div style="width:12rem" title="Update the smelter every so much seconds">Interval Rate:</div>');
+                resText = $('<h3 class="has-text-warning" style="width:12rem;">Inverval Rate:</h3>');
             } else {
-                resText = $('<div style="width:12rem">'+res+' Priority:</div>');
+                resText = $('<h3 class="has-text-warning" style="width:12rem;">'+res+' Priority:</h3>');
             }
             let resSub = function() {
                 settings.smelterSettings[res] -= 1;
@@ -4260,26 +4217,26 @@ function main() {
             }
             let resControls = createNumControl(settings.smelterSettings[res], "smelter_"+res+"_priority", resSub, resAdd);
             let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            tab.append(newDiv);
+            autoSmelterContent.append(newDiv);
         });
-        tab.append($('<br></br>'));
+
+        let autoSmelterBtnDetails = 'Manually triggers the Auto Smelter function.';
+        let autoSmelterBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${autoSmelterBtnDetails}"><button class="button is-primary"><span>Manual</span></button></div>`);
+        autoSmelterBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            count = settings.smelterSettings.interval;
+        });
+        autoSmelterTitle.append(autoSmelterBtn);
 
         // Auto Factory
-
-        let autoFactoryToggle = createToggleControl(settings.autoFactory, 'autoFactory', 'Auto Factory');
-        tab.append(autoFactoryToggle);
-        let autoFactoryDiv = $('<div></div>');
-        tab.append(autoFactoryDiv);
-        let autoFactoryDetails = $('<span></span>');
-        autoFactoryDetails[0].innerText = "Automatically allocates the factory building. The timing for allocating the factory is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
-        autoFactoryDiv.append(autoFactoryDetails);
-        tab.append($('<br></br>'));
+        let autoFactoryDesc = "Allocates the factory building. The timing for allocating the factory is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
+        let [autoFactoryTitle, autoFactoryContent] = createAutoSettingToggle('autoFactory', 'Auto Factory', autoFactoryDesc, true, tab);
         Object.keys(settings.factorySettings).forEach(function(res) {
             let resText = null;
             if (res == 'interval') {
-                resText = $('<div style="width:12rem" title="Update the factory every so much seconds">Interval Rate:</div>');
+                resText = $('<h3 class="has-text-warning" style="width:12rem;">Inverval Rate:</h3>');
             } else {
-                resText = $('<div style="width:12rem">'+res+' Priority:</div>');
+                resText = $('<h3 class="has-text-warning" style="width:12rem;">'+res+' Priority:</h3>');
             }
             let resSub = function() {
                 settings.factorySettings[res] -= 1;
@@ -4291,15 +4248,27 @@ function main() {
             }
             let resControls = createNumControl(settings.factorySettings[res], "factory_"+res+"_priority", resSub, resAdd);
             let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            tab.append(newDiv);
+            autoFactoryContent.append(newDiv);
         });
-        tab.append($('<br></br>'));
+
+        let autoFactoryBtnDetails = 'Manually triggers the Auto Factory function.';
+        let autoFactoryBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${autoFactoryBtnDetails}"><button class="button is-primary"><span>Manual</span></button></div>`);
+        autoFactoryBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            count = settings.factorySettings.interval;
+        });
+        autoFactoryTitle.append(autoFactoryBtn);
 
         // Auto Mining Droid
+        let autoDroidDesc = "Allocates mining droids. The timing for allocation is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted. Currently not yet implemented.";
+        let [autoDroidTitle, autoDroidContent] = createAutoSettingToggle('autoDroid', 'Auto Mining Droid', autoDroidDesc, true, tab);
 
         // Auto Graphene Plant
+        let autoGrapheneDesc = "Allocates graphene plants. The timing for allocation is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted. Currently not yet implemented.";
+        let [autoGrapheneTitle, autoGrapheneContent] = createAutoSettingToggle('autoGraphene', 'Auto Graphene Plants', autoGrapheneDesc, true, tab);
 
     }
+
     function createAutoSettingResearchPage(tab) {
 
         // Research Settings
@@ -4378,6 +4347,7 @@ function main() {
         tab.append(label2).append(target3);
 
     }
+
     function nameCompare(a, b) {
         return b.name < a.name;
     }
@@ -4861,6 +4831,7 @@ function main() {
         createPriorityList(tab);
 
     }
+
     function createAutoLog() {
         let autolog = $('<div id="autolog" class="msgQueue right resource alt ea-autolog"></div>');
         $('#queueColumn').append(autolog);
