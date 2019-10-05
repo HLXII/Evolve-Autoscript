@@ -1334,6 +1334,83 @@ function main() {
         storages.Container = new StorageAction('Container',
                                                {Steel:1250});
     }
+    class GeneAction extends Action {
+        constructor(id) {
+            super(id, ['misc']);
+            this.res = {Knowledge:200000};
+        }
+
+        get btn() {
+            let btn = $("#arpaSequence > span > button").not(".has-text-success");
+            return (btn.length) ? btn[0] : null;
+        }
+
+        get unlocked() {
+            return this.btn !== null;
+        }
+
+        get name() {
+            return "Assemble Gene";
+        }
+
+        getResDep(resid) {
+            if (this.res === null) {
+                return null;
+            }
+            return this.res[resid];
+        }
+
+        click() {
+            let btn = this.btn;
+            if (btn === null) {return false;}
+            btn.click();
+            return true;
+        }
+    }
+    class MercenaryAction extends Action {
+        constructor(id) {
+            super(id, ['misc']);
+            this.res = {};
+        }
+
+        get btn() {
+            let btn = $('button.first');
+            return (btn.length) ? btn[0] : null;
+        }
+
+        get unlocked() {
+            return this.btn !== null;
+        }
+
+        get name() {
+            return "Hire Mercenary";
+        }
+
+        getResDep(resid) {
+            let str = $('.hire > span')[0].attributes['data-label'].value;
+            let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
+            this.res.Money = val[1];
+            if (this.res === null) {
+                return null;
+            }
+            return this.res[resid];
+        }
+
+        click() {
+            let soldiers = soldierCount();
+            if (soldiers[0] === soldiers[1]) {return false;}
+            let btn = this.btn;
+            if (btn === null) {return false;}
+            btn.click();
+            return true;
+        }
+    }
+    var miscActions = {};
+    function loadMiscActions() {
+        if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
+        miscActions.Gene = new GeneAction("Gene");
+        miscActions.Mercenary = new MercenaryAction("Mercenary");
+    }
 
     class Job {
         constructor(id, priority) {
@@ -1624,6 +1701,8 @@ function main() {
         loadResources();
         // Storages
         try { loadStorages(); } catch(e) {}
+        // Misc Actions
+        loadMiscActions();
         // Buildings
         loadBuildings();
         // Jobs
@@ -1876,6 +1955,9 @@ function main() {
         }
     }
 
+    function soldierCount() {
+        return document.querySelector('#garrison .barracks > span:nth-child(2)').innerText.split(' / ');
+    }
     class AutoBattler {
         constructor() {
             this.battleButton = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span > button');
@@ -2973,15 +3055,28 @@ function main() {
         for (var x in storages) {
             // Don't add if not unlocked
             if (!storages[x].unlocked) {continue;}
+            // Don't add if not enabled
+            if (!storages[x].enabled) {continue;}
             // Don't add if no more space
             if (storages[x].full) {continue;}
             store.push(storages[x]);
         }
         return store;
     }
+    function getAvailableMiscActions() {
+        let misc = [];
+        for (var x in miscActions) {
+            // Don't add if not unlocked
+            if (!miscActions[x].unlocked) {continue;}
+            // Don't add if disabled
+            if (!miscActions[x].enabled) {continue;}
+            misc.push(miscActions[x]);
+        }
+        return misc;
+    }
     function getAvailableActions() {
         // Getting buildings and researches
-        let actions = getAvailableBuildings().concat(getAvailableResearches()).concat(getAvailableArpas()).concat(getAvailableStorages());
+        let actions = getAvailableBuildings().concat(getAvailableResearches()).concat(getAvailableArpas()).concat(getAvailableStorages()).concat(getAvailableMiscActions());
 
         for (let i = 0;i < actions.length;i++) {
             actions[i].completion = {};
@@ -4321,6 +4416,8 @@ function main() {
         if (t === undefined) {
             if (a == "Container" || a == "Crate") {
                 action = storages[a];
+            } else if (a == 'Gene' || a == 'Mercenary') {
+                action = miscActions[a];
             } else {
                 action = arpas[a];
             }
@@ -4416,7 +4513,7 @@ function main() {
                 div.style.display = 'none';
                 continue;
             }
-            if (showMiscToggle.children[0].value == 'false' && (action instanceof ArpaAction || action instanceof StorageAction)) {
+            if (showMiscToggle.children[0].value == 'false' && (action instanceof ArpaAction || action instanceof StorageAction || action instanceof GeneAction || action instanceof MercenaryAction)) {
                 div.style.display = 'none';
                 continue;
             }
@@ -4546,6 +4643,7 @@ function main() {
         for (x in researches) {temp_l.push(researches[x]);}
         for (x in arpas) {temp_l.push(arpas[x]);}
         for (x in storages) {temp_l.push(storages[x]);}
+        for (x in miscActions) {temp_l.push(miscActions[x]);}
         while(priorityList.childNodes.length != 1) {
             priorityList.removeChild(priorityList.lastChild);
         }
@@ -4587,6 +4685,9 @@ function main() {
                 } else if (action.loc.includes('tech')) {
                     researches[action.id].decBasePriority();
                     return researches[action.id].basePriority;
+                } else if (action.loc.includes('misc')) {
+                    miscActions[action.id].decBasePriority();
+                    return miscActions[action.id].basePriority;
                 } else {
                     buildings[action.id].decBasePriority();
                     return buildings[action.id].basePriority;
@@ -4602,6 +4703,9 @@ function main() {
                 } else if (action.loc.includes('tech')) {
                     researches[action.id].incBasePriority();
                     return researches[action.id].basePriority;
+                } else if (action.loc.includes('misc')) {
+                    miscActions[action.id].incBasePriority();
+                    return miscActions[action.id].basePriority;
                 } else {
                     buildings[action.id].incBasePriority();
                     return buildings[action.id].basePriority;
@@ -4614,6 +4718,8 @@ function main() {
                 settingVal = storages[action.id].basePriority;
             } else if (action.loc.includes('tech')) {
                 settingVal = researches[action.id].basePriority;
+            } else if (action.loc.includes('misc')) {
+                settingVal = miscActions[action.id].basePriority;
             } else {
                 settingVal = buildings[action.id].basePriority;
             }
