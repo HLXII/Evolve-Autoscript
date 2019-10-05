@@ -1420,6 +1420,9 @@ function main() {
 
         hire() {
             if (this.hireBtn !== null) {
+
+                var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
+                document.dispatchEvent (evt);
                 this.hireBtn.click();
                 return true;
             } else {
@@ -1428,6 +1431,8 @@ function main() {
         }
         fire() {
             if (this.fireBtn !== null) {
+                var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
+                document.dispatchEvent (evt);
                 this.fireBtn.click();
                 return true;
             } else {
@@ -1545,6 +1550,7 @@ function main() {
         craftJobs.Wrought_Iron = new CraftJob("Wrought_Iron", 5);
         craftJobs.Sheet_Metal = new CraftJob("Sheet_Metal", 5);
         craftJobs.Mythril = new CraftJob("Mythril", 5);
+        craftJobs.Aerogel = new CraftJob("Aerogel", 5);
     }
 
     let foodBtn = null;
@@ -1636,6 +1642,9 @@ function main() {
         }
         if (!settings.hasOwnProperty('autoFarm')) {
             settings.autoFarm = false;
+        }
+        if (!settings.hasOwnProperty('autoReset')) {
+            settings.autoReset = false;
         }
         if (!settings.hasOwnProperty('autoEvolution')) {
             settings.autoEvolution = false;
@@ -1759,6 +1768,18 @@ function main() {
             if (!settings.autoFarm && !(farmInterval === null)) {
                 clearInterval(farmInterval);
                 farmInterval = null;
+            }
+        }
+    }
+
+    let resetInterval = null;
+    function autoReset() {
+        if(settings.autoReset && resetInterval === null) {
+            resetInterval = setInterval(function() {location.reload();}, 200 * 1000);
+        } else {
+            if (!settings.autoReset && !(resetInterval === null)) {
+                clearInterval(resetInterval);
+                resetInterval = null;
             }
         }
     }
@@ -1937,21 +1958,6 @@ function main() {
             // Free agents are determined by the ratio of priority
             // Priority 9 would have a ratio of 9/9, thus will always have no free agents
             // Priority 0 would have a ratio of 0/9, thus always will have free agents
-
-            //console.log("Checking", job.name);
-            // If Craftsman, move all workers to Plywood for reassignment
-            /*
-                if (job.id == "craftsman") {
-                    for (x in craftJobs) {
-                        let cjob = craftJobs[x];
-                        if (!cjob.unlocked) {continue;}
-                        for (let k = 0;k < cjob.employed;k++) {
-                            cjob.fireBtn.click();
-                            craftJobs.Plywood.hireBtn.click();
-                        }
-                    }
-                }
-                */
 
             total_priority += job.priority;
             // Job has no max employees (Unemployed, Farmer, Lumberjack, Quarry Worker)
@@ -3328,6 +3334,7 @@ function main() {
         updateUI();
         updateSettings();
         autoFarm();
+        autoReset();
         if (inEvolution()) {
             // Evolution Automation
             if(settings.autoEvolution) {
@@ -3362,11 +3369,6 @@ function main() {
         count += 1;
     }
     setInterval(fastAutomate, 1000);
-
-
-    setInterval(function() {
-        location.reload();
-    }, 200*1000);
 
     /***
     *
@@ -4003,9 +4005,170 @@ function main() {
         $('.ea-tax-settings').remove();
     }
 
-    function populateSmelterSettings(settingsTab) {
-        let smelterLabel = $('<div><h3 class="name has-text-warning" title="Set the smelter settings">Smelter:</h3></div></br>');
-        settingsTab.append(smelterLabel);
+    function createAutoSettingPage(name, labelElm, contentElm) {
+        let label = $('<li class="ea-settings"><a><span>'+name+'</span></a></li>');
+        let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
+        label.on('mouseup',function(e) {
+            if (e.which != 1) {return;}
+            for (let i = 0;i < labelElm.children().length;i++) {
+                let tabLabel = labelElm.children()[i];
+                let tabItem = contentElm.children()[i];
+                if (tabLabel.classList.contains("is-active")) {
+                    tabLabel.classList.remove("is-active");
+                    tabItem.style.display = 'none';
+                }
+            }
+            label.addClass("is-active");
+            tab[0].style.display = '';
+        });
+        labelElm.append(label);
+        contentElm.append(tab);
+        return tab;
+    }
+    function createSettingTab() {
+        let settingTabLabel = $('<li class="ea-settings"><a><span>Auto Settings</span></a></li>');
+        let settingTab = $('<div id="autoSettingTab" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">Auto Settings</h2></div>');
+        // Creating click functions for other tabs
+        for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
+            let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
+            let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
+            tabLabel.on('mouseup',function(e) {
+                if (e.which != 1) {return;}
+                if (settingTabLabel.hasClass("is-active")) {
+                    settingTabLabel.removeClass("is-active");
+                    tabItem.style.display = '';
+                }
+                settingTab[0].style.display = 'none';
+                if (!tabLabel.hasClass("is-active")) {tabLabel.addClass("is-active");}
+            });
+        }
+        $('#mainColumn > .content > .b-tabs > .tabs > ul').append(settingTabLabel);
+        $('#mainColumn > .content > .b-tabs > .tab-content').append(settingTab);
+        settingTabLabel.on('mouseup',function(e) {
+            if (e.which != 1) {return;}
+            // For every other tab
+            for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length-1;i++) {
+                let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
+                let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
+                tabLabel.removeClass("is-active");
+                tabItem.style.display = 'none';
+            }
+            settingTabLabel.addClass("is-active");
+            settingTab[0].style.display = '';
+        });
+
+        let tabDiv = $('<div class="b-tabs resTabs"></div>');
+        let nav = $('<nav class="tabs"></nav>');
+        tabDiv.append(nav);
+        let section = $('<section class="tab-content"></section>');
+        tabDiv.append(section);
+        let ul = $('<ul></ul>');
+        nav.append(ul);
+        settingTab.append(tabDiv);
+
+        let generalTab = createAutoSettingPage("General", ul, section);
+        createAutoSettingGeneralPage(generalTab);
+        let evolutionTab = createAutoSettingPage("Evolution", ul, section);
+        createAutoSettingEvolutionPage(evolutionTab);
+        let jobTab = createAutoSettingPage("Jobs/Army", ul, section);
+        createAutoSettingJobPage(jobTab);
+        let resourceTab = createAutoSettingPage("Resources", ul, section);
+        createAutoSettingResourcePage(resourceTab);
+        let buildingTab = createAutoSettingPage("Buildings", ul, section);
+        createAutoSettingBuildingPage(buildingTab);
+        let researchTab = createAutoSettingPage("Research", ul, section);
+        createAutoSettingResearchPage(researchTab);
+        let priorityTab = createAutoSettingPage("Priority", ul, section);
+        createAutoSettingPriorityPage(priorityTab);
+    }
+    function createAutoSettingGeneralPage(tab) {
+
+        // Auto Print
+
+        let autoPrintToggle = createToggleControl(settings.autoPrint, 'autoPrint', 'Auto Print');
+        tab.append(autoPrintToggle);
+        let autoPrintDiv = $('<div></div>');
+        tab.append(autoPrintDiv);
+        let autoPrintDetails = $('<span></span>');
+        autoPrintDetails[0].innerText = 'This setting will print out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
+        autoPrintDiv.append(autoPrintDetails);
+        tab.append($('<br></br>'));
+
+        // Auto Farm
+        let autoFarmToggle = createToggleControl(settings.autoFarm, 'autoFarm', 'Auto Farm');
+        tab.append(autoFarmToggle);
+        let autoFarmDiv = $('<div></div>');
+        tab.append(autoFarmDiv);
+        let autoFarmDetails = $('<span></span>');
+        autoFarmDetails[0].innerText = 'This setting will auto-click the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
+        autoFarmDiv.append(autoFarmDetails);
+        tab.append($('<br></br>'));
+
+        // Auto Reset
+        let autoResetTitleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
+        tab.append(autoResetTitleDiv);
+        let autoResetToggle = createToggleControl(settings.autoReset, 'autoReset', 'Auto Reset');
+        autoResetTitleDiv.append(autoResetToggle);
+        let autoResetDiv = $('<div></div>');
+        tab.append(autoResetDiv);
+        let autoResetDetails = $('<span></span>');
+        autoResetDetails[0].innerText = 'This setting will automatically reload the page every 200 seconds, due to the modal windows lagging after too many launches.';
+        autoResetDiv.append(autoResetDetails);
+        let reloadBtnDetails = 'Resets the UI and reloads the backend variables.';
+        let reloadBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${reloadBtnDetails}"><button class="button is-primary"><span>Reset UI</span></button></div>`);
+        reloadBtn.on('mouseup', function(e){
+            if (e.which != 1) {return;}
+            resetUI();
+            updateSettings();
+            loadSettings();
+        });
+        autoResetTitleDiv.append(reloadBtn);
+        tab.append($('<br></br>'));
+
+        // Advanced
+
+    }
+    function createAutoSettingEvolutionPage(tab) {
+
+        // Auto Evolution/Challenge
+
+    }
+    function createAutoSettingJobPage(tab) {
+
+        // Auto Tax
+
+        // Auto Employ
+
+        // Auto Battle
+
+        // Auto Fortress
+
+    }
+    function createAutoSettingResourcePage(tab) {
+
+        // Auto Craft
+
+        // Auto Market
+
+        // Auto Trade
+
+        // Auto Storage
+
+    }
+    function createAutoSettingBuildingPage(tab) {
+
+        // Auto Support
+
+        // Auto Smelter
+
+        let autoSmelterToggle = createToggleControl(settings.autoSmelter, 'autoSmelter', 'Auto Smelter');
+        tab.append(autoSmelterToggle);
+        let autoSmelterDiv = $('<div></div>');
+        tab.append(autoSmelterDiv);
+        let autoSmelterDetails = $('<span></span>');
+        autoSmelterDetails[0].innerText = "Automatically allocates the smelter building. The timing for allocating the smelter is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
+        autoSmelterDiv.append(autoSmelterDetails);
+        tab.append($('<br></br>'));
         Object.keys(settings.smelterSettings).forEach(function(res) {
             let resText = null;
             if (res == 'interval') {
@@ -4023,12 +4186,20 @@ function main() {
             }
             let resControls = createNumControl(settings.smelterSettings[res], "smelter_"+res+"_priority", resSub, resAdd);
             let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            settingsTab.append(newDiv);
+            tab.append(newDiv);
         });
-    }
-    function populateFactorySettings(settingsTab) {
-        let factoryLabel = $('<div><h3 class="name has-text-warning" title="Set the factory settings">Factory:</h3></div></br>');
-        settingsTab.append(factoryLabel);
+        tab.append($('<br></br>'));
+
+        // Auto Factory
+
+        let autoFactoryToggle = createToggleControl(settings.autoFactory, 'autoFactory', 'Auto Factory');
+        tab.append(autoFactoryToggle);
+        let autoFactoryDiv = $('<div></div>');
+        tab.append(autoFactoryDiv);
+        let autoFactoryDetails = $('<span></span>');
+        autoFactoryDetails[0].innerText = "Automatically allocates the factory building. The timing for allocating the factory is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
+        autoFactoryDiv.append(autoFactoryDetails);
+        tab.append($('<br></br>'));
         Object.keys(settings.factorySettings).forEach(function(res) {
             let resText = null;
             if (res == 'interval') {
@@ -4046,10 +4217,19 @@ function main() {
             }
             let resControls = createNumControl(settings.factorySettings[res], "factory_"+res+"_priority", resSub, resAdd);
             let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            settingsTab.append(newDiv);
+            tab.append(newDiv);
         });
+        tab.append($('<br></br>'));
+
+        // Auto Mining Droid
+
+        // Auto Graphene Plant
+
     }
-    function populateResearchSettings(settingsTab) {
+    function createAutoSettingResearchPage(tab) {
+
+        // Research Settings
+
         // Creating Fanaticism/Anthropology choice
         let label = $('<div><h3 class="name has-text-warning" title="Research choices that give different effects based on the previous runs">Theology:</h3></div></br>');
         let fanORanth = $('<select style="width:150px;"><option value="fanaticism">Fanaticism</option><option value="anthropology">Anthropology</option></select>');
@@ -4096,7 +4276,7 @@ function main() {
             console.log("Changing target to ", settings.studyORdeify);
             updateSettings();
         };
-        settingsTab.append(label).append(target1).append(target2);
+        tab.append(label).append(target1).append(target2);
 
         // Creating Unification choice
         let label2 = $('<div><h3 class="name has-text-warning" title="Research choice that either gives morale boost or production increase">Unification:</h3></div></br>');
@@ -4121,7 +4301,8 @@ function main() {
             console.log("Changing target to ", settings.uniChoice);
             updateSettings();
         };
-        settingsTab.append(label2).append(target3);
+        tab.append(label2).append(target3);
+
     }
     function nameCompare(a, b) {
         return b.name < a.name;
@@ -4589,102 +4770,12 @@ function main() {
         populatePriorityList();
         updatePriorityList();
     }
-    function createAutoSettingPage(name, labelElm, contentElm) {
-        let label = $('<li class="ea-settings"><a><span>'+name+'</span></a></li>');
-        let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
-        label.on('mouseup',function(e) {
-            if (e.which != 1) {return;}
-            for (let i = 0;i < labelElm.children().length;i++) {
-                let tabLabel = labelElm.children()[i];
-                let tabItem = contentElm.children()[i];
-                if (tabLabel.classList.contains("is-active")) {
-                    tabLabel.classList.remove("is-active");
-                    tabItem.style.display = 'none';
-                }
-            }
-            label.addClass("is-active");
-            tab[0].style.display = '';
-        });
-        labelElm.append(label);
-        contentElm.append(tab);
-        return tab;
-    }
-    function createSettingTab() {
-        let settingTabLabel = $('<li class="ea-settings"><a><span>Auto Settings</span></a></li>');
-        let settingTab = $('<div id="autoSettingTab" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">Auto Settings</h2></div>');
-        // Creating click functions for other tabs
-        for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
-            let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
-            let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-            tabLabel.on('mouseup',function(e) {
-                if (e.which != 1) {return;}
-                if (settingTabLabel.hasClass("is-active")) {
-                    settingTabLabel.removeClass("is-active");
-                    tabItem.style.display = '';
-                }
-                settingTab[0].style.display = 'none';
-                if (!tabLabel.hasClass("is-active")) {tabLabel.addClass("is-active");}
-            });
-        }
-        $('#mainColumn > .content > .b-tabs > .tabs > ul').append(settingTabLabel);
-        $('#mainColumn > .content > .b-tabs > .tab-content').append(settingTab);
-        settingTabLabel.on('mouseup',function(e) {
-            if (e.which != 1) {return;}
-            // For every other tab
-            for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length-1;i++) {
-                let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
-                let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-                tabLabel.removeClass("is-active");
-                tabItem.style.display = 'none';
-            }
-            settingTabLabel.addClass("is-active");
-            settingTab[0].style.display = '';
-        });
+    function createAutoSettingPriorityPage(tab) {
 
-        let tabDiv = $('<div class="b-tabs resTabs"></div>');
-        let nav = $('<nav class="tabs"></nav>');
-        tabDiv.append(nav);
-        let section = $('<section class="tab-content"></section>');
-        tabDiv.append(section);
-        let ul = $('<ul></ul>');
-        nav.append(ul);
-        settingTab.append(tabDiv);
-
-        let generalTab = createAutoSettingPage("General", ul, section);
-        createAutoSettingGeneralPage(generalTab);
-
-        let evolutionTab = createAutoSettingPage("Evolution", ul, section);
-
-        populateSmelterSettings(settingTab);
-        populateFactorySettings(settingTab);
-        populateResearchSettings(settingTab);
-        createPriorityList(settingTab);
+        // Auto Priority
+        createPriorityList(tab);
 
     }
-    function createAutoSettingGeneralPage(tab) {
-
-        // Auto Print
-
-        let autoPrintToggle = createToggleControl(settings.autoPrint, 'autoPrint', 'Auto Print');
-        tab.append(autoPrintToggle);
-        let autoPrintDiv = $('<div></div>');
-        tab.append(autoPrintDiv);
-        let autoPrintDetails = $('<span></span>');
-        autoPrintDetails[0].innerText = 'This setting will print out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
-        autoPrintDiv.append(autoPrintDetails);
-        tab.append($('<br></br>'));
-
-        // Auto Farm
-        let autoFarmToggle = createToggleControl(settings.autoFarm, 'autoFarm', 'Auto Farm');
-        tab.append(autoFarmToggle);
-        let autoFarmDiv = $('<div></div>');
-        tab.append(autoFarmDiv);
-        let autoFarmDetails = $('<span></span>');
-        autoFarmDetails[0].innerText = 'This setting will auto-click the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
-        autoFarmDiv.append(autoFarmDetails);
-
-    }
-
     function createAutoLog() {
         let autolog = $('<div id="autolog" class="msgQueue right resource alt ea-autolog"></div>');
         $('#queueColumn').append(autolog);
