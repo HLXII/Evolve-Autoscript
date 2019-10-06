@@ -12,7 +12,6 @@ My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.
 * Add granularity to Auto Print (only Auto Priority right now, idk what else I could split it into)
 * Add install instructions to README
 * Maybe add sacrifical alter? Never played new mantis yet
-* Fix UI Labels on flex divs in game tabs to float above accurately (looking at u Market tab)
 * Add multiplier functionality to custom UI
 
 ## Large

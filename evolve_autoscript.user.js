@@ -1869,14 +1869,14 @@ function main() {
         }
     }
 
-    let resetInterval = null;
-    function autoReset() {
-        if(settings.autoReset && resetInterval === null) {
-            resetInterval = setInterval(function() {location.reload();}, 200 * 1000);
+    let refreshInterval = null;
+    function autoRefresh() {
+        if(settings.autoRefresh && refreshInterval === null) {
+            refreshInterval = setInterval(function() {location.reload();}, 200 * 1000);
         } else {
-            if (!settings.autoReset && !(resetInterval === null)) {
-                clearInterval(resetInterval);
-                resetInterval = null;
+            if (!settings.autoRefresh && !(refreshInterval === null)) {
+                clearInterval(refreshInterval);
+                refreshInterval = null;
             }
         }
     }
@@ -3461,7 +3461,7 @@ function main() {
         updateUI();
         updateSettings();
         autoFarm();
-        autoReset();
+        autoRefresh();
         if (inEvolution()) {
             // Evolution Automation
             if(settings.autoEvolution) {
@@ -3547,7 +3547,7 @@ function main() {
         let control = $('<div class="controls ea-'+settingName+'-settings" style="display:flex">').append(subBtn).append(label).append(addBtn).append('</div>');
         return control;
     }
-    function createToggleControl(toggleVal, toggleId, toggleName, toggleChangeFunc) {
+    function createToggleControl(toggleVal, toggleId, toggleName, enabledCallBack, disabledCallBack) {
         let toggle = $(`
         <label class="switch" id="${toggleId}_toggle">
         <input type="checkbox" true-value="true" value="false">
@@ -3566,6 +3566,11 @@ function main() {
             settings[toggleId] = state;
             console.log("Setting", toggleId, "to", state);
             updateSettings();
+            if(state && enabledCallBack !== undefined){
+                enabledCallBack();
+            } else if(disabledCallBack !== undefined){
+                disabledCallBack()
+            }
         });
         if(settings[toggleId]){
             setTimeout( function() {
@@ -3600,8 +3605,11 @@ function main() {
         if ($('#autoBattle').length == 0) {
             createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
         }
-        if (settings.autoMarket && $('.ea-market-settings').length == 0 && researched('tech-market')) {
+        if (settings.autoMarket && $('.as-market-settings').length == 0) {
             createMarketSettings();
+        }
+        if (settings.autoTrade && $('.as-trade-settings').length == 0) {
+            createTradeSettings();
         }
         if ($('#autoPrioritize').length == 0) {
             createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
@@ -3614,9 +3622,8 @@ function main() {
     function resetUI() {
         console.log("Resetting UI");
         removeStorageSettings();
-        removeSmelterSettings();
-        removeFactorySettings();
         removeMarketSettings();
+        removeTradeSettings();
         removeEmploySettings();
         removeTaxSettings();
         $('.ea-autolog').remove();
@@ -3658,13 +3665,15 @@ function main() {
         if (!resources[id].unlocked) {return;}
         if (!resources[id].crateable) {return;}
         let resourceSpan = $('#stack-'+resources[id].id);
-        let div = $('<div class="ea-storage-settings" style="display:flex"></div>');
+        let div = $('<div class="as-storage-settings" style="display:flex"></div>');
         let prioritySub = function() {
             resources[id].decStorePriority();
+            loadStorageUI();
             return resources[id].storePriority;
         }
         let priorityAdd = function() {
             resources[id].incStorePriority();
+            loadStorageUI();
             return resources[id].storePriority;
         }
         let priorityControls = createNumControl(resources[id].storePriority, id+"-store-priority", prioritySub, priorityAdd);
@@ -3672,10 +3681,12 @@ function main() {
 
         let minSub = function() {
             resources[id].decStoreMin();
+            loadStorageUI();
             return resources[id].storeMin;
         }
         let minAdd = function() {
             resources[id].incStoreMin();
+            loadStorageUI();
             return resources[id].storeMin;
         }
         let minControls = createNumControl(resources[id].storeMin, id+"-store-min", minSub, minAdd);
@@ -3687,8 +3698,8 @@ function main() {
         removeStorageSettings();
         // Creating labels
         let labelSpan = $('#createHead');
-        let prioLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:2rem"><span class="has-text-warning">Priority</span></div>');
-        let minLabel = $('<div class="ea-storage-settings" style="display:inline-flex;margin-left:3rem"><span class="has-text-warning">Min</span></div>');
+        let prioLabel = $('<div class="as-storage-settings" style="display:inline-flex;margin-left:2rem"><span class="has-text-warning">Priority</span></div>');
+        let minLabel = $('<div class="as-storage-settings" style="display:inline-flex;margin-left:3rem"><span class="has-text-warning">Min</span></div>');
         labelSpan.append(prioLabel).append(minLabel);
         // Creating individual counters
         for (var x in resources) {
@@ -3696,18 +3707,16 @@ function main() {
         }
     }
     function removeStorageSettings() {
-        $('.ea-storage-settings').remove();
+        $('.as-storage-settings').remove();
     }
 
     function createMarketSetting(resource){
-        let marketRow = $('#market-'+resource.id);
+        let marketDiv = $(`<div style="display:flex;" class="as-market-settings as-market-${resource.id}"></div>`);
 
-        let toggleBuy = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
-        marketRow.append(toggleBuy);
-        if(resource.autoBuy){
-            toggleBuy.click();
-            toggleBuy.children('input').attr('value', true);
-        }
+        let manualBuy = $('<div style="display:flex;"></div>');
+        marketDiv.append(manualBuy);
+        let toggleBuy = $('<label tabindex="0" class="switch" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
+        manualBuy.append(toggleBuy);
         toggleBuy.on('mouseup', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
@@ -3725,6 +3734,13 @@ function main() {
             updateSettings();
             loadTradeUI();
         });
+        if(resource.autoBuy){
+            setTimeout( function() {
+                console.log("Setting initially to true");
+                toggleBuy.children('span.check').click();
+                toggleBuy.children('input').attr('value', true);
+            }, 1000);
+        }
 
         let buyRatioSub = function() {
             resource.buyDec();
@@ -3737,12 +3753,12 @@ function main() {
             return resource.buyRatio;
         }
         let buyRatioControl = createNumControl(resource.buyRatio, resource.id+'-buy-ratio',buyRatioSub,buyRatioAdd);
-        let div = $('<div class="ea-market-settings" style="display:flex"></div>');
-        div.append(buyRatioControl);
-        marketRow.append(div);
+        manualBuy.append(buyRatioControl);
 
-        let toggleSell = $('<label tabindex="0" class="switch ea-market-settings" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
-        marketRow.append(toggleSell);
+        let manualSell = $('<div style="display:flex;"></div>');
+        marketDiv.append(manualSell);
+        let toggleSell = $('<label tabindex="0" class="switch" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
+        manualSell.append(toggleSell);
         toggleSell.on('mouseup', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
@@ -3760,9 +3776,13 @@ function main() {
             loadTradeUI();
         });
         if(resource.autoSell){
-            toggleSell.click();
-            toggleSell.children('input').attr('value', true);
+            setTimeout( function() {
+                console.log("Setting initially to true");
+                toggleSell.children('span.check').click();
+                toggleSell.children('input').attr('value', true);
+            }, 1000);
         }
+
         let sellRatioSub = function() {
             resource.sellDec();
             loadTradeUI();
@@ -3774,9 +3794,39 @@ function main() {
             return resource.sellRatio;
         }
         let sellRatioControl = createNumControl(resource.sellRatio, resource.id+'-sell-ratio',sellRatioSub,sellRatioAdd);
-        div = $('<div class="ea-market-settings" style="display:flex"></div>');
-        div.append(sellRatioControl);
-        marketRow.append(div);
+        manualSell.append(sellRatioControl);
+
+        return [marketDiv, manualBuy, manualSell];
+    }
+    function createMarketSettings(){
+        // Don't render if haven't researched markets
+        if (!researched('tech-market')) {return;}
+        removeMarketSettings();
+        let mainDiv = document.getElementById('market');
+        mainDiv.insertBefore($('<div class="as-market-settings"><br></div>')[0],mainDiv.children[1]);
+        let firstRow = false;
+        // Creating settings for TradeableResources
+        for (var x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            let [marketDiv, manualBuy, manualSell] = createMarketSetting(resources[x]);
+            if (!firstRow) {
+                firstRow = true;
+                let buyLabel = $('<div style="position:absolute;top:1.5rem;"><span>Manual Buy</span></div>');
+                manualBuy.prepend(buyLabel[0]);
+                let sellLabel = $('<div style="position:absolute;top:1.5rem;"><span>Manual Sell</span></div>');
+                manualSell.prepend(sellLabel[0]);
+            }
+            let marketRow = $('#market-'+resources[x].id);
+            marketRow.append(marketDiv);
+        }
+    }
+    function removeMarketSettings(){
+        $('.as-market-settings').remove();
+    }
+
+    function createTradeSetting(resource) {
+        let marketDiv = $(`<div style="display:flex;" class="as-trade-settings as-trade-${resource.id}"></div>`);
+
         let prioritySub = function() {
             resource.decBasePriority();
             loadTradeUI();
@@ -3787,29 +3837,40 @@ function main() {
             loadTradeUI();
             return resource.basePriority;
         }
-        let priorityControl = createNumControl(resource.basePriority, resource.id+'-priority',prioritySub,priorityAdd);
-        div = $('<div class="ea-market-settings" style="display:flex"></div>');
-        div.append(priorityControl);
-        marketRow.append(div);
+        let priorityControl = createNumControl(resource.basePriority, resource.id+'-trade-priority',prioritySub,priorityAdd);
+        marketDiv.append(priorityControl);
+
+        return [marketDiv, priorityControl];
     }
-    function createMarketSettings(){
-        removeMarketSettings();
+    function createTradeSettings() {
+        // Don't render if haven't researched markets
+        if (!researched('tech-market')) {return;}
+        removeTradeSettings();
         let mainDiv = document.getElementById('market');
-        let div = $('<div class="market-item alt ea-market-settings"></div>');
-        let manualBuyLabel = $('<span style="text-align:right;display:flex;margin-left:23rem;width:6rem;" title="Toggle to auto buy resources when under this ratio. Only buys when money is over minimum amount.">Manual Buy</span>')[0];
-        let manualSellLabel = $('<span style="text-align:right;display:flex;margin-left:2rem;width:6rem;" title="Toggle to auto sell resources when over this ratio. Only sells when money is not capped.">Manual Sell</span>')[0];
-        let tradePriorityLabel = $('<span style="text-align:right;display:flex;margin-left:2rem;width:6rem;" title="Priority for importing this resource through trade routes.">Priority</span>')[0];
-        div.append(manualBuyLabel).append(manualSellLabel).append(tradePriorityLabel);
-        mainDiv.insertBefore(div[0],mainDiv.children[1]);
+        if ($('.as-market-settings > br').length == 0) {
+            mainDiv.insertBefore($('<div class="as-trade-settings"><br></div>')[0],mainDiv.children[1]);
+        }
+        let firstRow = false;
+        let lastRow = null;
         // Creating settings for TradeableResources
         for (var x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
-            createMarketSetting(resources[x]);
+            let [marketDiv, tradeControl] = createTradeSetting(resources[x]);
+            if (!firstRow) {
+                firstRow = true;
+                let tradeLabel = $('<div style="position:absolute;top:1.5rem;"><span>Trade</span></div>');
+                tradeControl.prepend(tradeLabel[0]);
+            }
+            let marketRow = $('#market-'+resources[x].id);
+            marketRow.append(marketDiv);
+            lastRow = [tradeControl, marketDiv, marketRow];
         }
+
         // Creating trade setting for money
         let tradeRow = document.getElementById("tradeTotal");
-        let moneyLabel = $('<span title="Priority of money when allocating trade routes">Money Priority</span>');
-        let priorityDiv = $('<div class="ea-market-settings" style="display:flex;margin-left:6rem;"</div>');
+        let moneyLabel = $('<div style="position:absolute;bottom:4rem;width:5.25rem;text-align:center;"><span>$$$</span></div>');
+        lastRow[0].prepend(moneyLabel);
+        let priorityDiv = $('<div style="position:absolute;bottom:3rem;width:5.25rem;text-align:center;"</div>');
         let prioritySub = function() {
             resources.Money.decBasePriority();
             loadTradeUI();
@@ -3821,11 +3882,11 @@ function main() {
             return resources.Money.basePriority;
         }
         let priorityControl = createNumControl(resources.Money.basePriority,"Money-trade-priority",prioritySub,priorityAdd);
-        priorityDiv.append(moneyLabel).append(priorityControl);
-        tradeRow.append(priorityDiv[0]);
+        priorityDiv.append(priorityControl);
+        lastRow[0].prepend(priorityDiv[0]);
     }
-    function removeMarketSettings(){
-        $('.ea-market-settings').remove();
+    function removeTradeSettings() {
+        $('.as-trade-settings').remove();
     }
 
     function createEmploySettings() {
@@ -4010,10 +4071,10 @@ function main() {
         let priorityTab = createAutoSettingPage("Priority", ul, section);
         createAutoSettingPriorityPage(priorityTab);
     }
-    function createAutoSettingToggle(id, name, description, hasContent, tab) {
+    function createAutoSettingToggle(id, name, description, hasContent, tab, enabledCallBack, disabledCallBack) {
         let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
         tab.append(titleDiv);
-        let toggle = createToggleControl(settings[id], id, name);
+        let toggle = createToggleControl(settings[id], id, name, enabledCallBack, disabledCallBack);
         titleDiv.append(toggle);
         let details = $(`<div><span>${description}</span></div>`);
         tab.append(details);
@@ -4172,6 +4233,7 @@ function main() {
         moneyDiv.append(moneyPriorityControl);
         for (var x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
+            let id = x;
             let div = null;
             i += 1;
             if (i % 2) {
@@ -4188,7 +4250,6 @@ function main() {
             div.append(manualBuy);
             let buyToggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
             manualBuy.append(buyToggle);
-            let id = x;
             if(resources[id].autoBuy){
                 buyToggle.click();
                 buyToggle.children('input').attr('value', true);
@@ -4272,6 +4333,65 @@ function main() {
             div.append(priorityControl);
         }
     }
+    function loadStorageUI(content) {
+        if (content === null || content == undefined) {content = $('#as-autoStorage-content');}
+        $('.as-storageui').remove();
+        let i = 0;
+        let labelDiv = $('<div style="display:flex" class="alt market-item as-storageui"></div>');
+        content.append(labelDiv);
+        let resourceLabel = $('<span class="has-text-warning" style="width:12rem;">Storable Resource</span>');
+        labelDiv.append(resourceLabel);
+        let priorityLabel = $('<span class="has-text-warning" style="width:12rem;">Priority</span>');
+        labelDiv.append(priorityLabel);
+        let minLabel = $('<span class="has-text-warning" style="width:12rem;">Minimum Storage</h3>');
+        labelDiv.append(minLabel);
+
+        for (var x in resources) {
+            let id = x;
+            if (!(resources[x].crateable)) {continue;}
+            let div = null;
+            i += 1;
+            if (i % 2) {
+                div = $('<div style="display:flex" class="market-item as-storageui"></div>');
+            } else {
+                div = $('<div style="display:flex" class="alt market-item as-storageui"></div>');
+            }
+            content.append(div);
+
+            var label = $(`<span class="has-text-info" style="width:12rem;">${resources[x].name}</h3>`);
+            div.append(label);
+
+            let storePriorityDiv = $('<div style="width:12rem;"></div>');
+            div.append(storePriorityDiv);
+            let storePrioritySub = function() {
+                resources[x].decStorePriority();
+                createStorageSettings();
+                return resources[id].storePriority;
+            }
+            let storePriorityAdd = function() {
+                resources[id].incStorePriority();
+                createStorageSettings();
+                return resources[id].storePriority;
+            }
+            let storePriorityControl = createNumControl(resources[id].storePriority, resources[id].id+'_store_priority',storePrioritySub,storePriorityAdd);
+            storePriorityDiv.append(storePriorityControl);
+
+            let storeMinDiv = $('<div style="width:12rem;"></div>');
+            div.append(storeMinDiv);
+            let storeMinSub = function() {
+                resources[id].decStoreMin();
+                createStorageSettings();
+                return resources[id].storeMin;
+            }
+            let storeMinAdd = function() {
+                resources[id].incStoreMin();
+                createStorageSettings();
+                return resources[id].storeMin;
+            }
+            let storeMinControl = createNumControl(resources[id].storeMin, resources[id].id+'_store_min',storeMinSub,storeMinAdd);
+            storeMinDiv.append(storeMinControl);
+        }
+    }
     function createAutoSettingResourcePage(tab) {
 
         // Auto Craft
@@ -4313,7 +4433,7 @@ function main() {
 
         // Auto Market
         let autoMarketDesc = 'Buys/sells resources when they are below/above a certain storage ratio. This also makes sure when buying that the money never goes under the minimum value. Only works when Manual Trading is enabled (disabled in No Trade challenge).';
-        let [autoMarketTitle, autoMarketContent] = createAutoSettingToggle('autoMarket', 'Auto Market', autoMarketDesc, true, tab);
+        let [autoMarketTitle, autoMarketContent] = createAutoSettingToggle('autoMarket', 'Auto Market', autoMarketDesc, true, tab, createMarketSettings, removeMarketSettings);
         let volumeOption = $('<div style="display:flex;"></div>');
         autoMarketContent.append(volumeOption);
         autoMarketContent.append($('<br></br>'));
@@ -4358,12 +4478,13 @@ function main() {
 
         // Auto Trade
         let autoTradeDesc = 'Allocates trade routes based on the trade priority (as well as Auto Prioritize).';
-        let [autoTradeTitle, autoTradeContent] = createAutoSettingToggle('autoTrade', 'Auto Trade', autoTradeDesc, true, tab);
+        let [autoTradeTitle, autoTradeContent] = createAutoSettingToggle('autoTrade', 'Auto Trade', autoTradeDesc, true, tab, createTradeSettings, removeTradeSettings);
         loadTradeUI(autoTradeContent);
 
         // Auto Storage
         let autoStorageDesc = 'Allocates crates and containers to resources based on priority. Also as a minimum storage setting for steel and other resources that need initial storage.';
-        let [autoStorageTitle, autoStorageContent] = createAutoSettingToggle('autoStorage', 'Auto Storage', autoStorageDesc, false, tab);
+        let [autoStorageTitle, autoStorageContent] = createAutoSettingToggle('autoStorage', 'Auto Storage', autoStorageDesc, true, tab, createStorageSettings, removeStorageSettings);
+        loadStorageUI(autoStorageContent);
     }
 
     function createAutoSettingBuildingPage(tab) {
