@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.20
+// @version      1.1.21
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -3736,7 +3736,6 @@ function main() {
         }
         toggleBuy.on('mouseup', function(e){
             if (e.which != 1) {return;}
-            console.log("TEST");
             let input = e.currentTarget.children[0];
             let state = !(input.getAttribute('value') === "true");
             input.setAttribute('value', state);
@@ -3750,14 +3749,17 @@ function main() {
             }
             resources[resource.id].autoBuy = state;
             updateSettings();
+            loadTradeUI();
         });
 
         let buyRatioSub = function() {
             resource.buyDec();
+            loadTradeUI();
             return resource.buyRatio;
         }
         let buyRatioAdd = function() {
             resource.buyInc();
+            loadTradeUI();
             return resource.buyRatio;
         }
         let buyRatioControl = createNumControl(resource.buyRatio, resource.id+'-buy-ratio',buyRatioSub,buyRatioAdd);
@@ -3781,6 +3783,7 @@ function main() {
                 toggleBuy.children('input')[0].setAttribute('value',false);
             }
             updateSettings();
+            loadTradeUI();
         });
         if(resource.autoSell){
             toggleSell.click();
@@ -3788,10 +3791,12 @@ function main() {
         }
         let sellRatioSub = function() {
             resource.sellDec();
+            loadTradeUI();
             return resource.sellRatio;
         }
         let sellRatioAdd = function() {
             resource.sellInc();
+            loadTradeUI();
             return resource.sellRatio;
         }
         let sellRatioControl = createNumControl(resource.sellRatio, resource.id+'-sell-ratio',sellRatioSub,sellRatioAdd);
@@ -3800,10 +3805,12 @@ function main() {
         marketRow.append(div);
         let prioritySub = function() {
             resource.decBasePriority();
+            loadTradeUI();
             return resource.basePriority;
         }
         let priorityAdd = function() {
             resource.incBasePriority();
+            loadTradeUI();
             return resource.basePriority;
         }
         let priorityControl = createNumControl(resource.basePriority, resource.id+'-priority',prioritySub,priorityAdd);
@@ -3831,10 +3838,12 @@ function main() {
         let priorityDiv = $('<div class="ea-market-settings" style="display:flex;margin-left:6rem;"</div>');
         let prioritySub = function() {
             resources.Money.decBasePriority();
+            loadTradeUI();
             return resources.Money.basePriority;
         }
         let priorityAdd = function() {
             resources.Money.incBasePriority();
+            loadTradeUI();
             return resources.Money.basePriority;
         }
         let priorityControl = createNumControl(resources.Money.basePriority,"Money-trade-priority",prioritySub,priorityAdd);
@@ -4046,7 +4055,8 @@ function main() {
         tab.append($('<br></br>'));
         let content = null;
         if (hasContent) {
-            content = $('<div style="margin-left:2em;"></div>');
+            let contentId = 'as-' + id + '-content';
+            content = $(`<div style="margin-left:2em;" id="${contentId}"></div>`);
             tab.append(content);
             tab.append($('<br></br>'));
         }
@@ -4163,8 +4173,10 @@ function main() {
     }
 
     function loadTradeUI(content) {
+        if (content === null || content == undefined) {content = $('#as-autoTrade-content');}
+        $('.as-tradeui').remove();
         let i = 0;
-        let labelDiv = $('<div style="display:flex" class="alt market-item"></div>');
+        let labelDiv = $('<div style="display:flex" class="alt market-item as-tradeui"></div>');
         content.append(labelDiv);
         let resourceLabel = $('<span class="has-text-warning" style="width:12rem;">Tradeable Resource</h3>');
         labelDiv.append(resourceLabel);
@@ -4175,7 +4187,7 @@ function main() {
         let tradeLabel = $('<span class="has-text-warning" style="width:12rem;">Trade Priority</h3>');
         labelDiv.append(tradeLabel);
         i += 1;
-        let moneyDiv = $('<div style="display:flex" class="market-item"></div>');
+        let moneyDiv = $('<div style="display:flex" class="market-item as-tradeui"></div>');
         content.append(moneyDiv);
         let moneyLabel = $('<span class="has-text-advanced" style="width:12rem;">Money</span>');
         moneyDiv.append(moneyLabel);
@@ -4198,9 +4210,9 @@ function main() {
             let div = null;
             i += 1;
             if (i % 2) {
-                div = $('<div style="display:flex" class="market-item"></div>');
+                div = $('<div style="display:flex" class="market-item as-tradeui"></div>');
             } else {
-                div = $('<div style="display:flex" class="alt market-item"></div>');
+                div = $('<div style="display:flex" class="alt market-item as-tradeui"></div>');
             }
             content.append(div);
 
