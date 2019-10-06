@@ -2237,7 +2237,7 @@ function main() {
         }
     }
 
-    function autoMarket(bulkSell, ignoreSellRatio) {
+    function autoMarket() {
         // Don't start autoMarket if haven't unlocked market
         if (!researched('tech-market')) {return;}
         let curMoney = resources.Money.amount;
@@ -2287,10 +2287,6 @@ function main() {
                         curMoney += sellValue;
                         curResource -= qty;
                     }
-                }
-
-                if(bulkSell === true) {
-                    return;
                 }
 
                 if (resource.autoBuy && resource.ratio < resource.buyRatio && resource.buyBtn !== null) {
@@ -3604,30 +3600,8 @@ function main() {
         if ($('#autoBattle').length == 0) {
             createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
         }
-        if ($('#autoMarket').length == 0) {
-            createSettingToggle('autoMarket', 'Auto buys/sells resources at certain ratios. See Market tab for more settings', createMarketSettings, removeMarketSettings);
-        } else if (settings.autoMarket > 0 && $('.ea-market-settings').length == 0 && researched('tech-market')) {
-            createMarketSettings()
-        }
-        if ($('#ea-settings').length == 0) {
-            let settingsDiv = $('<div id="ea-settings" style="overflow:auto;" title="Sets the minimum amount of money to keep. Can input real money value or ratio"></div>');
-            let minMoneyTxt = $('<div style="float:left;">Minimum money to keep :</div>')
-            let minMoneyInput = $('<input type="text" class="input is-small" style="width:20%;float:right;"/>');
-            minMoneyInput.val(settings.minimumMoney);
-            let setBtn = $('<a class="button is-dark is-small" id="set-min-money" style="float:right;"><span>set</span></a>');
-            settingsDiv.append(minMoneyTxt).append(setBtn).append(minMoneyInput);
-            $('#resources').append(settingsDiv);
-
-            setBtn.on('mouseup', function(e) {
-                if (e.which != 1) {return;}
-                let val = minMoneyInput.val();
-                let minMoney = getRealValue(val);
-                if(!isNaN(minMoney)){
-                    console.log("Setting minimum Money", minMoney);
-                    settings.minimumMoney = minMoney;
-                    updateSettings();
-                }
-            });
+        if (settings.autoMarket && $('.ea-market-settings').length == 0 && researched('tech-market')) {
+            createMarketSettings();
         }
         if ($('#autoPrioritize').length == 0) {
             createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
@@ -3849,15 +3823,6 @@ function main() {
         let priorityControl = createNumControl(resources.Money.basePriority,"Money-trade-priority",prioritySub,priorityAdd);
         priorityDiv.append(moneyLabel).append(priorityControl);
         tradeRow.append(priorityDiv[0]);
-
-        if($('#bulk-sell').length == 0 && researched('tech-market')){
-            let bulkSell = $('<a class="ea-market-settings button is-dark is-small" id="bulk-sell"><span>Bulk Sell</span></a>');
-            $('#autoMarket_right').append(bulkSell);
-            bulkSell.on('mouseup', function(e){
-                if (e.which != 1) {return;}
-                autoMarket(true, true);
-            });
-        }
     }
     function removeMarketSettings(){
         $('.ea-market-settings').remove();
@@ -4351,8 +4316,9 @@ function main() {
         let [autoMarketTitle, autoMarketContent] = createAutoSettingToggle('autoMarket', 'Auto Market', autoMarketDesc, true, tab);
         let volumeOption = $('<div style="display:flex;"></div>');
         autoMarketContent.append(volumeOption);
+        autoMarketContent.append($('<br></br>'));
         volumeOption.append($('<h3 class="has-text-warning" style="width:12rem;">Market Volume:</h3>'));
-        let volumeDropdown = $(`<select style="width:150px;">
+        let volumeDropdown = $(`<select style="width:12rem;">
                             <option value="1">10x</option>
                             <option value="2">25x</option>
                             <option value="3">100x</option>
@@ -4369,6 +4335,26 @@ function main() {
             updateSettings();
         };
         volumeOption.append(volumeDropdown);
+
+        let minMoneyDiv = $('<div style="display:flex;"></div>');
+        autoMarketContent.append(minMoneyDiv);
+        let minMoneyTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Money:</span>')
+        minMoneyDiv.append(minMoneyTxt);
+        let minMoneyInput = $('<input type="text" class="input is-small" style="width:10rem;"/>');
+        minMoneyInput.val(settings.minimumMoney);
+        minMoneyDiv.append(minMoneyInput);
+        let setBtn = $('<a class="button is-dark is-small" id="set-min-money" style="width:2rem;"><span>Set</span></a>');
+        minMoneyDiv.append(setBtn);
+        setBtn.on('mouseup', function(e) {
+            if (e.which != 1) {return;}
+            let val = minMoneyInput.val();
+            let minMoney = getRealValue(val);
+            if(!isNaN(minMoney)){
+                console.log("Setting minimum Money", minMoney);
+                settings.minimumMoney = minMoney;
+                updateSettings();
+            }
+        });
 
         // Auto Trade
         let autoTradeDesc = 'Allocates trade routes based on the trade priority (as well as Auto Prioritize).';
