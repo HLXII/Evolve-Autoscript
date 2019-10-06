@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.1.21
+// @version      1.1.22
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -3589,9 +3589,7 @@ function main() {
         if ($('#autoSettingTab').length == 0) {
             createSettingTab();
         }
-        if ($('#autoStorage').length == 0) {
-            createSettingToggle('autoStorage', 'Automatically assigns crates and containers to resources', createStorageSettings, removeStorageSettings);
-        } else if (settings.autoStorage && $('.ea-storage-settings').length == 0 && researched('tech-containerization')) {
+        if (settings.autoStorage && $('.as-storage-settings').length == 0) {
             createStorageSettings();
         }
         if ($('#autoEmploy').length == 0) {
@@ -3627,12 +3625,10 @@ function main() {
         removeEmploySettings();
         removeTaxSettings();
         $('.ea-autolog').remove();
-        $('#autoStorage').remove();
         $('#autoPrioritize').remove();
         $('#autoEmploy').remove();
         $('#autoTax').remove();
         $('#autoBattle').remove();
-        $('#autoMarket').remove();
         $('#ea-settings').remove();
         $('#autoSettings').remove();
     }
@@ -3695,6 +3691,8 @@ function main() {
         resourceSpan.append(div);
     }
     function createStorageSettings() {
+        // Don't render if haven't researched crates
+        if (!researched('tech-containerization')) {return;}
         removeStorageSettings();
         // Creating labels
         let labelSpan = $('#createHead');
