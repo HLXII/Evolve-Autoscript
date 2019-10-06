@@ -26,3 +26,4 @@ My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.
 * Add support for Auto Prestige
 * Auto Gene
 * Update ArpaActions to take into account rank
+* Add Auto Prioritize support to Auto Employ (probably only effecting craftsman allocation somehow)

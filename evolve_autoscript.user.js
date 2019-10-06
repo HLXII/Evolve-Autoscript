@@ -1421,14 +1421,8 @@ function main() {
         get _priority() {return settings.jobs[this.id].priority;}
         set _priority(priority) {settings.jobs[this.id].priority = priority;}
 
-        get mainDiv() {
-            return document.getElementById('civ-'+this.id);
-        }
         get label() {
             return document.querySelector('#civ-'+this.id+' > .job_label > h3');
-        }
-        get employLabel() {
-            return document.querySelector('#civ-'+this.id+' > .job_label > .count');
         }
         get hireBtn() {
             return document.querySelector('#civ-'+this.id+' > .controls > .add');
@@ -1442,31 +1436,10 @@ function main() {
         }
 
         get employed() {
-            if (this.employLabel !== null) {
-                let employees = this.employLabel.innerText.split('/');
-                if (employees.length == 0) {
-                    console.log("Error:", this.id, "Employed");
-                    return -1;
-                } else {
-                    return parseInt(employees[0]);
-                }
-            } else {
-                console.log("Error:", this.id, "Employed");
-                return -1;
-            }
+            return window.game.global.civic[this.id].workers;
         }
         get maxEmployed() {
-            if (this.employLabel !== null) {
-                let employees = this.employLabel.innerText.split('/');
-                if (employees.length != 2) {
-                    return -1;
-                } else {
-                    return parseInt(employees[1]);
-                }
-            } else {
-                console.log("Error:", this.id, "Max Employed");
-                return -1;
-            }
+            return window.game.global.civic[this.id].max;
         }
 
         get priority() {
@@ -1477,34 +1450,40 @@ function main() {
             if (this._priority == 0) {return;}
             this._priority -= 1;
             updateSettings();
-            console.log("Lowering", this.id, "Priority", this._priority);
+            console.log("Lowering", this.name, "Priority", this._priority);
         }
         higherPriority() {
-            if (this._priority == 9) {return;}
+            if (this._priority == 99) {return;}
             this._priority += 1;
             updateSettings();
             console.log("Increasing", this.name, "Priority", this._priority);
         }
 
         get unlocked() {
-            return (civicsOn() && this.mainDiv !== null && this.mainDiv.style.display != 'none');
+            return window.game.global.civic[this.id].display;
         }
 
-        hire() {
+        hire(num) {
+            if (num === undefined) {num = 1;}
             if (this.hireBtn !== null) {
                 var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
                 document.dispatchEvent (evt);
-                this.hireBtn.click();
+                for (let i = 0;i < num;i++) {
+                    this.hireBtn.click();
+                }
                 return true;
             } else {
                 return false;
             }
         }
-        fire() {
+        fire(num) {
+            if (num === undefined) {num = 1;}
             if (this.fireBtn !== null) {
                 var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
                 document.dispatchEvent (evt);
-                this.fireBtn.click();
+                for (let i = 0;i < num;i++) {
+                    this.fireBtn.click();
+                }
                 return true;
             } else {
                 return false;
@@ -1539,6 +1518,17 @@ function main() {
             }
         }
 
+        get employed() {
+            return window.game.global.civic[this.id];
+        }
+        get maxEmployed() {
+            return -1;
+        }
+
+        get unlocked() {
+            return true;
+        }
+
         updateUI() {
             if (this.name != 'Hunter') {return;}
             super.updateUI();
@@ -1551,9 +1541,6 @@ function main() {
 
         get mainDiv() {
             return document.getElementById('foundry');
-        }
-        get employLabel() {
-            return document.querySelector('#foundry > .job > .foundry > .count');
         }
         get hireBtn() {
             return document.querySelector('#foundry .job:nth-child(2) > .controls > .add')
@@ -1570,21 +1557,17 @@ function main() {
     var jobs = {};
     function loadJobs() {
         if (!settings.hasOwnProperty('jobs')) {settings.jobs = {};}
-        jobs.free = new Unemployed("free", 0);
-        jobs.farmer = new Job("farmer", 1);
-        jobs.lumberjack = new Job("lumberjack", 3);
-        jobs.quarry_worker = new Job("quarry_worker", 3);
-        jobs.miner = new Job("miner", 4);
-        jobs.coal_miner = new Job("coal_miner", 4);
-        jobs.cement_worker = new Job("cement_worker", 4);
-        jobs.entertainer = new Job("entertainer", 8);
-        jobs.professor = new Job("professor", 9);
-        jobs.scientist = new Job("scientist", 9);
-        jobs.banker = new Job("banker", 9);
-        jobs.colonist = new Job("colonist", 7);
-        jobs.space_miner = new Job("space_miner", 7);
-        jobs.surveyor = new Job("hell_surveyor",9);
-        jobs.craftsman = new Craftsman("craftsman", 9);
+        jobs.free = new Unemployed('free', 0);
+        for (var x in window.game.global.civic) {
+            if (window.game.global.civic[x].hasOwnProperty('job')) {
+                if (x == 'craftsman') {
+                    jobs[x] = new Craftsman(x, 0);
+                }
+                else {
+                    jobs[x] = new Job(x, 0);
+                }
+            }
+        }
     }
     class CraftJob extends Job {
         constructor(id, priority) {
@@ -1596,9 +1579,6 @@ function main() {
         }
         get label() {
             return document.querySelector('#craft'+this.id+' > h3');
-        }
-        get employLabel() {
-            return document.querySelector('#craft'+this.id+' > .count');
         }
         get hireBtn() {
             return document.getElementById('craft'+this.id).parentNode.children[1].children[1];
@@ -1620,12 +1600,7 @@ function main() {
         }
 
         get employed() {
-            if (this.employLabel !== null) {
-                return parseInt(this.employLabel.innerText);
-            } else {
-                console.log("Error:", this.id, "Employed");
-                return -1;
-            }
+            return window.game.global.city.foundry[this.id];
         }
         get maxEmployed() {
             return -1;
@@ -1634,12 +1609,12 @@ function main() {
     var craftJobs = {};
     function loadCraftJobs() {
         if (!settings.hasOwnProperty('jobs')) {settings.jobs = {};}
-        craftJobs.Plywood = new CraftJob("Plywood", 5);
-        craftJobs.Brick = new CraftJob("Brick", 5);
-        craftJobs.Wrought_Iron = new CraftJob("Wrought_Iron", 5);
-        craftJobs.Sheet_Metal = new CraftJob("Sheet_Metal", 5);
-        craftJobs.Mythril = new CraftJob("Mythril", 5);
-        craftJobs.Aerogel = new CraftJob("Aerogel", 5);
+        Object.keys(window.game.global.resource).forEach(function(res) {
+            // Craftable Resources
+            if (window.game.craftCost[res] !== undefined) {
+                craftJobs[res] = new CraftJob(res, 5);
+            }
+        });
     }
 
     let foodBtn = null;
@@ -2044,176 +2019,84 @@ function main() {
     }
     let autoBattler = new AutoBattler();
 
-    function prioCompare(a, b) {
-        return b.priority - a.priority;
-    }
     function autoEmploy(priorityData) {
-        // Sorting based on priority
         let sortedJobs = [];
         var x;
+        let population = 0;
+        let totalPriority = 0;
+        let priorities = [];
+        let ratios = [];
         for (x in jobs) {
             if (jobs[x].unlocked) {
                 sortedJobs.push(jobs[x]);
+                population += jobs[x].employed;
+                totalPriority += jobs[x].priority;
+                priorities.push(jobs[x].priority);
             }
         }
-        sortedJobs.sort(prioCompare);
-        let free_agents = 0;
-        let total_priority = 0;
-        // Find total free agents
         for (let i = 0;i < sortedJobs.length;i++) {
-            let job = sortedJobs[i];
-            // Free agents are determined by the ratio of priority
-            // Priority 9 would have a ratio of 9/9, thus will always have no free agents
-            // Priority 0 would have a ratio of 0/9, thus always will have free agents
+            ratios.push(sortedJobs[i].priority / totalPriority);
+        }
 
-            total_priority += job.priority;
-            // Job has no max employees (Unemployed, Farmer, Lumberjack, Quarry Worker)
-            // Use the one more than the current employed
-            let maxEmployed = (job.maxEmployed == -1) ? job.employed + 5 : job.maxEmployed;
-            job.max_employed = maxEmployed;
-            job.wanted = Math.round(maxEmployed /(1+Math.pow(Math.E, -job.priority+4.5)));
-            job.need = job.wanted - job.employed;
-            job.temp_employed = job.employed;
-            //console.log(job.name, job.priority, job.wanted, job.need);
-            // If there is negative need, send to unemployed
-            if (job.need < 0) {
-                // Removal from craftsman requires additional work
-                if (job.id == 'craftsman') {
-                    let totalRemove = -job.need;
-                    // Searching through craft jobs to remove
-                    for (x in craftJobs) {
-                        if (!craftJobs[x].unlocked) {continue;}
-                        craftJobs[x].temp_employed = craftJobs[x].employed;
-                        if (craftJobs[x].employed >= totalRemove) {
-                            for (let j = 0;j < totalRemove;j++) {
-                                craftJobs[x].fire();
-                            }
-                            craftJobs[x].temp_employed = craftJobs[x].employed - totalRemove;
-                            free_agents += totalRemove;
-                            break;
-                        } else {
-                            for (let j = 0;j < craftJobs[x].employed;j++) {
-                                craftJobs[x].fire();
-                            }
-                            craftJobs[x].temp_employed = 0;
-                            free_agents += craftJobs[x].employed;
-                            totalRemove -= craftJobs[x].employed;
-                        }
-                    }
-                } else {
-                    for (let j = 0;j < -job.need;j++) {
-                        if (job.id != 'free') {job.fire();}
-                        job.temp_employed -= 1;
-                        free_agents += 1;
-                    }
-                }
+        // Allocating jobs
+        let maxCheck = function(index, allocation) {
+            if (sortedJobs[index].maxEmployed != -1 && sortedJobs[index].maxEmployed == allocation) {
+                return true;
+            }
+            return false;
+        };
+        let allocation = allocate(population,priorities,ratios,maxCheck);
+        //console.log(allocation);
+
+        // Firing extra employees
+        for (let i = 0;i < allocation.alloc.length;i++) {
+            //console.log(i, sortedJobs[i].name, sortedJobs[i].employed, "->", allocation.alloc[i]);
+            if (sortedJobs[i].employed > allocation.alloc[i]) {
+                sortedJobs[i].fire(sortedJobs[i].employed - allocation.alloc[i]);
+            }
+        }
+        // Hiring required employees
+        for (let i = 0;i < allocation.alloc.length;i++) {
+            if (sortedJobs[i].employed < allocation.alloc[i]) {
+                sortedJobs[i].hire(allocation.alloc[i] - sortedJobs[i].employed);
             }
         }
 
-        //console.log("Finished freeing agents");
-
-        // All free agents should be in unemployed
-        // Now send those back that are needed
-        for (let i = 0;i < sortedJobs.length;i++) {
-            let job = sortedJobs[i];
-            for (let i = 0;i < job.need;i++) {
-                if (job.id != 'free') {job.hire();}
-                job.temp_employed += 1;
-                free_agents -= 1;
-            }
-        }
-
-        //console.log("Finished sending initial agents");
-
-
-        // Divy up the remaining free agents based on priority
-        // The pie is split based on total priority points
-        for (let i = 0;i < sortedJobs.length;i++) {
-            let job = sortedJobs[i];
-            //if (job.id == "free") {continue;}
-            let pie = Math.round(free_agents * job.priority / total_priority);
-            for (let j = 0;j < Math.min(pie,job.max_employed - job.temp_employed);j++) {
-                if (job.id != 'free') {job.hire();}
-                free_agents -= 1;
-            }
-            total_priority -= job.priority;
-        }
-        // Sometimes there's still some free agents left
-        for (let j = 0;j < free_agents;j++) {
-            for (let i = 0;i < sortedJobs.length;i++) {
-                let job = sortedJobs[i];
-                if (job.id == 'free') {continue;}
-                job.hire()
-            }
-        }
-
-        // Divy up Craftsmen
-
+        // Allocating craftsman
         if (!jobs.craftsman.unlocked) {return;}
         //console.log("Divying up Craftsman");
         // Delay to get new craftman number
         setTimeout(function() {
             let totalCraftsman = 0;
-            let total_priority = 0;
+            let totalPriority = 0;
             let cjobs = [];
-            let cwant = [];
-            let cratio = [];
-            let cneed = [];
+            let priorities = [];
+            let ratios = [];
             // Finding availible craftsman positions, as well as total priority and craftsman numbers
             for (x in craftJobs) {
                 if (!craftJobs[x].unlocked) {continue;}
                 cjobs.push(craftJobs[x]);
-                total_priority += craftJobs[x].priority;
+                totalPriority += craftJobs[x].priority;
                 totalCraftsman += craftJobs[x].employed;
-                craftJobs[x].want = 0;
-                cwant.push(0);
+                priorities.push(craftJobs[x].priority);
             }
             // Calculating wanted ratios
             for (let i = 0;i < cjobs.length;i++) {
-                cratio.push(cjobs[i].priority / total_priority);
+                ratios.push(cjobs[i].priority / totalPriority);
             }
             // Optimizing craftsman placement
-            for (let i = 0;i < totalCraftsman;i++) {
-                // Calculating error based on next value choice
-                let error = -1;
-                let choice = -1;
-                for (let j = 0;j < cjobs.length;j++) {
-                    let total = i+1;
-                    let tempError = 0;
-                    // Finding new error based on adding this craftsman
-                    for (let k = 0;k < cjobs.length;k++) {
-                        if (j == k) {
-                            // Currently attempting to add a craftsman to this position
-                            tempError += (((cwant[k]+1) / total) - cratio[k]) ** 2;
-                        } else {
-                            tempError += ((cwant[k] / total) - cratio[k]) ** 2;
-                        }
-                    }
-                    if (error == -1 || tempError < error) {
-                        error = tempError;
-                        choice = j;
-                    }
-                }
-                cwant[choice] += 1;
-            }
-            // Finding differential
-            for (let i = 0;i < cjobs.length;i++) {
-                cneed[i] = cwant[i] - cjobs[i].employed;
-            }
+            let allocation = allocate(totalCraftsman,priorities,ratios);
+
             // Firing all unneeded
             for (let i = 0;i < cjobs.length;i++) {
-                if (cneed[i] < 0) {
-                    for (let j = 0;j < -cneed[i];j++) {
-                        cjobs[i].fire();
-                    }
+                if (allocation.alloc[i] < cjobs[i].employed) {
+                    cjobs[i].fire(cjobs[i].employed - allocation.alloc[i]);
                 }
             }
             // Hiring all needed
             for (let i = 0;i < cjobs.length;i++) {
-                if (cneed[i] > 0) {
-                    for (let j = 0;j < cneed[i];j++) {
-                        cjobs[i].hire();
-                    }
+                if (allocation.alloc[i] > cjobs[i].employed) {
+                    cjobs[i].hire(allocation.alloc[i] - cjobs[i].employed);
                 }
             }
         }, 25);
@@ -2225,7 +2108,6 @@ function main() {
     function getCurrentMorale() {
         let totalMorale = 100;
         for (var x in window.game.global.city.morale) {
-            console.log(x, window.game.global.city.morale[x]);
             if (x == 'current') {continue;}
             totalMorale += window.game.global.city.morale[x];
         }
@@ -2248,7 +2130,6 @@ function main() {
         if (!researched('tech-tax_rates')) {return;}
         let morale = getCurrentMorale();
         let maxMorale = getMaxMorale();
-        console.log(morale, maxMorale);
         // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
         if (resources.Money.ratio == 1) {
             for (let i = 0;i < 50;i++) {
@@ -3060,6 +2941,9 @@ function main() {
         // Optimizing each support
     }
 
+    function prioCompare(a, b) {
+        return b.priority - a.priority;
+    }
     function getAvailableBuildings() {
         let build = [];
         for (var x in buildings) {
@@ -3457,27 +3341,26 @@ function main() {
         }
     }
 
-    function allocate(totalNum,priorities,ratios) {
+    function allocate(totalNum,priorities,ratios,requireFunc) {
         let allocationList = [];
         let curNum = [];
         for (let i = 0;i < priorities.length;i++) {curNum.push(0);}
         for (let i = 0;i < totalNum;i++) {
+            let total = i+1;
             // Calculating error based on next value choice
+            let prevError = 0;
+            for (let j = 0;j < priorities.length;j++) {
+                prevError = ((curNum[j] / total) - ratios[j]) ** 2;
+            }
             let error = -1;
             let choice = -1;
             for (let j = 0;j < priorities.length;j++) {
                 if (priorities[j] == 0 || ratios[j] == 0) {continue;}
-                let total = i+1;
-                let tempError = 0;
-                // Finding new error based on adding this trade route
-                for (let k = 0;k < priorities.length;k++) {
-                    if (j == k) {
-                        // Currently attempting to add a trade route to this resource
-                        tempError += (((curNum[k]+1) / total) - ratios[k]) ** 2;
-                    } else {
-                        tempError += ((curNum[k] / total) - ratios[k]) ** 2;
-                    }
-                }
+                if (requireFunc !== undefined && requireFunc(j, curNum[j])) {continue;}
+                let tempError = prevError;
+                tempError -= ((curNum[j] / total) - ratios[j]) ** 2;
+                tempError += (((curNum[j]+1) / total) - ratios[j]) ** 2;
+
                 if (error == -1 || tempError < error) {
                     error = tempError;
                     choice = j;
@@ -3631,9 +3514,7 @@ function main() {
         if (settings.autoStorage && $('.as-storage-settings').length == 0) {
             createStorageSettings();
         }
-        if ($('#autoEmploy').length == 0) {
-            createSettingToggle('autoEmploy', 'Autoemploys workers. See Civics page for job priorities', createEmploySettings, removeEmploySettings);
-        } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
+        if (settings.autoEmploy && $('.as-employ-settings').length == 0) {
             createEmploySettings();
         }
         if ($('#autoBattle').length == 0) {
@@ -3661,7 +3542,6 @@ function main() {
         removeEmploySettings();
         $('.ea-autolog').remove();
         $('#autoPrioritize').remove();
-        $('#autoEmploy').remove();
         $('#autoBattle').remove();
         $('#ea-settings').remove();
         $('#autoSettings').remove();
@@ -3926,79 +3806,63 @@ function main() {
         for (var x in jobs) {
             let job = jobs[x];
             if (!job.unlocked) {continue;}
+            let prioritySub = function() {
+                job.lowerPriority();
+                loadEmployUI();
+                return job._priority;
+            }
+            let priorityAdd = function() {
+                job.higherPriority();
+                loadEmployUI();
+                return job._priority;
+            }
+            let priorityControl = createNumControl(job._priority, job.id+'-priority',prioritySub,priorityAdd);
             if (job.id != "free" || job.name == 'Hunter') {
                 if (job.id == "craftsman") {
-                    let prioritySub = $('<span role="button" aria-label="Decrease '+job.name+' Priority" class="sub ea-employ-craft-settings">«</span>');
-                    prioritySub.on('mouseup', function(e) {
-                        jobs[job.id].lowerPriority();
-                        jobs[job.id].updateUI();
-                    });
-                    let priorityAdd = $('<span role="button" aria-label="Increase '+job.name+' Priority" class="add ea-employ-craft-settings">»</span>');
-                    priorityAdd.on('mouseup', function(e) {
-                        jobs[job.id].higherPriority();
-                        jobs[job.id].updateUI();
-                    });
-                    let priorityLabel = $('<span class="count current" id="'+job.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
-                    let priorityControls = $('<div class="foundry controls ea-employ-craft-settings" style="text-align:right;display:flex;margin-left:4.5rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
                     let parent = $('#foundry > .job > .foundry').parent();
-                    parent.append(priorityControls);
+                    let div = $('<div class="foundry as-employ-settings" style="text-align:right;margin-left:4.5rem"></div>');
+                    parent.append(div);
+                    div.append(priorityControl);
+                    //parent.append(priorityControl);
                 } else if (job.id == 'free') {
-                    let prioritySub = $('<span role="button" aria-label="Decrease '+job.name+' Priority" class="sub ea-employ-settings">«</span>');
-                    prioritySub.on('mouseup', function(e) {
-                        jobs[job.id].lowerPriority();
-                        jobs[job.id].updateUI();
-                    });
-                    let priorityAdd = $('<span role="button" aria-label="Increase '+job.name+' Priority" class="add ea-employ-settings">»</span>');
-                    priorityAdd.on('mouseup', function(e) {
-                        jobs[job.id].higherPriority();
-                        jobs[job.id].updateUI();
-                    });
-                    let priorityLabel = $('<span class="count current" id="'+job.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
-                    let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;display:flex;margin-left:4.5rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
-                    $('#civ-'+job.id).append(priorityControls)
+                    let div = $('<div class="as-employ-settings" style="text-align:right;margin-left:4.5rem"></div>');
+                    $('#civ-'+job.id).append(div);
+                    div.append(priorityControl);
                 }else {
-                    let prioritySub = $('<span role="button" aria-label="Decrease '+job.name+' Priority" class="sub ea-employ-settings">«</span>');
-                    prioritySub.on('mouseup', function(e) {
-                        jobs[job.id].lowerPriority();
-                        jobs[job.id].updateUI();
-                    });
-                    let priorityAdd = $('<span role="button" aria-label="Increase '+job.name+' Priority" class="add ea-employ-settings">»</span>');
-                    priorityAdd.on('mouseup', function(e) {
-                        jobs[job.id].higherPriority();
-                        jobs[job.id].updateUI();
-                    });
-                    let priorityLabel = $('<span class="count current" id="'+job.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+job._priority+'</span>');
-                    let priorityControls = $('<div class="controls ea-employ-settings" style="text-align:right;display:flex;margin-left:1.25rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
-                    $('#civ-'+job.id).append(priorityControls)
+                    let div = $('<div class="as-employ-settings" style="text-align:right;margin-left:1.25rem"></div>');
+                    $('#civ-'+job.id).append(div);
+                    div.append(priorityControl);
                 }
 
             } else {
                 let parent = document.getElementById("civ-"+job.id);
-                let priorityLabel = $('<span class="has-text-warning ea-employ-settings" style="text-align:right;min-width:9.25rem">Priority</span>');
+                let priorityLabel = $('<span class="has-text-warning as-employ-settings" style="text-align:right;min-width:9.25rem">Priority</span>');
                 $('#civ-'+job.id).append(priorityLabel);
             }
         }
+
         for (x in craftJobs) {
             let cjob = craftJobs[x];
             if (!cjob.unlocked) {continue;}
-            let prioritySub = $('<span role="button" aria-label="Decrease '+cjob.name+' Priority" class="sub ea-employ-craft-settings">«</span>');
-            prioritySub.on('mouseup', function(e) {
-                craftJobs[cjob.id].lowerPriority();
-                craftJobs[cjob.id].updateUI();
-            });
-            let priorityAdd = $('<span role="button" aria-label="Increase '+cjob.name+' Priority" class="add ea-employ-craft-settings">»</span>');
-            priorityAdd.on('mouseup', function(e) {
-                craftJobs[cjob.id].higherPriority();
-                craftJobs[cjob.id].updateUI();
-            });
-            let priorityLabel = $('<span class="count current" id="'+cjob.id+'_priority" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:1.5rem;">'+cjob.priority+'</span>');
-            let priorityControls = $('<div class="controls ea-employ-craft-settings" style="text-align:right;display:flex;margin-left:1.25rem">').append(prioritySub).append(priorityLabel).append(priorityAdd).append('</div>');
-            $('#craft'+cjob.id).parent().append(priorityControls)
+            let prioritySub = function() {
+                cjob.lowerPriority();
+                loadEmployUI();
+                return cjob._priority;
+            }
+            let priorityAdd = function() {
+                cjob.higherPriority();
+                loadEmployUI();
+                return cjob._priority;
+            }
+            let priorityControl = createNumControl(cjob._priority, cjob.id+'-priority',prioritySub,priorityAdd);
+            let div = $('<div class="as-employ-settings" style="text-align:right;margin-left:1.25rem">');
+            div.append(priorityControl);
+            $('#craft'+cjob.id).parent().append(div);
         }
+
     }
     function removeEmploySettings() {
-        $('.ea-employ-settings').remove();
-        $('.ea-employ-craft-settings').remove();
+        $('.as-employ-settings').remove();
     }
 
     function createAutoSettingPage(name, labelElm, contentElm) {
@@ -4192,6 +4056,78 @@ function main() {
         }
     }
 
+    function loadEmployUI(content) {
+        if (content === null || content == undefined) {content = $('#as-autoEmploy-content');}
+        $('.as-employui').remove();
+        let i = 0;
+        let labelDiv = $('<div style="display:flex" class="alt market-item as-employui"></div>');
+        content.append(labelDiv);
+        let jobLabel = $('<span class="has-text-warning" style="width:12rem;">Job</span>');
+        labelDiv.append(jobLabel);
+        let priorityLabel = $('<span class="has-text-warning" style="width:12rem;">Priority</span>');
+        labelDiv.append(priorityLabel);
+
+        for (let x in jobs) {
+            let id = x;
+            let div = null;
+            i += 1;
+            if (i % 2) {
+                div = $('<div style="display:flex" class="market-item as-employui"></div>');
+            } else {
+                div = $('<div style="display:flex" class="alt market-item as-employui"></div>');
+            }
+            content.append(div);
+
+            // Setting Hunter priority
+            let name = (x == 'free') ? 'Hunter' : jobs[x].name;
+            let label = $(`<span class="has-text-info" style="width:12rem;">${name}</h3>`);
+            div.append(label);
+
+            let priorityDiv = $('<div style="width:12rem;"></div>');
+            div.append(priorityDiv);
+            let prioritySub = function() {
+                jobs[id].lowerPriority();
+                createEmploySettings();
+                return jobs[id]._priority;
+            }
+            let priorityAdd = function() {
+                jobs[id].higherPriority();
+                createEmploySettings();
+                return jobs[id]._priority;
+            }
+            let priorityControl = createNumControl(jobs[id]._priority, jobs[id].id+'_priority',prioritySub,priorityAdd);
+            priorityDiv.append(priorityControl);
+        }
+        for (let x in craftJobs) {
+            let id = x;
+            let div = null;
+            i += 1;
+            if (i % 2) {
+                div = $('<div style="display:flex" class="market-item as-employui"></div>');
+            } else {
+                div = $('<div style="display:flex" class="alt market-item as-employui"></div>');
+            }
+            content.append(div);
+
+            let label = $(`<span class="has-text-danger" style="width:12rem;">${craftJobs[x].name}</h3>`);
+            div.append(label);
+
+            let priorityDiv = $('<div style="width:12rem;"></div>');
+            div.append(priorityDiv);
+            let prioritySub = function() {
+                craftJobs[id].lowerPriority();
+                createEmploySettings();
+                return craftJobs[id]._priority;
+            }
+            let priorityAdd = function() {
+                craftJobs[id].higherPriority();
+                createEmploySettings();
+                return craftJobs[id]._priority;
+            }
+            let priorityControl = createNumControl(craftJobs[id]._priority, craftJobs[id].id+'_priority',prioritySub,priorityAdd);
+            priorityDiv.append(priorityControl);
+        }
+    }
     function createAutoSettingJobPage(tab) {
 
         // Auto Tax
@@ -4215,6 +4151,9 @@ function main() {
         minMoraleDiv.append(minMoraleControl);
 
         // Auto Employ
+        let autoEmployDesc = 'Allocates the population to jobs. May add min/max settings later on.';
+        let [autoEmployTitle, autoEmployContent] = createAutoSettingToggle('autoEmploy', 'Auto Employ', autoEmployDesc, true, tab, createEmploySettings, removeEmploySettings);
+        loadEmployUI(autoEmployContent);
 
         // Auto Battle
 
