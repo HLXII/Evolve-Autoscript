@@ -1438,11 +1438,7 @@ function main() {
         }
 
         get name() {
-            if (this.label !== null) {
-                return this.label.innerText;
-            } else {
-                return this.id;
-            }
+            return window.game.global.civic[this.id].name;
         }
 
         get employed() {
@@ -1496,7 +1492,6 @@ function main() {
 
         hire() {
             if (this.hireBtn !== null) {
-
                 var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
                 document.dispatchEvent (evt);
                 this.hireBtn.click();
@@ -1536,6 +1531,14 @@ function main() {
             }
         }
 
+        get name() {
+            if (this.label !== null) {
+                return this.label.innerText;
+            } else {
+                return this.id;
+            }
+        }
+
         updateUI() {
             if (this.name != 'Hunter') {return;}
             super.updateUI();
@@ -1544,7 +1547,6 @@ function main() {
     class Craftsman extends Job {
         constructor(id, priority) {
             super(id, priority);
-            //this.workPhases = ['New Moon', 'Waxing Gibbous Moon', 'Full Moon', 'Waning Crescent Moon'];
         }
 
         get mainDiv() {
@@ -1560,23 +1562,10 @@ function main() {
             return document.querySelector('#foundry .job:nth-child(2) > .controls > .sub')
         }
 
-        get name() {
-            return "Craftsman";
-        }
-
         get unlocked() {
             return (civicsOn() && this.mainDiv !== null && this.mainDiv.children.length > 0);
         }
 
-        /*
-        // Priority goes to zero when craftsman don't do any work
-        get priority() {
-            if (this.workPhases.includes(getLunarPhase())) {
-                return this._priority;
-            } else {
-                return 0;
-            }
-        }*/
     }
     var jobs = {};
     function loadJobs() {
@@ -1616,6 +1605,30 @@ function main() {
         }
         get fireBtn() {
             return document.getElementById('craft'+this.id).parentNode.children[1].children[0];
+        }
+
+        get name() {
+            if (this.label !== null) {
+                return this.label.innerText;
+            } else {
+                return this.id;
+            }
+        }
+
+        get unlocked() {
+            return (civicsOn() && this.mainDiv !== null && this.mainDiv.style.display != 'none');
+        }
+
+        get employed() {
+            if (this.employLabel !== null) {
+                return parseInt(this.employLabel.innerText);
+            } else {
+                console.log("Error:", this.id, "Employed");
+                return -1;
+            }
+        }
+        get maxEmployed() {
+            return -1;
         }
     }
     var craftJobs = {};
@@ -1762,6 +1775,9 @@ function main() {
         }
         if (!settings.hasOwnProperty('autoMarket')) {
             settings.autoMarket = false;
+        }
+        if (!settings.hasOwnProperty('marketVolume')) {
+            settings.marketVolume = 1;
         }
         if (!settings.hasOwnProperty('minimumMoney')) {
             settings.minimumMoney = 0;
@@ -2229,8 +2245,19 @@ function main() {
         let multipliers = $('#market-qty').children();
         // If multipliers don't exist (aka cannot manual buy/sell) don't autoMarket
         if (multipliers === null || multipliers === undefined || multipliers.length == 0) {return;}
-        multipliers[2].click();
+        let curMarketVolume = Math.min(settings.marketVolume,multipliers.length);
+        multipliers[curMarketVolume].click();
         let qty = 25;
+        switch(curMarketVolume) {
+            case 1: qty = 10; break;
+            case 2: qty = 25; break;
+            case 3: qty = 100; break;
+            case 4: qty = 250; break;
+            case 5: qty = 1000; break;
+            case 6: qty = 2500; break;
+            case 7: qty = 10000; break;
+            case 8: qty = 25000; break;
+        }
         setTimeout(function(){ //timeout needed to let the click on multiplier take effect
             for (var x in resources) {
                 let resource = resources[x];
@@ -4135,6 +4162,139 @@ function main() {
 
     }
 
+    function loadTradeUI(content) {
+        let i = 0;
+        let labelDiv = $('<div style="display:flex" class="alt market-item"></div>');
+        content.append(labelDiv);
+        let resourceLabel = $('<span class="has-text-warning" style="width:12rem;">Tradeable Resource</h3>');
+        labelDiv.append(resourceLabel);
+        let buyLabel = $('<span class="has-text-warning" style="width:12rem;">Manual Buy</h3>');
+        labelDiv.append(buyLabel);
+        let sellLabel = $('<span class="has-text-warning" style="width:12rem;">Manual Sell</h3>');
+        labelDiv.append(sellLabel);
+        let tradeLabel = $('<span class="has-text-warning" style="width:12rem;">Trade Priority</h3>');
+        labelDiv.append(tradeLabel);
+        i += 1;
+        let moneyDiv = $('<div style="display:flex" class="market-item"></div>');
+        content.append(moneyDiv);
+        let moneyLabel = $('<span class="has-text-advanced" style="width:12rem;">Money</span>');
+        moneyDiv.append(moneyLabel);
+        let padding = $('<div style="width:24rem;"></div>');
+        moneyDiv.append(padding);
+        let moneyPrioritySub = function() {
+            resources['Money'].decBasePriority();
+            createMarketSettings();
+            return resources['Money'].basePriority;
+        }
+        let moneyPriorityAdd = function() {
+            resources['Money'].incBasePriority();
+            createMarketSettings();
+            return resources['Money'].basePriority;
+        }
+        let moneyPriorityControl = createNumControl(resources['Money'].basePriority, resources['Money'].id+'_priority',moneyPrioritySub,moneyPriorityAdd);
+        moneyDiv.append(moneyPriorityControl);
+        for (var x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            let div = null;
+            i += 1;
+            if (i % 2) {
+                div = $('<div style="display:flex" class="market-item"></div>');
+            } else {
+                div = $('<div style="display:flex" class="alt market-item"></div>');
+            }
+            content.append(div);
+
+            var label = $(`<span class="has-text-info" style="width:12rem;">${resources[x].name}</h3>`);
+            div.append(label);
+
+            let manualBuy = $('<div style="width:12rem;display:flex;"></div>');
+            div.append(manualBuy);
+            let buyToggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
+            manualBuy.append(buyToggle);
+            let id = x;
+            if(resources[id].autoBuy){
+                buyToggle.click();
+                buyToggle.children('input').attr('value', true);
+            }
+            buyToggle.on('mouseup', function(e){
+                let input = e.currentTarget.children[0];
+                let state = !(input.getAttribute('value') === "true");
+                input.setAttribute('value', state);
+                let otherState = sellToggle.children('input').attr('value') === 'true';
+                if(state && otherState){
+                    sellToggle.click();
+                    console.log("Turning off sellToggle");
+                    resources[id].autoSell = false;
+                    sellToggle.children('input')[0].setAttribute('value',false);
+                }
+                resources[id].autoBuy = state;
+                createMarketSettings();
+            });
+            let buyDec = function() {
+                resources[id].buyDec();
+                createMarketSettings();
+                return resources[id].buyRatio;
+            }
+            let buyInc = function() {
+                resources[id].buyInc();
+                createMarketSettings();
+                return resources[id].buyRatio;
+            }
+            let buyVal = resources[id].buyRatio;
+            let buyControls = createNumControl(buyVal,resources[id].name+"_buy_ratio",buyDec,buyInc);
+            manualBuy.append(buyControls);
+
+            let manualSell = $('<div style="width:12rem;display:flex;"></div>');
+            div.append(manualSell);
+            let sellToggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
+            manualSell.append(sellToggle);
+            id = x;
+            if(resources[id].autoSell){
+                sellToggle.click();
+                sellToggle.children('input').attr('value', true);
+            }
+            sellToggle.on('mouseup', function(e){
+                let input = e.currentTarget.children[0];
+                let state = !(input.getAttribute('value') === "true");
+                input.setAttribute('value', state);
+                let otherState = buyToggle.children('input').attr('value') === 'true';
+                if(state && otherState){
+                    buyToggle.click();
+                    console.log("Turning off buyToggle");
+                    resources[id].autoBuy = false;
+                    buyToggle.children('input')[0].setAttribute('value',false);
+                }
+                resources[id].autoSell = state;
+                createMarketSettings();
+            });
+            let sellDec = function() {
+                resources[id].sellDec();
+                createMarketSettings();
+                return resources[id].sellRatio;
+            }
+            let sellInc = function() {
+                resources[id].sellInc();
+                createMarketSettings();
+                return resources[id].sellRatio;
+            }
+            let sellVal = resources[id].sellRatio;
+            let sellControls = createNumControl(sellVal,resources[id].name+"_sell_ratio",sellDec,sellInc);
+            manualSell.append(sellControls);
+
+            let prioritySub = function() {
+                resources[id].decBasePriority();
+                createMarketSettings();
+                return resources[id].basePriority;
+            }
+            let priorityAdd = function() {
+                resources[id].incBasePriority();
+                createMarketSettings();
+                return resources[id].basePriority;
+            }
+            let priorityControl = createNumControl(resources[id].basePriority, resources[id].id+'_priority',prioritySub,priorityAdd);
+            div.append(priorityControl);
+        }
+    }
     function createAutoSettingResourcePage(tab) {
 
         // Auto Craft
@@ -4176,11 +4336,32 @@ function main() {
 
         // Auto Market
         let autoMarketDesc = 'Buys/sells resources when they are below/above a certain storage ratio. This also makes sure when buying that the money never goes under the minimum value. Only works when Manual Trading is enabled (disabled in No Trade challenge).';
-        let [autoMarketTitle, autoMarketContent] = createAutoSettingToggle('autoMarket', 'Auto Market', autoMarketDesc, false, tab);
+        let [autoMarketTitle, autoMarketContent] = createAutoSettingToggle('autoMarket', 'Auto Market', autoMarketDesc, true, tab);
+        let volumeOption = $('<div style="display:flex;"></div>');
+        autoMarketContent.append(volumeOption);
+        volumeOption.append($('<h3 class="has-text-warning" style="width:12rem;">Market Volume:</h3>'));
+        let volumeDropdown = $(`<select style="width:150px;">
+                            <option value="1">10x</option>
+                            <option value="2">25x</option>
+                            <option value="3">100x</option>
+                            <option value="4">250x</option>
+                            <option value="5">1000x</option>
+                            <option value="6">2500x</option>
+                            <option value="7">10000x</option>
+                            <option value="8">25000x</option>
+                            </select>`);
+        volumeDropdown[0].value = settings.marketVolume;
+        volumeDropdown[0].onchange = function(){
+            settings.marketVolume = volumeDropdown[0].value;
+            console.log("Changing market volume to ", settings.marketVolume);
+            updateSettings();
+        };
+        volumeOption.append(volumeDropdown);
 
         // Auto Trade
         let autoTradeDesc = 'Allocates trade routes based on the trade priority (as well as Auto Prioritize).';
-        let [autoTradeTitle, autoTradeContent] = createAutoSettingToggle('autoTrade', 'Auto Trade', autoTradeDesc, false, tab);
+        let [autoTradeTitle, autoTradeContent] = createAutoSettingToggle('autoTrade', 'Auto Trade', autoTradeDesc, true, tab);
+        loadTradeUI(autoTradeContent);
 
         // Auto Storage
         let autoStorageDesc = 'Allocates crates and containers to resources based on priority. Also as a minimum storage setting for steel and other resources that need initial storage.';
