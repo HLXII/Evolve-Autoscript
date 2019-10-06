@@ -1757,8 +1757,8 @@ function main() {
         if (!settings.hasOwnProperty('autoTax')) {
             settings.autoTax = false;
         }
-        if (!settings.hasOwnProperty('defaultMorale')) {
-            settings.defaultMorale = 100;
+        if (!settings.hasOwnProperty('minimumMorale')) {
+            settings.minimumMorale = 100;
         }
         if (!settings.hasOwnProperty('autoEmploy')) {
             settings.autoEmploy = false;
@@ -2222,16 +2222,55 @@ function main() {
     let moraleLabel = $('#morale').children(1)[0];
     let incTaxBtn = $('#tax_rates > .add');
     let decTaxBtn = $('#tax_rates > .sub');
+    function getCurrentMorale() {
+        let totalMorale = 100;
+        for (var x in window.game.global.city.morale) {
+            console.log(x, window.game.global.city.morale[x]);
+            if (x == 'current') {continue;}
+            totalMorale += window.game.global.city.morale[x];
+        }
+        return totalMorale;
+    }
+    function getMaxMorale() {
+        let maxMorale = 100;
+        maxMorale += buildings['city-amphitheatre'].numTotal;
+        maxMorale += buildings['city-casino'].numTotal;
+        maxMorale += buildings['space-vr_center'].numOn * 2;
+        if (researched('tech-superstars')) {maxMorale += window.game.global.civic.entertainer.workers;}
+        maxMorale += arpas['monument'].rank * 2;
+        if (window.game.global.civic.taxes.tax_rate < 20){
+            maxMorale += 10 - Math.floor(window.game.global.civic.taxes.tax_rate / 2);
+        }
+        return maxMorale;
+    }
     function autoTax(priorityData) {
         // Don't start taxes if haven't researched
         if (!researched('tech-tax_rates')) {return;}
-        let morale = parseInt(moraleLabel.innerText.substr(0,moraleLabel.innerText.length-1));
-        if (morale > settings.defaultMorale) {
-            for (let i = 0;i < morale - settings.defaultMorale;i++) {
+        let morale = getCurrentMorale();
+        let maxMorale = getMaxMorale();
+        console.log(morale, maxMorale);
+        // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
+        if (resources.Money.ratio == 1) {
+            for (let i = 0;i < 50;i++) {
+                decTaxBtn.click();
+            }
+        }
+        // Currently above max Morale
+        else if (morale > maxMorale) {
+            for (let i = 0;i < morale - maxMorale;i++) {
                 incTaxBtn.click();
             }
+        }
+        // Currently below minimum Morale
+        else if (morale < settings.minimumMorale) {
+            for (let i = 0;i < settings.minimumMorale - morale;i++) {
+                decTaxBtn.click();
+            }
         } else {
-            for (let i = 0;i < settings.defaultMorale - morale;i++) {
+            if (resources.Money.ratio < 0.5) {
+                incTaxBtn.click();
+            }
+            else {
                 decTaxBtn.click();
             }
         }
@@ -3597,9 +3636,6 @@ function main() {
         } else if(settings.autoEmploy && ($('.ea-employ-settings').length == 0 || $('.ea-employ-craft-settings').length == 0)) {
             createEmploySettings();
         }
-        if ($('#autoTax').length == 0) {
-            createSettingToggle('autoTax', 'Automatically changes tax rate to match desired morale level', createTaxSettings, removeTaxSettings);
-        }
         if ($('#autoBattle').length == 0) {
             createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
         }
@@ -3623,11 +3659,9 @@ function main() {
         removeMarketSettings();
         removeTradeSettings();
         removeEmploySettings();
-        removeTaxSettings();
         $('.ea-autolog').remove();
         $('#autoPrioritize').remove();
         $('#autoEmploy').remove();
-        $('#autoTax').remove();
         $('#autoBattle').remove();
         $('#ea-settings').remove();
         $('#autoSettings').remove();
@@ -3967,32 +4001,6 @@ function main() {
         $('.ea-employ-craft-settings').remove();
     }
 
-    function createTaxSettings() {
-        let moraleText = $('<span>Set Default Morale:</span>');
-        let moraleSub = $('<span role="button" aria-label="Decrease Morale" class="sub ea-tax-settings">«</span>');
-        moraleSub.on('mouseup', function(e) {
-            settings.defaultMorale -= 1;
-            let count = $('#autoTax > div > .ea-tax-settings > .count')[0];
-            count.removeChild(count.firstChild);
-            count.appendChild(document.createTextNode(settings.defaultMorale));
-            updateSettings();
-        });
-        let moraleAdd = $('<span role="button" aria-label="Increase Morale" class="add ea-tax-settings">»</span>');
-        moraleAdd.on('mouseup', function(e) {
-            settings.defaultMorale += 1;
-            let count = $('#autoTax > div > .ea-tax-settings > .count')[0];
-            count.removeChild(count.firstChild);
-            count.appendChild(document.createTextNode(settings.defaultMorale));
-            updateSettings();
-        });
-        let moraleLabel = $('<span class="count current" style="padding-right:5px;padding-left:5px;vertical-align:bottom;width:3rem;">'+settings.defaultMorale+'</span>');
-        let moraleControls = $('<div class="controls ea-tax-settings" style="text-align:right;min-width:6rem;display:flex">').append(moraleText).append(moraleSub).append(moraleLabel).append(moraleAdd).append('</div>');
-        $('#autoTax_right').append(moraleControls);
-    }
-    function removeTaxSettings() {
-        $('.ea-tax-settings').remove();
-    }
-
     function createAutoSettingPage(name, labelElm, contentElm) {
         let label = $('<li class="ea-settings"><a><span>'+name+'</span></a></li>');
         let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
@@ -4187,6 +4195,24 @@ function main() {
     function createAutoSettingJobPage(tab) {
 
         // Auto Tax
+        let autoTaxDesc = 'Manages the tax rate for optimal morale and taxes.';
+        let [autoTaxTitle, autoTaxContent] = createAutoSettingToggle('autoTax', 'Auto Tax', autoTaxDesc, true, tab);
+
+        let minMoraleDiv = $('<div style="display:flex;"></div>');
+        autoTaxContent.append(minMoraleDiv);
+        let minMoraleTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Morale:</span>')
+        minMoraleDiv.append(minMoraleTxt);
+
+        let minMoraleSub = function() {
+            settings.minimumMorale -= 1;
+            return settings.minimumMorale;
+        }
+        let minMoraleAdd = function() {
+            settings.minimumMorale += 1;
+            return settings.minimumMorale;
+        }
+        let minMoraleControl = createNumControl(settings.minimumMorale, "minimum_morale", minMoraleSub, minMoraleAdd);
+        minMoraleDiv.append(minMoraleControl);
 
         // Auto Employ
 

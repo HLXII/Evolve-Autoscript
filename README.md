@@ -13,6 +13,7 @@ My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.
 * Add install instructions to README
 * Maybe add sacrifical alter? Never played new mantis yet
 * Add multiplier functionality to custom UI
+* Replace some toggles with checkboxes (copy UI from fortress) (replace priority show toggles and challenge setting toggles)
 
 ## Large
 * Update Auto Support. Currently simplistic allocation, and support buildings not implemented
@@ -20,7 +21,6 @@ My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.
 * Auto Mass Ejector
 * Refactor priority system to use single priority queue
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits)
-* Update Auto Tax to take into account money limits
 * Update Auto Battle for more optimal battles (optimal calculations, enemy power checks, max soldier/campaign, etc)
 * Refactor Auto Employ for more granularity (Specifically craftsmen. Can't get exactly one worker easily)
 * Add support for Auto Prestige
