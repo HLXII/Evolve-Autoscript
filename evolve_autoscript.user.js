@@ -1793,8 +1793,8 @@ function main() {
             settings.uniChoice = 'unify';
         }
 
-        if (!settings.hasOwnProperty('autoPrioritize')) {
-            settings.autoPrioritize = false;
+        if (!settings.hasOwnProperty('autoPriority')) {
+            settings.autoPriority = false;
         }
 
         if (!settings.hasOwnProperty('log')) {settings.log = []};
@@ -2606,92 +2606,6 @@ function main() {
         }, 100);
     }
 
-    function _autoSupport(priorityData) {
-        // Don't start autoSupport if haven't unlocked power
-        if (!researched('tech-electricity')) {return;}
-        var x;
-        // Generating unlocked producers and consumers
-        var ps = [];
-        var cs = [];
-        for (x in elecProducers) {
-            if (elecProducers[x].unlocked) {
-                ps.push(elecProducers[x]);
-            }
-        }
-        for (x in elecConsumers) {
-            if (elecConsumers[x].unlocked) {
-                cs.push(elecConsumers[x]);
-            }
-        }
-        cs.sort(prioCompare);
-        //console.log(ps, cs);
-        // Turn on all possible producers
-        for (let i = 0;i < ps.length;i++) {
-            let p = ps[i];
-            p.delta = 0;
-            // Calculate whether to turn off
-            let needTurnOff = false;
-            for (let j = 0;j < p.consume.length;j++) {
-                let res = p.consume[j].res;
-                if (res.rate < 0) {
-                    needTurnOff = true;
-                }
-            }
-            // A resource that this producer needs is decreasing
-            if (needTurnOff && p.numOn > 0) {
-                p.decBtn.click();
-                p.delta = -1;
-                continue;
-            }
-            // Calculate whether to turn on
-            let canTurnOn = true;
-            for (let j = 0;j < p.consume.length;j++) {
-                let res = p.consume[j].res;
-                let cost = p.consume[j].cost;
-                if (res.rate < cost) {
-                    canTurnOn = false;
-                }
-            }
-            if (canTurnOn && p.numOn < p.numTotal) {
-                p.incBtn.click();
-                p.delta = 1;
-            }
-        }
-        // Calculate total possible power
-        let totalPower = 0;
-        for (let i = 0;i < ps.length;i++) {
-            let p = ps[i];
-            totalPower += p.produce * (p.numOn + p.delta)
-        }
-        //console.log("Total Power:", totalPower);
-        // Distribute power to needed buildings
-        for (let i = 0;i < cs.length;i++) {
-            let c = cs[i];
-            // Have some power left to give
-            if (totalPower > 0) {
-                let canTurnOn = (totalPower - (totalPower % c.consume)) / c.consume;
-                canTurnOn = Math.min(canTurnOn, c.numTotal);
-                if (c.numOn > canTurnOn) {
-                    for (let j = 0;j < c.numOn - canTurnOn;j++) {
-                        c.decBtn.click();
-                    }
-                } else {
-                    for (let j = 0;j < canTurnOn - c.numOn;j++) {
-                        c.incBtn.click();
-                    }
-                }
-                totalPower -= canTurnOn * c.consume;
-                //console.log(c, canTurnOn);
-            // Run out of power
-            } else {
-                for (let j = 0;j < c.numOn;j++) {
-                    c.decBtn.click();
-                }
-                //console.log(c, 0);
-            }
-        }
-    }
-
     function isFuelProducer(building) {
         let fuels = ['Coal', 'Oil', 'Uranium', 'Helium_3','Elerium'];
         let yes = false;
@@ -3055,7 +2969,7 @@ function main() {
         }
         return res;
     }
-    function autoPrioritize(count) {
+    function autoPriority(count) {
         // Finding available actions
         let actions = getAvailableActions();
         //console.log(actions);
@@ -3238,7 +3152,7 @@ function main() {
     function autoTrade(priorityData) {
         // If haven't researched trade, don't do anything
         if (!researched('tech-trade')) {return;}
-        // Haven't made non-AutoPrioritize autoTrade, so ignore otherwise
+        // Haven't made non-AutoPriority autoTrade, so ignore otherwise
         if (priorityData === null) {return;}
         let limits = priorityData.limits
         let PQs = priorityData.PQs
@@ -3397,8 +3311,8 @@ function main() {
         } else {
             // Civilization Automation
             var priorityData = null;
-            if(settings.autoPrioritize) {
-                priorityData = autoPrioritize(count);
+            if(settings.autoPriority) {
+                priorityData = autoPriority(count);
             }
             if(settings.autoTrade){autoTrade(priorityData);}
             if(settings.autoCraft){
@@ -3522,17 +3436,11 @@ function main() {
         if (settings.autoEmploy && $('.as-employ-settings').length == 0) {
             createEmploySettings();
         }
-        if ($('#autoBattle').length == 0) {
-            createSettingToggle('autoBattle', 'Automatically battles when all soldiers are ready. Changes the campaign type to match army rating');
-        }
         if (settings.autoMarket && $('.as-market-settings').length == 0) {
             createMarketSettings();
         }
         if (settings.autoTrade && $('.as-trade-settings').length == 0) {
             createTradeSettings();
-        }
-        if ($('#autoPrioritize').length == 0) {
-            createSettingToggle('autoPrioritize', 'Complex priority system to control purchasing buildings and research');
         }
         if ($('#autoSettings').length == 0) {
             createAutoSettings();
@@ -3546,8 +3454,6 @@ function main() {
         removeTradeSettings();
         removeEmploySettings();
         $('.ea-autolog').remove();
-        $('#autoPrioritize').remove();
-        $('#autoBattle').remove();
         $('#ea-settings').remove();
         $('#autoSettings').remove();
     }
@@ -4163,8 +4069,12 @@ function main() {
         loadEmployUI(autoEmployContent);
 
         // Auto Battle
+        let autoBattleDesc = 'Automatically runs battle campaigns. Currently the algorithm is very simple. Will add more complex behavior soon.';
+        let [autoBattleTitle, autoBattleContent] = createAutoSettingToggle('autoBattle', 'Auto Battle', autoBattleDesc, true, tab);
 
         // Auto Fortress
+        let autoFortressDesc = 'Manages soldier allocation in the fortress. Currently not yet implemented.';
+        let [autoFortressTitle, autoFortressContent] = createAutoSettingToggle('autoFortress', 'Auto Fortress', autoFortressDesc, true, tab);
 
     }
 
@@ -5094,7 +5004,10 @@ function main() {
     function createAutoSettingPriorityPage(tab) {
 
         // Auto Priority
-        createPriorityList(tab);
+        let autoPriorityDesc = 'Main Priority System. Creates a priority queue for all the buildings/research/misc. The priority queue can also be used to manage allocation for other settings (smelter, trade, etc). This will probably be heavily reworked in the future.';
+        let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, true, tab);
+
+        createPriorityList(autoPriorityContent);
 
     }
 
