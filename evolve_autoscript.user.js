@@ -1185,7 +1185,10 @@ function main() {
         }
 
         get rank() {
-            return window.game.global.arpa[this.id].rank
+            if (window.game.global.arpa[this.id] !== undefined) {
+                return window.game.global.arpa[this.id].rank
+            }
+            return 0;
         }
 
         getResDep(resid) {
@@ -2148,7 +2151,7 @@ function main() {
             }
         }
         // Currently below minimum Morale
-        else if (morale < settings.minimumMorale) {
+        else if (morale <= settings.minimumMorale) {
             for (let i = 0;i < settings.minimumMorale - morale;i++) {
                 decTaxBtn.click();
             }

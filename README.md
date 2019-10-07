@@ -25,6 +25,7 @@ Also thinking of moving some buttons back under the resource section for easy ac
 * Add multiplier functionality to custom UI
 * Replace some toggles with checkboxes (copy UI from fortress) (replace priority show toggles and challenge setting toggles) This is definitely necessary as there is a bug with the current toggles.
 * Add hover text to some labels for more details (see Reset UI button for dom class and syntax)
+* Add setting to display/hide inline UI
 
 ## Large
 * Update Auto Support. Currently simplistic allocation, and support buildings not implemented
