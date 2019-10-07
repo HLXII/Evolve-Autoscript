@@ -2010,7 +2010,7 @@ function main() {
         return parseInt(armyRating);
     }
     function decCampaign(num) {
-        num = num ? num : 1;
+        num = (num === undefined) ? 1 : num;
         let decCampaignBtn = document.querySelector('#tactics > .sub');
         if (decCampaignBtn === null) {return;}
         for (let i = 0;i < num;i++) {
@@ -2018,7 +2018,7 @@ function main() {
         }
     }
     function incCampaign(num) {
-        num = num ? num : 1;
+        num = (num === undefined) ? 1 : num;
         let incCampaignBtn = document.querySelector('#tactics > .add');
         if (incCampaignBtn === null) {return;}
         for (let i = 0;i < num;i++) {
@@ -4191,6 +4191,45 @@ function main() {
         // Auto Battle
         let autoBattleDesc = 'Automatically runs battle campaigns. Currently the algorithm is very simple. Will add more complex behavior soon.';
         let [autoBattleTitle, autoBattleContent] = createAutoSettingToggle('autoBattle', 'Auto Battle', autoBattleDesc, true, tab);
+
+        let maxCampaignOption = $('<div style="display:flex;"></div>');
+        autoBattleContent.append(maxCampaignOption);
+        autoBattleContent.append($('<br></br>'));
+        maxCampaignOption.append($('<span class="has-text-warning" style="width:12rem;">Max Campaign:</span>'));
+        let maxCampaignDecision = $(`<select style="width:150px;">
+                            <option value="0">Ambush</option>
+                            <option value="1">Raid</option>
+                            <option value="2">Pillage</option>
+                            <option value="3">Assault</option>
+                            <option value="4">Siege</option>
+                            </select>`);
+        maxCampaignDecision[0].value = settings.maxCampaign;
+        maxCampaignDecision[0].onchange = function(){
+            settings.maxCampaign = maxCampaignDecision[0].value;
+            console.log("Changing max campaign to ", settings.maxCampaign);
+            updateSettings();
+        };
+        maxCampaignOption.append(maxCampaignDecision);
+
+        let minWinRateDiv = $('<div style="display:flex;"></div>');
+        autoBattleContent.append(minWinRateDiv);
+        let minWinRateTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Win Rate:</span>')
+        minWinRateDiv.append(minWinRateTxt);
+        let minWinRateInput = $('<input type="text" class="input is-small" style="width:10rem;"/>');
+        minWinRateInput.val(settings.minWinRate);
+        minWinRateDiv.append(minWinRateInput);
+        let setBtn = $('<a class="button is-dark is-small" id="set-min-winrate" style="width:2rem;"><span>Set</span></a>');
+        minWinRateDiv.append(setBtn);
+        setBtn.on('mouseup', function(e) {
+            if (e.which != 1) {return;}
+            let val = minWinRateInput.val();
+            let minWinRate = getRealValue(val);
+            if(!isNaN(minWinRate) && minWinRate >= 0 && minWinRate <= 100){
+                console.log("Setting minimum win rate", minWinRate);
+                settings.minWinRate = minWinRate;
+                updateSettings();
+            }
+        });
 
         // Auto Fortress
         let autoFortressDesc = 'Manages soldier allocation in the fortress. Currently not yet implemented.';
