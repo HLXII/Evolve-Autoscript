@@ -2257,6 +2257,7 @@ function main() {
         if (!researched('tech-tax_rates')) {return;}
         let morale = getCurrentMorale();
         let maxMorale = getMaxMorale();
+        //console.log(morale, maxMorale);
         // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
         if (resources.Money.ratio == 1) {
             for (let i = 0;i < 50;i++) {
@@ -2264,7 +2265,7 @@ function main() {
             }
         }
         // Currently above max Morale
-        else if (morale > maxMorale) {
+        else if (morale >= maxMorale) {
             for (let i = 0;i < morale - maxMorale;i++) {
                 incTaxBtn.click();
             }
@@ -3542,6 +3543,22 @@ function main() {
         }
         return toggle;
     }
+    function createDropDownControl(currentValue, id, name, values, changeFunc) {
+        let option = $(`<div style="display:flex;" id="${id}_dropdown"></div>`);
+        option.append($(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`));
+        let decision = $(`<select style="width:12rem;"></select>`);
+        for (let val in values) {
+            decision.append($(`<option value="${val}">${values[val]}</option>`));
+        }
+        decision[0].value = settings[id];
+        decision[0].onchange = function(){
+            settings[id] = decision[0].value;
+            console.log(`Changing ${id} to ${settings[id]}`);
+            updateSettings();
+        };
+        option.append(decision);
+        return option;
+    }
 
     function updateUI(){
         if ($('.ea-autolog').length == 0) {
@@ -4027,50 +4044,14 @@ function main() {
         let autoEvolutionDesc = 'This setting will automatically play the Evolution stage. It will buy the mininum amount of RNA/DNA storage for evolving, as well as automatically purchase challenges.';
         let [autoEvolutionTitle, autoEvolutionContent] = createAutoSettingToggle('autoEvolution', 'Auto Evolution', autoEvolutionDesc, true, tab);
 
-        let raceOption = $('<div style="display:flex;"></div>');
+        let raceValues = {};
+        for (let race in window.game.races) {
+            if (race == 'protoplasm' || race == 'junker') {continue;}
+            raceValues[race] = window.game.races[race].name;
+        }
+        let raceOption = createDropDownControl(settings.evolution, 'evolution', 'Evolution Decision', raceValues);
         autoEvolutionContent.append(raceOption);
         autoEvolutionContent.append($('<br></br>'));
-        raceOption.append($('<h3 class="has-text-warning" style="width:12rem;">Evolution Decision:</h3>'));
-        let evoDecision = $(`<select style="width:150px;">
-                            <option value="elven">Elven</option>
-                            <option value="orc">Orc</option>
-                            <option value="human">Human</option>
-                            <option value="troll">Troll</option>
-                            <option value="orge">Ogre</option>
-                            <option value="cyclops">Cyclops</option>
-                            <option value="kobold">Kobold</option>
-                            <option value="goblin">Goblin</option>
-                            <option value="gnome">Gnome</option>
-                            <option value="cath">Cath</option>
-                            <option value="wolven">Wolven</option>
-                            <option value="centuar">Centuar</option>
-                            <option value="tortoisan">Tortoisan</option>
-                            <option value="gecko">Gecko</option>
-                            <option value="slitheryn">Slitheryn</option>
-                            <option value="arraak">Arraak</option>
-                            <option value="pterodacti">Pterodacti</option>
-                            <option value="dracnid">Dracnid</option>
-                            <option value="sporgar">Sporgar</option>
-                            <option value="shroomi">Shroomi</option>
-                            <option value="mantis">Mantis</option>
-                            <option value="scorpid">Scorpid</option>
-                            <option value="antid">Antid</option>
-                            <option value="entish">Entish</option>
-                            <option value="cacti">Cacti</option>
-                            <option value="sharkin">Sharkin</option>
-                            <option value="octigoran">Octigoran</option>
-                            <option value="balorg">Balorg</option>
-                            <option value="imp">Imp</option>
-                            <option value="seraph">Seraph</option>
-                            <option value="unicorn">Unicorn</option>
-                            </select>`);
-        evoDecision[0].value = settings.evolution;
-        evoDecision[0].onchange = function(){
-            settings.evolution = evoDecision[0].value;
-            console.log("Changing target to ", settings.evolution);
-            updateSettings();
-        };
-        raceOption.append(evoDecision);
 
         let challengeOption = $('<div style="display:flex;"></div>');
         autoEvolutionContent.append(challengeOption);
@@ -4189,27 +4170,13 @@ function main() {
         loadEmployUI(autoEmployContent);
 
         // Auto Battle
-        let autoBattleDesc = 'Automatically runs battle campaigns. Currently the algorithm is very simple. Will add more complex behavior soon.';
+        let autoBattleDesc = 'Automatically runs battle campaigns. Will choose the highest campaign that allows for the minimum win rate. You can limit the highest campaign as well, as Siege is always less efficient.';
         let [autoBattleTitle, autoBattleContent] = createAutoSettingToggle('autoBattle', 'Auto Battle', autoBattleDesc, true, tab);
 
-        let maxCampaignOption = $('<div style="display:flex;"></div>');
+        let maxCampaignOptions = {0:'Ambush',1:'Raid',2:'Pillage',3:'Assault',4:'Siege'};
+        let maxCampaignOption = createDropDownControl(settings.maxCampaign, 'maxCampaign', 'Max Campaign', maxCampaignOptions);
         autoBattleContent.append(maxCampaignOption);
         autoBattleContent.append($('<br></br>'));
-        maxCampaignOption.append($('<span class="has-text-warning" style="width:12rem;">Max Campaign:</span>'));
-        let maxCampaignDecision = $(`<select style="width:150px;">
-                            <option value="0">Ambush</option>
-                            <option value="1">Raid</option>
-                            <option value="2">Pillage</option>
-                            <option value="3">Assault</option>
-                            <option value="4">Siege</option>
-                            </select>`);
-        maxCampaignDecision[0].value = settings.maxCampaign;
-        maxCampaignDecision[0].onchange = function(){
-            settings.maxCampaign = maxCampaignDecision[0].value;
-            console.log("Changing max campaign to ", settings.maxCampaign);
-            updateSettings();
-        };
-        maxCampaignOption.append(maxCampaignDecision);
 
         let minWinRateDiv = $('<div style="display:flex;"></div>');
         autoBattleContent.append(minWinRateDiv);
