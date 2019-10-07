@@ -1161,9 +1161,15 @@ function main() {
         }
         // Space
     }
-    class ArpaAction extends Action {
+    class MiscAction extends Action {
+        constructor(id) {
+            super(id, ['misc']);
+        }
+    }
+    class ArpaAction extends MiscAction {
         constructor(id, res) {
-            super(id, ['arpa']);
+            super(id);
+            this.loc.push('arpa');
             this.res = res;
         }
 
@@ -1275,9 +1281,10 @@ function main() {
         arpas.monument = new MonumentAction('monument');
         loadMonumentRes();
     }
-    class StorageAction extends Action {
+    class StorageAction extends MiscAction {
         constructor(id, res) {
-            super(id, ['storage']);
+            super(id);
+            this.loc.push('storage');
             this.res = res;
         }
 
@@ -1339,9 +1346,9 @@ function main() {
         storages.Container = new StorageAction('Container',
                                                {Steel:1250});
     }
-    class GeneAction extends Action {
+    class GeneAction extends MiscAction {
         constructor(id) {
-            super(id, ['misc']);
+            super(id);
             this.res = {Knowledge:200000};
         }
 
@@ -1372,9 +1379,10 @@ function main() {
             return true;
         }
     }
-    class MercenaryAction extends Action {
+    class MercenaryAction extends MiscAction {
         constructor(id) {
-            super(id, ['misc']);
+            super(id);
+            this.loc.push('mercenary');
             this.res = {};
         }
 
@@ -1388,7 +1396,7 @@ function main() {
         }
 
         get name() {
-            return "Hire Mercenary";
+            return "Hire Garrison Mercenary";
         }
 
         getResDep(resid) {
@@ -1410,11 +1418,26 @@ function main() {
             return true;
         }
     }
+    class FortressMercenaryAction extends MercenaryAction {
+        constructor(id) {
+            super(id);
+        }
+
+        get btn() {
+            let btn = $('button.merc');
+            return (btn.length) ? btn[0] : null;
+        }
+
+        get name() {
+            return "Hire Fortress Mercenary";
+        }
+    }
     var miscActions = {};
     function loadMiscActions() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         miscActions.Gene = new GeneAction("Gene");
         miscActions.Mercenary = new MercenaryAction("Mercenary");
+        miscActions.FortressMercenary = new FortressMercenaryAction("FortressMercenary");
     }
 
     class Job {
@@ -4544,7 +4567,7 @@ function main() {
         if (t === undefined) {
             if (a == "Container" || a == "Crate") {
                 action = storages[a];
-            } else if (a == 'Gene' || a == 'Mercenary') {
+            } else if (a == 'Gene' || a == 'Mercenary' || a == 'FortressMercenary') {
                 action = miscActions[a];
             } else {
                 action = arpas[a];
@@ -4641,7 +4664,7 @@ function main() {
                 div.style.display = 'none';
                 continue;
             }
-            if (showMiscToggle.children[0].value == 'false' && (action instanceof ArpaAction || action instanceof StorageAction || action instanceof GeneAction || action instanceof MercenaryAction)) {
+            if (showMiscToggle.children[0].value == 'false' && (action instanceof MiscAction)) {
                 div.style.display = 'none';
                 continue;
             }
