@@ -1770,6 +1770,12 @@ function main() {
         if (!settings.hasOwnProperty('autoBattle')) {
             settings.autoBattle = false;
         }
+        if (!settings.hasOwnProperty('minWinRate')) {
+            settings.minWinRate = 60;
+        }
+        if (!settings.hasOwnProperty('maxCampaign')) {
+            settings.maxCampaign = 4;
+        }
         if (!settings.hasOwnProperty('autoFortress')) {
             settings.autoFortress = false;
         }
@@ -1986,69 +1992,159 @@ function main() {
         }
     }
 
-    function soldierCount() {
-        return document.querySelector('#garrison .barracks > span:nth-child(2)').innerText.split(' / ');
+    function getWounded() {
+        return window.game.global.civic.garrison.wounded;
     }
-    class AutoBattler {
-        constructor() {
-            this.battleButton = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span > button');
-            this.addBattalion = document.querySelector('#battalion > .add');
-            this.armySize = document.querySelector('#battalion > span:nth-child(3) > .current');
-            this.lowerCampaign = document.querySelector('#tactics > .sub');
-            this.higherCampaign = document.querySelector('#tactics > .add');
-            this.campaignStrengths = [
-                { name: "Ambush", rating: 10 },
-                { name: "Raid", rating: 50 },
-                { name: "Pillage", rating: 100 },
-                { name: "Assault", rating: 200 },
-                { name: "Siege", rating: 500 }
-            ];
+    function getMaxSoldiers() {
+        return window.game.global.civic.garrison.max;
+    }
+    function getAvailableSoldiers() {
+        return window.game.global.civic.garrison.workers;
+    }
+    function getCurrentSoldiers() {
+        return window.game.global.civic.garrison.raid;
+    }
+    function armyRating() {
+        let armyRating = document.querySelector('#garrison > .header > span >  span:nth-child(2)');
+        if (armyRating === null) {return 0;}
+        return parseInt(armyRating);
+    }
+    function decCampaign(num) {
+        num = num ? num : 1;
+        let decCampaignBtn = document.querySelector('#tactics > .sub');
+        if (decCampaignBtn === null) {return;}
+        for (let i = 0;i < num;i++) {
+            decCampaignBtn.click();
         }
-
-        autoBattle() {
-            // Don't battle if the garrison hasn't been unlocked
-            if (!researched('tech-garrison')) {return;}
-            // Don't battle after unification
-            if (researched('tech-wc_conquest')||researched('tech-wc_morale')||researched('tech-wc_money')||researched('tech-wc_reject')) {return;}
-            // Adding soldiers
-            for (let i = 0;i < this.soldierCount[0] - parseInt(this.armySize.innerText);i++) {
-                this.addBattalion.click();
-            }
-            // If no wounded and max soldiers, start battle
-            if (this.woundedCount == 0 && this.soldierCount[0] == this.soldierCount[1] && this.soldierCount[0] != 0) {
-                //console.log("Wounded: ", this.woundedCount, "Soldiers: ", this.soldierCount);
-                // Changing campaign to match current rating
-                for (let i = 0;i < 4;i++) {
-                    this.lowerCampaign.click();
+    }
+    function incCampaign(num) {
+        num = num ? num : 1;
+        let incCampaignBtn = document.querySelector('#tactics > .add');
+        if (incCampaignBtn === null) {return;}
+        for (let i = 0;i < num;i++) {
+            incCampaignBtn.click();
+        }
+    }
+    function getCurrentCampaign() {
+        return window.game.global.civic.garrison.tactic;
+    }
+    function addSoldiers(num) {
+        num = num ? num : 1;
+        let btn = document.querySelector('#battalion > .add');
+        if (btn === null) {return;}
+        for (let i = 0;i < num;i++) {
+            btn.click();
+        }
+    }
+    function subSoldiers(num) {
+        num = num ? num : 1;
+        let btn = document.querySelector('#battalion > .sub');
+        if (btn === null) {return;}
+        for (let i = 0;i < num;i++) {
+            btn.click();
+        }
+    }
+    function getWinRate() {
+        let span = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span');
+        if (span === null) {return 0;}
+        span = span.attributes['data-label'].value;
+        span = /([\d\.]+)% ([\w])+/.exec(span);
+        let [ meh, winRate, advantage] = span;
+        winRate = parseFloat(winRate);
+        winRate *= (advantage == 'advantage') ? 1 : -1;
+        return parseFloat(span[1]);
+    }
+    function runCampaign() {
+        let btn = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span > button');
+        if (btn === null) {return;}
+        btn.click();
+    }
+    let armyStatus = false;
+    let armySetupStage = 0;
+    let chosenCampaign = false;
+    function battle() {
+        // Don't autoBattle if garrison not unlocked
+        if (!researched('tech-garrison')) {return;}
+        // Don't autoBattle if unified
+        if (window.game.global.tech['world_control']) {return;}
+        // If army isn't ready, wait until it is
+        let avaSoldiers = getAvailableSoldiers();
+        let maxSoldiers = getMaxSoldiers();
+        let wounded = getWounded();
+        //console.log(avaSoldiers, maxSoldiers, wounded);
+        // Determining of army is ready
+        if (avaSoldiers && avaSoldiers == maxSoldiers && wounded == 0) {
+            armyStatus = true;
+        } else {
+            armyStatus = false;
+            chosenCampaign = false;
+            armySetupStage = 0;
+        }
+        // Army is ready
+        if (armyStatus) {
+            switch(armySetupStage) {
+                // Initial Stage
+                case 0: {
+                    // Setting campaign to max campaign setting
+                    decCampaign(4);
+                    incCampaign(settings.maxCampaign);
+                    // Setting army size to max
+                    addSoldiers(maxSoldiers);
+                    armySetupStage += 1;
+                    //console.log("Campaign Ready - Setting up soldiers");
+                    break;
                 }
-                for (let i = 1;i <= 4;i++) {
-                    //console.log(this.rating, "VS", this.campaignStrengths[i]);
-                    if (this.rating < this.campaignStrengths[i].rating) {
-                        break;
-                    } else {
-                        this.higherCampaign.click();
+                // Decrement Stage
+                case 1: {
+                    // Checking winrate
+                    let winrate = getWinRate();
+                    // Lower Win Rate
+                    if (winrate <= settings.minWinRate) {
+                        // Checking if campaign chosen
+                        if (chosenCampaign) {
+                            //console.log("Chosen Campaign", getCurrentCampaign(), "Win", winrate, settings.minWinRate);
+                            addSoldiers();
+                            runCampaign();
+                            armyStatus = false;
+                            chosenCampaign = false;
+                            armySetupStage = 0;
+                        }
+                        // Campaign not chosen yet
+                        else {
+                            if (getCurrentCampaign() == 0) {
+                                //console.log("Cannot beat Ambush, resetting army algorithm");
+                                armyStatus = false;
+                                chosenCampaign = false;
+                                armySetupStage = 0;
+                            } else {
+                                //console.log("Cannot win at this campaign", getCurrentCampaign(), " decrementing campaign");
+                                decCampaign();
+                            }
+                        }
                     }
+                    // Higher Win Rate
+                    else {
+                        //console.log("Can win at this campaign",getCurrentCampaign(),"subtracting soldiers");
+                        chosenCampaign = true;
+                        subSoldiers();
+                    }
+                    break;
                 }
-                // Don't battle if army rating lower than lowest campaign
-                if (this.rating < this.campaignStrengths[0].rating) {return;}
-                // Starting battle
-                this.battleButton.click();
             }
-        }
 
-        get soldierCount() {
-            return document.querySelector('#garrison .barracks > span:nth-child(2)').innerText.split(' / ');
-        }
-
-        get woundedCount() {
-            return document.querySelector('#garrison .barracks:nth-child(2) > span:nth-child(2)').innerText;
-        }
-
-        get rating() {
-            return document.querySelector('#garrison > .header').children[1].children[1].childNodes[0].textContent;
         }
     }
-    let autoBattler = new AutoBattler();
+    let battleInterval = null;
+    function autoBattle() {
+        if(settings.autoBattle && battleInterval === null) {
+            battleInterval = setInterval(battle, 25);
+        } else {
+            if (!settings.autoBattle && !(battleInterval === null)) {
+                clearInterval(battleInterval);
+                battleInterval = null;
+            }
+        }
+    }
 
     function autoEmploy(priorityData) {
         let sortedJobs = [];
@@ -3329,6 +3425,7 @@ function main() {
         updateSettings();
         autoFarm();
         autoRefresh();
+        autoBattle();
         if (inEvolution()) {
             // Evolution Automation
             if(settings.autoEvolution) {
@@ -3349,9 +3446,6 @@ function main() {
             }
             if(settings.autoTax) {
                 autoTax();
-            }
-            if(settings.autoBattle){
-                autoBattler.autoBattle();
             }
             if(settings.autoMarket){
                 autoMarket();
@@ -3693,7 +3787,7 @@ function main() {
     }
     function createTradeSettings() {
         // Don't render if haven't researched markets
-        if (!researched('tech-market')) {return;}
+        if (!researched('tech-trade')) {return;}
         removeTradeSettings();
         let mainDiv = document.getElementById('market');
         if ($('.as-market-settings > br').length == 0) {
