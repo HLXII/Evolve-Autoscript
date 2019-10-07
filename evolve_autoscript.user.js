@@ -2127,6 +2127,11 @@ function main() {
                         //console.log("Can win at this campaign",getCurrentCampaign(),"subtracting soldiers");
                         chosenCampaign = true;
                         subSoldiers();
+                        if (getCurrentSoldiers() == 0) {
+                            armyStatus = false;
+                            chosenCampaign = false;
+                            armySetupStage = 0;
+                        }
                     }
                     break;
                 }

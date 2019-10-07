@@ -15,6 +15,7 @@ Also thinking of moving some buttons back under the resource section for easy ac
 ## Bugfix
 * Fix research settings, because I don't think it works correctly (also doesn't take into account new crispr for both religions)
 * Clicking somewhere random, then releasing the click above the tab navigators makes the label look focused (green in night mode). This is because of something weird I did in the UI code. I think I know a fix, but I'm too lazy to check.
+* Money is attached to the helium control in the inline trade settings. Need to connect it to the one that's currently visible. However, the inline settings don't update unless you click Reset UI. Maybe reset UI in a timer?
 
 ## Small
 * Update autoCraft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
@@ -26,6 +27,7 @@ Also thinking of moving some buttons back under the resource section for easy ac
 * Replace some toggles with checkboxes (copy UI from fortress) (replace priority show toggles and challenge setting toggles) This is definitely necessary as there is a bug with the current toggles.
 * Add hover text to some labels for more details (see Reset UI button for dom class and syntax)
 * Add setting to display/hide inline UI
+* Fix up Auto Tax. Current implementation needs some work.
 
 ## Large
 * Update Auto Support. Currently simplistic allocation, and support buildings not implemented
@@ -33,7 +35,6 @@ Also thinking of moving some buttons back under the resource section for easy ac
 * Auto Mass Ejector
 * Refactor priority system to use single priority queue
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits)
-* Update Auto Battle for more optimal battles (optimal calculations, enemy power checks, max soldier/campaign, etc)
 * Refactor Auto Employ for more granularity (Specifically craftsmen. Can't get exactly one worker easily)
 * Add support for Auto Prestige
 * Auto Gene
