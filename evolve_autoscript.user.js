@@ -78,8 +78,9 @@ function main() {
                           "evo-kobold", "evo-goblin", "evo-gnome",
                           "evo-cath", "evo-wolven", "evo-centuar",
                           "evo-mantis", "evo-scorpid", "evo-antid",
-                          "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp"];
+                          "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp",'evo-seraph','evo-unicorn'];
     let evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
+    let evoUniverses = ['uni-standard','uni-heavy','uni-antimatter','uni-evil','uni-micro'];
     let evoRaceTrees = {
         "entish":["evo-chloroplasts", "evo-entish"],
         "cacti":["evo-chloroplasts", "evo-cacti"],
@@ -110,7 +111,9 @@ function main() {
         "octigoran":["evo-phagocytosis", "evo-aquatic", "evo-octigoran"],
         "octigoran":["evo-phagocytosis", "evo-aquatic", "evo-octigoran"],
         "balorg":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-balorg"],
-        "imp":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-imp"]
+        "imp":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-imp"],
+        "seraph":["evo-phagocytosis", "evo-mammals", "evo-angelic", "evo-seraph"],
+        "unicorn":["evo-phagocytosis", "evo-mammals", "evo-angelic", "evo-unicorn"],
     };
     let maxEvo = {}
     function loadEvolution() {
@@ -1866,11 +1869,13 @@ function main() {
             // Not purchasable
             if (action.className.indexOf("cna") >= 0) {continue;}
             // Farming button
-            if(evoFarmActions.uncludes(action.id)) {continue;}
+            if(evoFarmActions.includes(action.id)) {continue;}
             // Reached max in maxEvo
             if(action.id in maxEvo && parseInt($('#'+action.id+' > a > .count')[0].innerText) >= maxEvo[action.id]) {continue;}
             // Don't take planets
             if(/\w+\d+/.exec(action.id) !== null) {continue;}
+            // Don't take universes
+            if (evoUniverses.includes(action.id)) {continue;}
             // Check for challenge runs
             if (evoChallengeActions.includes(action.id) && !settings[action.id]) {continue;}
             // Checking for race decision tree
@@ -4030,6 +4035,8 @@ function main() {
                             <option value="octigoran">Octigoran</option>
                             <option value="balorg">Balorg</option>
                             <option value="imp">Imp</option>
+                            <option value="seraph">Seraph</option>
+                            <option value="unicorn">Unicorn</option>
                             </select>`);
         evoDecision[0].value = settings.evolution;
         evoDecision[0].onchange = function(){
