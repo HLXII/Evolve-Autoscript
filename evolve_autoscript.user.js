@@ -3508,75 +3508,61 @@ function main() {
     *
     ***/
 
-    function createSettingToggle(name, title, enabledCallBack, disabledCallBack){
-        let parent = $('#resources');
-        let toggle = $('<label tabindex="0" class="switch" id="'+name+'_toggle" style="" title="'+title+'"><input type="checkbox" value=false> <span class="check"></span><span>'+name+'</span></label>');
-        let divLeft = $('<div id="'+name+'_left" style="float:left">').append(toggle).append($('</div>'));
-        let divRight = $('<div id="'+name+'_right" style="float:right"></div>');
-        let mainDiv = $('<div id="'+name+'" style="overflow:auto">').append(divLeft).append(divRight).append($('</div>'));
-        parent.append(mainDiv);
-        if(settings[name]){
-            toggle.click();
-            toggle.children('input').attr('value', true);
-            if(enabledCallBack !== undefined){
-                enabledCallBack();
-            }
-        }
-        toggle.on('click', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-            settings[name] = state;
-            console.log("Setting", name, "to", state);
-            updateSettings();
-            if(state && enabledCallBack !== undefined){
-                enabledCallBack();
-            } else if(disabledCallBack !== undefined){
-                disabledCallBack()
-            }
-        });
-    }
-    function createNumControl(settingVal,settingName,subFunc,addFunc) {
-        let subBtn = $('<span role="button" aria-label="Decrease '+settingName+'" class="sub">«</span>');
-        let label = $('<span id="'+settingName+'_control" class="count current" style="width:2rem;">'+settingVal+'</span>');
+    function createNumControl(currentValue, name, subFunc, addFunc) {
+        let subBtn = $(`<span role="button" aria-label="Decrease ${name}" class="sub">«</span>`);
+        let label = $(`<span id="${name}_control" class="count current" style="width:2rem;">${currentValue}</span>`);
         subBtn.on('click', function(e) {
-            document.getElementById(settingName+'_control').innerText = subFunc();
+            document.getElementById(name+'_control').innerText = subFunc();
             updateSettings();
         });
-        let addBtn = $('<span role="button" aria-label="Increase '+settingName+'" class="add">»</span>');
+        let addBtn = $(`<span role="button" aria-label="Increase ${name}" class="add">»</span>`);
         addBtn.on('click', function(e) {
-            document.getElementById(settingName+'_control').innerText = addFunc();
+            document.getElementById(name+'_control').innerText = addFunc();
             updateSettings();
         });
-        let control = $('<div class="controls ea-'+settingName+'-settings" style="display:flex">').append(subBtn).append(label).append(addBtn).append('</div>');
+        let control = $(`<div class="controls as-${name}-settings" style="display:flex"></div>`).append(subBtn).append(label).append(addBtn);
         return control;
     }
-    function createToggleControl(toggleVal, toggleId, toggleName, enabledCallBack, disabledCallBack) {
+    function createToggleControl(toggleId, toggleName, args) {
+        args = args || {};
+        let controlName = (Array.isArray(toggleId)) ? toggleId.join('_') : toggleId;
+        let checkStyle = (args.small !== undefined) ? 'style="height:5px;"' : '';
         let toggle = $(`
-        <label class="switch" id="${toggleId}_toggle">
+        <label class="switch" id="${controlName}_toggle">
         <input type="checkbox" true-value="true" value="false">
-        <span class="check"></span>
+        <span class="check" ${checkStyle}></span>
         <span class="control-label"><span class="is-primary is-bottom is-small is-animated is-multiline">${toggleName}</span>
         </span>
         </label>`);
+        let setting = (args.root !== undefined) ? args.root : settings;
+        let attr = toggleId;
+        if (Array.isArray(toggleId)) {
+            for (let i = 0;i < toggleId.length-1;i++) {
+                setting = setting[toggleId[i]];
+            }
+            toggleId = toggleId[toggleId.length-1];
+        }
         toggle.children('input').on('click', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget;
             let state = !(input.getAttribute('value') === "true");
             input.setAttribute('value', state);
-            settings[toggleId] = state;
-            console.log("Setting", toggleId, "to", state);
+            setting[toggleId] = state;
+            console.log(`Setting ${controlName} to ${state}`);
             updateSettings();
-            if(state && enabledCallBack !== undefined){
-                enabledCallBack();
-            } else if(disabledCallBack !== undefined){
-                disabledCallBack()
+            if (state && args.enabledCallBack !== undefined) {
+                args.enabledCallBack();
+            }
+            else if (args.disabledCallBack !== undefined) {
+                args.disabledCallBack()
+            }
+            if (args.onChange !== undefined) {
+                args.onChange(state);
             }
         });
-        if(settings[toggleId]){
+        if(setting[toggleId]){
             setTimeout( function() {
-                console.log("Setting initially to true");
+                console.log(`Setting ${controlName} initially to true`);
                 toggle.children('span.check').click();
                 toggle.children('input').attr('value', true);
             }, 1000);
@@ -4062,7 +4048,7 @@ function main() {
     function createAutoSettingToggle(id, name, description, hasContent, tab, enabledCallBack, disabledCallBack) {
         let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
         tab.append(titleDiv);
-        let toggle = createToggleControl(settings[id], id, name, enabledCallBack, disabledCallBack);
+        let toggle = createToggleControl(id, name, {enabledCallBack:enabledCallBack, disabledCallBack:disabledCallBack});
         titleDiv.append(toggle);
         let details = $(`<div><span>${description}</span></div>`);
         tab.append(details);
@@ -4332,16 +4318,9 @@ function main() {
 
             let manualBuy = $('<div style="width:12rem;display:flex;"></div>');
             div.append(manualBuy);
-            let buyToggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
-            manualBuy.append(buyToggle);
-            if(resources[id].autoBuy){
-                buyToggle.click();
-                buyToggle.children('input').attr('value', true);
-            }
-            buyToggle.on('click', function(e){
-                let input = e.currentTarget.children[0];
-                let state = !(input.getAttribute('value') === "true");
-                input.setAttribute('value', state);
+
+            let buyToggleOnChange = function(state) {
+                let sellToggle = $(`#${id}_autoSell_toggle`);
                 let otherState = sellToggle.children('input').attr('value') === 'true';
                 if(state && otherState){
                     sellToggle.click();
@@ -4349,9 +4328,11 @@ function main() {
                     resources[id].autoSell = false;
                     sellToggle.children('input')[0].setAttribute('value',false);
                 }
-                resources[id].autoBuy = state;
                 createMarketSettings();
-            });
+            }
+            let buyToggle = createToggleControl([id, 'autoBuy'], '', {root:resources,small:true,onChange:buyToggleOnChange});
+            manualBuy.append(buyToggle);
+
             let buyDec = function() {
                 resources[id].buyDec();
                 createMarketSettings();
@@ -4368,17 +4349,9 @@ function main() {
 
             let manualSell = $('<div style="width:12rem;display:flex;"></div>');
             div.append(manualSell);
-            let sellToggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
-            manualSell.append(sellToggle);
-            id = x;
-            if(resources[id].autoSell){
-                sellToggle.click();
-                sellToggle.children('input').attr('value', true);
-            }
-            sellToggle.on('click', function(e){
-                let input = e.currentTarget.children[0];
-                let state = !(input.getAttribute('value') === "true");
-                input.setAttribute('value', state);
+
+            let sellToggleOnChange = function(state) {
+                let buyToggle = $(`#${id}_autoBuy_toggle`);
                 let otherState = buyToggle.children('input').attr('value') === 'true';
                 if(state && otherState){
                     buyToggle.click();
@@ -4386,9 +4359,11 @@ function main() {
                     resources[id].autoBuy = false;
                     buyToggle.children('input')[0].setAttribute('value',false);
                 }
-                resources[id].autoSell = state;
                 createMarketSettings();
-            });
+            }
+            let sellToggle = createToggleControl([id, 'autoSell'], '', {root:resources,small:true,onChange:sellToggleOnChange});
+            manualSell.append(sellToggle);
+
             let sellDec = function() {
                 resources[id].sellDec();
                 createMarketSettings();
@@ -4500,19 +4475,9 @@ function main() {
             autoCraftContent.append(div);
             let label = $(`<span class="has-text-danger" style="width:12rem;">${resources[x].name}</h3>`);
             div.append(label);
-            let toggle = $('<label tabindex="0" class="switch"><input type="checkbox" value=false><span class="check" style="height:5px;"></span></label>');
-            div.append(toggle);
             let id = x;
-            if(resources[id].enabled){
-                toggle.click();
-                toggle.children('input').attr('value', true);
-            }
-            toggle.on('click', function(e){
-                let input = e.currentTarget.children[0];
-                let state = !(input.getAttribute('value') === "true");
-                input.setAttribute('value', state);
-                resources[id].enabled = state;
-            });
+            let toggle = createToggleControl([id, 'enabled'], '', {root:resources,small:true});
+            div.append(toggle);
         }
 
         // Auto Market
@@ -5054,20 +5019,10 @@ function main() {
             actionDiv.append(prioDiv);
 
             // Enable Toggle
-            let toggle = $('<label tabindex="0" class="switch" style="margin-top: 4px;width:10%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
-            actionDiv.append(toggle);
-            if(action.enabled){
-                toggle.click();
-                toggle.children('input').attr('value', true);
-            }
-            toggle.on('click', function(e){
-                if (e.which != 1) {return;}
-                let input = e.currentTarget.children[0];
-                let state = !(input.getAttribute('value') === "true");
-                console.log("Updated build state", action.id, state);
-                input.setAttribute('value', state);
-                action.enabled = state;
-            });
+            let enableDiv = $('<div style="width:10%;" title="'+action.id+' Enabled"></div>');
+            actionDiv.append(enableDiv);
+            let toggle = createToggleControl('enabled', '', {root:action,small:true});
+            enableDiv.append(toggle);
 
             if (action instanceof Building) {
                 drawBuildingItem(action,actionDiv);
