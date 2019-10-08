@@ -1829,6 +1829,18 @@ function main() {
         if (!settings.hasOwnProperty('autoPriority')) {
             settings.autoPriority = false;
         }
+        if (!settings.hasOwnProperty('showAll')) {
+            settings.showAll = false;
+        }
+        if (!settings.hasOwnProperty('showBuilding')) {
+            settings.showBuilding = false;
+        }
+        if (!settings.hasOwnProperty('showResearch')) {
+            settings.showResearch = false;
+        }
+        if (!settings.hasOwnProperty('showMisc')) {
+            settings.showMisc = false;
+        }
 
         if (!settings.hasOwnProperty('log')) {settings.log = []};
     }
@@ -3545,7 +3557,7 @@ function main() {
         <label class="switch" id="${toggleId}_toggle">
         <input type="checkbox" true-value="true" value="false">
         <span class="check"></span>
-        <span class="control-label"><span class="is-primary is-bottom is-small is-animated is-multiline"">${toggleName}</span>
+        <span class="control-label"><span class="is-primary is-bottom is-small is-animated is-multiline">${toggleName}</span>
         </span>
         </label>`);
         toggle.children('input').on('click', function(e){
@@ -3648,8 +3660,8 @@ function main() {
         removeMarketSettings();
         removeTradeSettings();
         removeEmploySettings();
-        $('.ea-autolog').remove();
-        $('#ea-settings').remove();
+        $('.as-autolog').remove();
+        $('.as-settings').remove();
         $('#autoSettings').remove();
     }
 
@@ -3972,8 +3984,8 @@ function main() {
     }
 
     function createAutoSettingPage(name, labelElm, contentElm) {
-        let label = $('<li class="ea-settings"><a><span>'+name+'</span></a></li>');
-        let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
+        let label = $('<li class="as-settings"><a><span>'+name+'</span></a></li>');
+        let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item as-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
         label.on('mouseup',function(e) {
             if (e.which != 1) {return;}
             for (let i = 0;i < labelElm.children().length;i++) {
@@ -3992,8 +4004,8 @@ function main() {
         return tab;
     }
     function createSettingTab() {
-        let settingTabLabel = $('<li class="ea-settings"><a><span>Auto Settings</span></a></li>');
-        let settingTab = $('<div id="autoSettingTab" class="tab-item ea-settings" style="display:none"><h2 class="is-sr-only">Auto Settings</h2></div>');
+        let settingTabLabel = $('<li class="as-settings"><a><span>Auto Settings</span></a></li>');
+        let settingTab = $('<div id="autoSettingTab" class="tab-item as-settings" style="display:none"><h2 class="is-sr-only">Auto Settings</h2></div>');
         // Creating click functions for other tabs
         for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
             let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
@@ -4121,7 +4133,7 @@ function main() {
             let toggleId = evoChallengeActions[i];
             let str = evoChallengeActions[i].split('-')[1];
             let toggleName = str.charAt(0).toUpperCase() + str.slice(1);
-            let toggle = createToggleControl(toggleVal, toggleId, toggleName);
+            let toggle = createCheckBoxControl(toggleVal, toggleId, toggleName);
             let toggleDiv = $('<div></div>');
             toggleDiv.append(toggle);
             challengeToggles.append(toggleDiv);
@@ -4751,10 +4763,6 @@ function main() {
         console.log("Updating Priority List");
         let search = $('#priorityInput')[0];
         let sort = $('#prioritySort')[0];
-        let showToggle = $('#show_toggle')[0];
-        let showBuildingsToggle = $('#show_buildings_toggle')[0];
-        let showResearchesToggle = $('#show_researches_toggle')[0];
-        let showMiscToggle = $('#show_misc_toggle')[0];
         let priorityList = $('#priorityList')[0];
 
         // Finding search parameters
@@ -4817,20 +4825,20 @@ function main() {
             let action = getActionFromId(id);
 
             // Checking if available
-            if (showToggle.children[0].value == 'false' && !action.unlocked) {
+            if (!settings.showAll && !action.unlocked) {
                 div.style.display = 'none';
                 continue;
             }
             // Checking if type shown
-            if (showBuildingsToggle.children[0].value == 'false' && action instanceof Building) {
+            if (!settings.showBuilding && action instanceof Building) {
                 div.style.display = 'none';
                 continue;
             }
-            if (showResearchesToggle.children[0].value == 'false' && action instanceof Research) {
+            if (!settings.showResearch && action instanceof Research) {
                 div.style.display = 'none';
                 continue;
             }
-            if (showMiscToggle.children[0].value == 'false' && (action instanceof MiscAction)) {
+            if (!settings.showMisc && (action instanceof MiscAction)) {
                 div.style.display = 'none';
                 continue;
             }
@@ -5046,7 +5054,7 @@ function main() {
             actionDiv.append(prioDiv);
 
             // Enable Toggle
-            let toggle = $('<label tabindex="0" class="switch ea-settings-tab" style="margin-top: 4px;width:10%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
+            let toggle = $('<label tabindex="0" class="switch" style="margin-top: 4px;width:10%;"><input type="checkbox" value=false> <span class="check" style="height:5px;"></span></label>');
             actionDiv.append(toggle);
             if(action.enabled){
                 toggle.click();
@@ -5086,42 +5094,11 @@ function main() {
         sort.on('change', updatePriorityList);
         topLeft.append(search).append(sortLabel).append(sort);
 
-        let showToggle = $('<label tabindex="0" class="switch" id="show_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show All</span></label>');
-        showToggle.on('change', updatePriorityList);
-        showToggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-        });
-        bottomLeft.append(showToggle);
-        let showBuildingToggle = $('<label tabindex="0" class="switch" id="show_buildings_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show Buildings</span></label>');
-        showBuildingToggle.on('change', updatePriorityList);
-        showBuildingToggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-        });
-        bottomLeft.append(showBuildingToggle);
-        let showResearchToggle = $('<label tabindex="0" class="switch" id="show_researches_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show Researches</span></label>');
-        showResearchToggle.on('change', updatePriorityList);
-        showResearchToggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-        });
-        bottomLeft.append(showResearchToggle);
-        let showMiscToggle = $('<label tabindex="0" class="switch" id="show_misc_toggle" style=""><input type="checkbox" value=false> <span class="check"></span><span>Show Misc.</span></label>');
-        showMiscToggle.on('change', updatePriorityList);
-        showMiscToggle.on('mouseup', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-        });
-        bottomLeft.append(showMiscToggle);
+        let showAll = createCheckBoxControl(settings.showAll, 'showAll', 'Show All', updatePriorityList, updatePriorityList);
+        let showBuilding = createCheckBoxControl(settings.showBuilding, 'showBuilding', 'Show Buildings', updatePriorityList, updatePriorityList);
+        let showResearch = createCheckBoxControl(settings.showResearch, 'showResearch', 'Show Researches', updatePriorityList, updatePriorityList);
+        let showMisc = createCheckBoxControl(settings.showMisc, 'showMisc', 'Show Misc.', updatePriorityList, updatePriorityList);
+        bottomLeft.append(showAll).append(showBuilding).append(showResearch).append(showMisc);
 
         let enableLabel = $('<span style="padding-right:10px;">Enable:</span>');
         let enableAllBtn = $('<a class="button is-dark is-small" id="enable-all-btn"><span>All</span></a>');
@@ -5197,14 +5174,14 @@ function main() {
 
         // Auto Priority
         let autoPriorityDesc = 'Main Priority System. Creates a priority queue for all the buildings/research/misc. The priority queue can also be used to manage allocation for other settings (smelter, trade, etc). This will probably be heavily reworked in the future.';
-        let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, true, tab);
+        let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, false, tab);
 
-        createPriorityList(autoPriorityContent);
+        createPriorityList(tab);
 
     }
 
     function createAutoLog() {
-        let autolog = $('<div id="autolog" class="msgQueue right resource alt ea-autolog"></div>');
+        let autolog = $('<div id="autolog" class="msgQueue right resource alt as-autolog"></div>');
         $('#queueColumn').append(autolog);
     }
 
