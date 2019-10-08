@@ -14,7 +14,6 @@ Also thinking of moving some buttons back under the resource section for easy ac
 
 ## Bugfix
 * Fix research settings, because I don't think it works correctly (also doesn't take into account new crispr for both religions)
-* Clicking somewhere random, then releasing the click above the tab navigators makes the label look focused (green in night mode). This is because of something weird I did in the UI code. I think I know a fix, but I'm too lazy to check.
 * Money is attached to the helium control in the inline trade settings. Need to connect it to the one that's currently visible. However, the inline settings don't update unless you click Reset UI. Maybe reset UI in a timer?
 
 ## Small

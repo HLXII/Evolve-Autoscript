@@ -3522,7 +3522,7 @@ function main() {
                 enabledCallBack();
             }
         }
-        toggle.on('mouseup', function(e){
+        toggle.on('click', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
             let state = !(input.getAttribute('value') === "true");
@@ -3540,12 +3540,12 @@ function main() {
     function createNumControl(settingVal,settingName,subFunc,addFunc) {
         let subBtn = $('<span role="button" aria-label="Decrease '+settingName+'" class="sub">«</span>');
         let label = $('<span id="'+settingName+'_control" class="count current" style="width:2rem;">'+settingVal+'</span>');
-        subBtn.on('mouseup', function(e) {
+        subBtn.on('click', function(e) {
             document.getElementById(settingName+'_control').innerText = subFunc();
             updateSettings();
         });
         let addBtn = $('<span role="button" aria-label="Increase '+settingName+'" class="add">»</span>');
-        addBtn.on('mouseup', function(e) {
+        addBtn.on('click', function(e) {
             document.getElementById(settingName+'_control').innerText = addFunc();
             updateSettings();
         });
@@ -3676,12 +3676,12 @@ function main() {
         let control = $('<div class="field"></div>');
         control.append(label).append(ctrlDiv);
         let importBtn = $('<button class="button">Import Settings</button><text> </text>');
-        importBtn.on('mouseup', function(e) {
+        importBtn.on('click', function(e) {
             if (e.which != 1) {return;}
             importSettings();
         });
         let exportBtn = $('<button class="button">Export Settings</button>');
-        exportBtn.on('mouseup', function(e) {
+        exportBtn.on('click', function(e) {
             if (e.which != 1) {return;}
             exportSettings();
         });
@@ -3747,7 +3747,7 @@ function main() {
         marketDiv.append(manualBuy);
         let toggleBuy = $('<label tabindex="0" class="switch" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
         manualBuy.append(toggleBuy);
-        toggleBuy.on('mouseup', function(e){
+        toggleBuy.on('click', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
             let state = !(input.getAttribute('value') === "true");
@@ -3789,7 +3789,7 @@ function main() {
         marketDiv.append(manualSell);
         let toggleSell = $('<label tabindex="0" class="switch" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
         manualSell.append(toggleSell);
-        toggleSell.on('mouseup', function(e){
+        toggleSell.on('click', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget.children[0];
             let state = !(input.getAttribute('value') === "true");
@@ -3986,7 +3986,7 @@ function main() {
     function createAutoSettingPage(name, labelElm, contentElm) {
         let label = $('<li class="as-settings"><a><span>'+name+'</span></a></li>');
         let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item as-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
-        label.on('mouseup',function(e) {
+        label.on('click',function(e) {
             if (e.which != 1) {return;}
             for (let i = 0;i < labelElm.children().length;i++) {
                 let tabLabel = labelElm.children()[i];
@@ -4010,7 +4010,7 @@ function main() {
         for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length;i++) {
             let tabLabel = $('#mainColumn > .content > .b-tabs > .tabs > ul > li:nth-child('+i+')');
             let tabItem = $('#mainColumn > .content > .b-tabs > .tab-content').children()[i-1];
-            tabLabel.on('mouseup',function(e) {
+            tabLabel.on('click',function(e) {
                 if (e.which != 1) {return;}
                 if (settingTabLabel.hasClass("is-active")) {
                     settingTabLabel.removeClass("is-active");
@@ -4022,7 +4022,7 @@ function main() {
         }
         $('#mainColumn > .content > .b-tabs > .tabs > ul').append(settingTabLabel);
         $('#mainColumn > .content > .b-tabs > .tab-content').append(settingTab);
-        settingTabLabel.on('mouseup',function(e) {
+        settingTabLabel.on('click',function(e) {
             if (e.which != 1) {return;}
             // For every other tab
             for (let i = 1;i <= $('#mainColumn > .content > .b-tabs > .tabs > ul').children().length-1;i++) {
@@ -4092,7 +4092,7 @@ function main() {
         let [autoRefreshTitle, autoRefreshContent] = createAutoSettingToggle('autoRefresh', 'Auto Refresh', autoRefreshDesc, false, tab);
         let reloadBtnDetails = 'Resets the UI and reloads the backend variables.';
         let reloadBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${reloadBtnDetails}"><button class="button is-primary"><span>Reset UI</span></button></div>`);
-        reloadBtn.on('mouseup', function(e){
+        reloadBtn.on('click', function(e){
             if (e.which != 1) {return;}
             resetUI();
             updateSettings();
@@ -4258,7 +4258,7 @@ function main() {
         minWinRateDiv.append(minWinRateInput);
         let setBtn = $('<a class="button is-dark is-small" id="set-min-winrate" style="width:2rem;"><span>Set</span></a>');
         minWinRateDiv.append(setBtn);
-        setBtn.on('mouseup', function(e) {
+        setBtn.on('click', function(e) {
             if (e.which != 1) {return;}
             let val = minWinRateInput.val();
             let minWinRate = getRealValue(val);
@@ -4338,7 +4338,7 @@ function main() {
                 buyToggle.click();
                 buyToggle.children('input').attr('value', true);
             }
-            buyToggle.on('mouseup', function(e){
+            buyToggle.on('click', function(e){
                 let input = e.currentTarget.children[0];
                 let state = !(input.getAttribute('value') === "true");
                 input.setAttribute('value', state);
@@ -4375,7 +4375,7 @@ function main() {
                 sellToggle.click();
                 sellToggle.children('input').attr('value', true);
             }
-            sellToggle.on('mouseup', function(e){
+            sellToggle.on('click', function(e){
                 let input = e.currentTarget.children[0];
                 let state = !(input.getAttribute('value') === "true");
                 input.setAttribute('value', state);
@@ -4507,7 +4507,7 @@ function main() {
                 toggle.click();
                 toggle.children('input').attr('value', true);
             }
-            toggle.on('mouseup', function(e){
+            toggle.on('click', function(e){
                 let input = e.currentTarget.children[0];
                 let state = !(input.getAttribute('value') === "true");
                 input.setAttribute('value', state);
@@ -4549,7 +4549,7 @@ function main() {
         minMoneyDiv.append(minMoneyInput);
         let setBtn = $('<a class="button is-dark is-small" id="set-min-money" style="width:2rem;"><span>Set</span></a>');
         minMoneyDiv.append(setBtn);
-        setBtn.on('mouseup', function(e) {
+        setBtn.on('click', function(e) {
             if (e.which != 1) {return;}
             let val = minMoneyInput.val();
             let minMoney = getRealValue(val);
@@ -4602,7 +4602,7 @@ function main() {
 
         let autoSmelterBtnDetails = 'Manually triggers the Auto Smelter function.';
         let autoSmelterBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${autoSmelterBtnDetails}"><button class="button is-primary"><span>Manual</span></button></div>`);
-        autoSmelterBtn.on('mouseup', function(e){
+        autoSmelterBtn.on('click', function(e){
             if (e.which != 1) {return;}
             count = settings.smelterSettings.interval;
         });
@@ -4633,7 +4633,7 @@ function main() {
 
         let autoFactoryBtnDetails = 'Manually triggers the Auto Factory function.';
         let autoFactoryBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${autoFactoryBtnDetails}"><button class="button is-primary"><span>Manual</span></button></div>`);
-        autoFactoryBtn.on('mouseup', function(e){
+        autoFactoryBtn.on('click', function(e){
             if (e.which != 1) {return;}
             count = settings.factorySettings.interval;
         });
@@ -5060,7 +5060,7 @@ function main() {
                 toggle.click();
                 toggle.children('input').attr('value', true);
             }
-            toggle.on('mouseup', function(e){
+            toggle.on('click', function(e){
                 if (e.which != 1) {return;}
                 let input = e.currentTarget.children[0];
                 let state = !(input.getAttribute('value') === "true");
@@ -5102,7 +5102,7 @@ function main() {
 
         let enableLabel = $('<span style="padding-right:10px;">Enable:</span>');
         let enableAllBtn = $('<a class="button is-dark is-small" id="enable-all-btn"><span>All</span></a>');
-        enableAllBtn.on('mouseup', function(e){
+        enableAllBtn.on('click', function(e){
             if (e.which != 1) {return;}
             let priorityList = $('#priorityList')[0];
             for (let i = 1;i < priorityList.childNodes.length;i++) {
@@ -5112,7 +5112,7 @@ function main() {
             updatePriorityList();
         });
         let enableVisBtn = $('<a class="button is-dark is-small" id="enable-vis-btn"><span>Visible</span></a>');
-        enableVisBtn.on('mouseup', function(e){
+        enableVisBtn.on('click', function(e){
             if (e.which != 1) {return;}
             let priorityList = $('#priorityList')[0];
             for (let i = 1;i < priorityList.childNodes.length;i++) {
@@ -5127,7 +5127,7 @@ function main() {
 
         let disableLabel = $('<span style="padding-right:10px;">Disable:</span>');
         let disableAllBtn = $('<a class="button is-dark is-small" id="disable-all-btn"><span>All</span></a>');
-        disableAllBtn.on('mouseup', function(e){
+        disableAllBtn.on('click', function(e){
             if (e.which != 1) {return;}
             let priorityList = $('#priorityList')[0];
             for (let i = 1;i < priorityList.childNodes.length;i++) {
@@ -5137,7 +5137,7 @@ function main() {
             updatePriorityList();
         });
         let disableVisBtn = $('<a class="button is-dark is-small" id="disable-vis-btn"><span>Visible</span></a>');
-        disableVisBtn.on('mouseup', function(e){
+        disableVisBtn.on('click', function(e){
             if (e.which != 1) {return;}
             let priorityList = $('#priorityList')[0];
             for (let i = 1;i < priorityList.childNodes.length;i++) {
