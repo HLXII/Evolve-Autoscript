@@ -1495,8 +1495,7 @@ function main() {
         hire(num) {
             if (num === undefined) {num = 1;}
             if (this.hireBtn !== null) {
-                var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
-                document.dispatchEvent (evt);
+                disableMult();
                 for (let i = 0;i < num;i++) {
                     this.hireBtn.click();
                 }
@@ -1508,8 +1507,7 @@ function main() {
         fire(num) {
             if (num === undefined) {num = 1;}
             if (this.fireBtn !== null) {
-                var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
-                document.dispatchEvent (evt);
+                disableMult();
                 for (let i = 0;i < num;i++) {
                     this.fireBtn.click();
                 }
@@ -1776,6 +1774,9 @@ function main() {
         if (!settings.hasOwnProperty('maxCampaign')) {
             settings.maxCampaign = 4;
         }
+        if (!settings.hasOwnProperty('woundedCheck')) {
+            settings.woundedCheck = false;
+        }
         if (!settings.hasOwnProperty('autoFortress')) {
             settings.autoFortress = false;
         }
@@ -1995,10 +1996,22 @@ function main() {
     function getWounded() {
         return window.game.global.civic.garrison.wounded;
     }
-    function getMaxSoldiers() {
+    function getTotalSoldiers() {
         return window.game.global.civic.garrison.max;
     }
+    function getFortressSoldiers() {
+        if (window.game.global.portal.hasOwnProperty('fortress')) {
+            return window.game.global.portal.fortress.assigned;
+        }
+        return 0;
+    }
+    function getMaxSoldiers() {
+        return getTotalSoldiers() - getFortressSoldiers();
+    }
     function getAvailableSoldiers() {
+        if (window.game.global.portal.hasOwnProperty('fortress')) {
+            return window.game.global.civic.garrison.workers - window.game.global.portal.fortress.assigned;
+        }
         return window.game.global.civic.garrison.workers;
     }
     function getCurrentSoldiers() {
@@ -2013,6 +2026,7 @@ function main() {
         num = (num === undefined) ? 1 : num;
         let decCampaignBtn = document.querySelector('#tactics > .sub');
         if (decCampaignBtn === null) {return;}
+        disableMult();
         for (let i = 0;i < num;i++) {
             decCampaignBtn.click();
         }
@@ -2021,6 +2035,7 @@ function main() {
         num = (num === undefined) ? 1 : num;
         let incCampaignBtn = document.querySelector('#tactics > .add');
         if (incCampaignBtn === null) {return;}
+        disableMult();
         for (let i = 0;i < num;i++) {
             incCampaignBtn.click();
         }
@@ -2032,6 +2047,7 @@ function main() {
         num = num ? num : 1;
         let btn = document.querySelector('#battalion > .add');
         if (btn === null) {return;}
+        disableMult();
         for (let i = 0;i < num;i++) {
             btn.click();
         }
@@ -2040,6 +2056,7 @@ function main() {
         num = num ? num : 1;
         let btn = document.querySelector('#battalion > .sub');
         if (btn === null) {return;}
+        disableMult();
         for (let i = 0;i < num;i++) {
             btn.click();
         }
@@ -2071,10 +2088,13 @@ function main() {
         let avaSoldiers = getAvailableSoldiers();
         let maxSoldiers = getMaxSoldiers();
         let wounded = getWounded();
+        let healthy = getTotalSoldiers() - wounded;
         //console.log(avaSoldiers, maxSoldiers, wounded);
         // Determining of army is ready
-        if (avaSoldiers && avaSoldiers == maxSoldiers && wounded == 0) {
-            armyStatus = true;
+        if (avaSoldiers && avaSoldiers == maxSoldiers) {
+            if (!(settings.woundedCheck && wounded > 0)) {
+                armyStatus = true;
+            }
         } else {
             armyStatus = false;
             chosenCampaign = false;
@@ -2104,7 +2124,9 @@ function main() {
                         if (chosenCampaign) {
                             //console.log("Chosen Campaign", getCurrentCampaign(), "Win", winrate, settings.minWinRate);
                             addSoldiers();
-                            runCampaign();
+                            if (getCurrentSoldiers() < healthy) {
+                                runCampaign();
+                            }
                             armyStatus = false;
                             chosenCampaign = false;
                             armySetupStage = 0;
@@ -2128,6 +2150,10 @@ function main() {
                         chosenCampaign = true;
                         subSoldiers();
                         if (getCurrentSoldiers() == 0) {
+                            addSoldiers();
+                            if (getCurrentSoldiers() < healthy) {
+                                runCampaign();
+                            }
                             armyStatus = false;
                             chosenCampaign = false;
                             armySetupStage = 0;
@@ -3522,9 +3548,6 @@ function main() {
         <span class="control-label"><span class="is-primary is-bottom is-small is-animated is-multiline"">${toggleName}</span>
         </span>
         </label>`);
-        if (typeof toggleChangeFunc === "function") {
-            toggle.on('change', toggleChangeFunc);
-        }
         toggle.children('input').on('click', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget;
@@ -3563,6 +3586,36 @@ function main() {
         };
         option.append(decision);
         return option;
+    }
+    function createCheckBoxControl(currentValue, id, name, enabledCallBack, disabledCallBack) {
+        let checkBox = $(`
+        <label class="b-checkbox checkbox" id="${id}">
+        <input type="checkbox" true-value="Yes" false-value="No" value="false">
+        <span class="check is-dark"></span>
+        <span class="control-label">${name}</span>
+        </label>`);
+        checkBox.children('input').on('click', function(e){
+            if (e.which != 1) {return;}
+            let input = e.currentTarget;
+            let state = !(input.getAttribute('value') === "true");
+            input.setAttribute('value', state);
+            settings[id] = state;
+            console.log("Setting", id, "to", state);
+            updateSettings();
+            if(state && enabledCallBack !== undefined){
+                enabledCallBack();
+            } else if(disabledCallBack !== undefined){
+                disabledCallBack()
+            }
+        });
+        if(settings[id]){
+            setTimeout( function() {
+                console.log("Setting initially to true");
+                checkBox.children('span.check').click();
+                checkBox.children('input').attr('value', true);
+            }, 1000);
+        }
+        return checkBox;
     }
 
     function updateUI(){
@@ -4185,6 +4238,7 @@ function main() {
 
         let minWinRateDiv = $('<div style="display:flex;"></div>');
         autoBattleContent.append(minWinRateDiv);
+        autoBattleContent.append($('<br></br>'));
         let minWinRateTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Win Rate:</span>')
         minWinRateDiv.append(minWinRateTxt);
         let minWinRateInput = $('<input type="text" class="input is-small" style="width:10rem;"/>');
@@ -4202,6 +4256,13 @@ function main() {
                 updateSettings();
             }
         });
+
+        let woundedCheckStr = 'Enable "Check Wounded" to wait for no wounded soldiers before battle. Uncheck to start battles as soon as there are enough healthy soldiers to fight. Unchecked causes slightly more lag due to the fact that the algorithm continuously manipulates the garrison.';
+        let woundedCheckDetails = $(`<div><span>${woundedCheckStr}</span></div>`);
+        autoBattleContent.append(woundedCheckDetails);
+        autoBattleContent.append($('<br>'));
+        let woundedCheck = createCheckBoxControl(settings.woundedCheck, 'woundedCheck', "Check Wounded");
+        autoBattleContent.append(woundedCheck);
 
         // Auto Fortress
         let autoFortressDesc = 'Manages soldier allocation in the fortress. Currently not yet implemented.';
@@ -5204,6 +5265,12 @@ function main() {
             console.log('Error in getting current race');
             return null;
         }
+    }
+
+    // Forces keyup event for all the multiplier keys
+    function disableMult() {
+        var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
+        document.dispatchEvent (evt);
     }
 
     // Convert from abbreviated value to actual number
