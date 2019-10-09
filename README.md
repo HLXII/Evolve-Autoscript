@@ -13,7 +13,6 @@ Also thinking of moving some buttons back under the resource section for easy ac
 # Stuff to do
 
 ## Bugfix
-* Fix research settings, because I don't think it works correctly (also doesn't take into account new crispr for both religions)
 * Money is attached to the helium control in the inline trade settings. Need to connect it to the one that's currently visible. However, the inline settings don't update unless you click Reset UI. Maybe reset UI in a timer?
 
 ## Small
