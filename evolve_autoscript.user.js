@@ -1816,14 +1816,17 @@ function main() {
             settings.autoGraphene = false;
         }
 
-        if (!settings.hasOwnProperty('fanORanth')) {
-            settings.fanORanth = "fanaticism";
+        if (!settings.hasOwnProperty('autoResearch')) {
+            settings.autoResearch = false;
         }
-        if (!settings.hasOwnProperty('studyORdeify')) {
-            settings.studyORdeify = "study";
+        if (!settings.hasOwnProperty('religion1')) {
+            settings.religion1 = "fanaticism";
         }
-        if (!settings.hasOwnProperty('uniChoice')) {
-            settings.uniChoice = 'unify';
+        if (!settings.hasOwnProperty('religion2')) {
+            settings.religion2 = "study";
+        }
+        if (!settings.hasOwnProperty('unify')) {
+            settings.unify = 'unify';
         }
 
         if (!settings.hasOwnProperty('autoPriority')) {
@@ -3061,11 +3064,11 @@ function main() {
             let btn = document.getElementById(researches[x].id);
             if (btn.className.indexOf('cnam') >= 0) {continue;}
             // Research filters
-            if(researches[x].id == "tech-fanaticism" && settings.fanORanth == "anthropology") {continue;}
-            if(researches[x].id == "tech-anthropology" && settings.fanORanth == "fanaticism") {continue;}
+            if(researches[x].id == "tech-fanaticism" && settings.religion1 == "anthropology") {continue;}
+            if(researches[x].id == "tech-anthropology" && settings.religion1 == "fanaticism") {continue;}
             // Checking if study/deify ancients
-            if(researches[x].id == "tech-study" && settings.studyORdeify == "deify") {continue;}
-            if(researches[x].id == "tech-deify" && settings.studyORdeify == "study") {continue;}
+            if(researches[x].id == "tech-study" && settings.religion2 == "deify") {continue;}
+            if(researches[x].id == "tech-deify" && settings.religion2 == "study") {continue;}
             // Checking if unification
             if(researches[x].id.indexOf("wc") >= 0) {
                 if (settings.uniChoice == 'unify') {
@@ -3569,7 +3572,8 @@ function main() {
         }
         return toggle;
     }
-    function createDropDownControl(currentValue, id, name, values, changeFunc) {
+    function createDropDownControl(currentValue, id, name, values, args) {
+        args = args || {};
         let option = $(`<div style="display:flex;" id="${id}_dropdown"></div>`);
         option.append($(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`));
         let decision = $(`<select style="width:12rem;"></select>`);
@@ -3581,6 +3585,9 @@ function main() {
             settings[id] = decision[0].value;
             console.log(`Changing ${id} to ${settings[id]}`);
             updateSettings();
+            if (args.onChange !== undefined) {
+                args.onChange(decision[0].value);
+            }
         };
         option.append(decision);
         return option;
@@ -4097,7 +4104,7 @@ function main() {
     function createAutoSettingEvolutionPage(tab) {
 
         // Auto Evolution/Challenge
-        let autoEvolutionDesc = 'This setting will automatically play the Evolution stage. It will buy the mininum amount of RNA/DNA storage for evolving, as well as automatically purchase challenges.';
+        let autoEvolutionDesc = 'Automatically plays the Evolution stage. It will buy the mininum amount of RNA/DNA storage for evolving, as well as automatically purchase challenges.';
         let [autoEvolutionTitle, autoEvolutionContent] = createAutoSettingToggle('autoEvolution', 'Auto Evolution', autoEvolutionDesc, true, tab);
 
         let raceValues = {};
@@ -4618,78 +4625,28 @@ function main() {
 
         // Research Settings
 
+        let autoResearchDesc = 'Controls which research branches to take. Turning this off will have irregular research purchases.';
+        let [autoResearchTitle, autoResearchContent] = createAutoSettingToggle('autoResearch', 'Auto Research', autoResearchDesc, true, tab);
         // Creating Fanaticism/Anthropology choice
-        let label = $('<div><h3 class="name has-text-warning" title="Research choices that give different effects based on the previous runs">Theology:</h3></div></br>');
-        let fanORanth = $('<select style="width:150px;"><option value="fanaticism">Fanaticism</option><option value="anthropology">Anthropology</option></select>');
-        let fanDesc = "Gain a dominant trait from your progenitor race. If same race, gain a random minor trait. Gives bonuses to combat and trade. Better for long runs.";
-        let anthDesc = "Gives bonuses to science and tax income. Better for short runs.";
-        let target1 = $('<div style="padding-left:5%;display:flex;"><span style="width:4rem">Target 1:</span></div>');
-        target1.append(fanORanth);
-        fanORanth[0].value = settings.fanORanth;
-        if (settings.fanORanth == "anthropology") {
-            fanORanth[0].title = anthDesc;
-        } else {
-            fanORanth[0].title = fanDesc;
-        }
-        fanORanth[0].onchange = function(){
-            settings.fanORanth = fanORanth[0].value;
-            if (settings.fanORanth == "anthropology") {
-                fanORanth[0].title = anthDesc;
-            } else {
-                fanORanth[0].title = fanDesc;
-            }
-            console.log("Changing target to ", settings.fanORanth);
-            updateSettings();
-        };
+        let religionStr1 = 'This setting chooses between Fanaticism and Anthropology. There is also a third setting for after you get Transcendence.';
+        let religionDetails1 = $(`<div><span>${religionStr1}</span></div>`);
+        autoResearchContent.append(religionDetails1);
+        let religion1 = createDropDownControl(settings.religion1, 'religion1', 'Religion Tier 1', {fanaticism:'Fanaticism',anthropology:'Anthropology',transcendence:'Transcendence'});
+        autoResearchContent.append(religion1);
 
-        // Creating Study/Deify choice
-        let studyORdeify = $('<select style="width:150px;"><option value="study">Study</option><option value="deify">Deify</option></select>');
-        let deifyDesc = "Gain a dominant trait from your progenitor's progenitor race. If same race, gain a random minor trait. Gives bonuses to combat and trade. Better for long runs.";
-        let studyDesc = "Gives bonuses to science and tax income. Better for short runs.";
-        let target2 = $('<div style="padding-left:5%;display:flex;"><span style="width:4rem">Target 2:</span></div>');
-        target2.append(studyORdeify);
-        studyORdeify[0].value = settings.studyORdeify;
-        if (settings.studyORdeify == "study") {
-            studyORdeify[0].title = studyDesc;
-        } else {
-            studyORdeify[0].title = deifyDesc;
-        }
-        studyORdeify[0].onchange = function(){
-            settings.studyORdeify = studyORdeify[0].value;
-            if (settings.studyORdeify == "study") {
-                studyORdeify[0].title = studyDesc;
-            } else {
-                studyORdeify[0].title = deifyDesc;
-            }
-            console.log("Changing target to ", settings.studyORdeify);
-            updateSettings();
-        };
-        tab.append(label).append(target1).append(target2);
+        // Creating Fanaticism/Anthropology choice
+        let religionStr2 = 'This setting chooses between Study and Deify Ancients.';
+        let religionDetails2 = $(`<div><span>${religionStr2}</span></div>`);
+        autoResearchContent.append(religionDetails2);
+        let religion2 = createDropDownControl(settings.religion2, 'religion2', 'Religion Tier 2', {study:'Study Ancients',deify:'Deify Ancients'});
+        autoResearchContent.append(religion2);
 
         // Creating Unification choice
-        let label2 = $('<div><h3 class="name has-text-warning" title="Research choice that either gives morale boost or production increase">Unification:</h3></div></br>');
-        let uniChoice = $('<select style="width:150px;"><option value="unify">Unify</option><option value="reject">Reject</option></select>');
-        let unifyDesc = 'Choose Unification (Either by Conquest, Cultural Supremacy, or Buy the World). Will remove combat and give storage bonus';
-        let rejectDesc = 'Choose to reject Unification. Will give morale bonus';
-        let target3 = $('<div style="padding-left:5%;display:flex;"><span style="width:4rem;">Choice: </span></div>');
-        target3.append(uniChoice);
-        if (settings.uniChoice == "unify") {
-            uniChoice[0].title = unifyDesc;
-        } else {
-            uniChoice[0].title = rejectDesc;
-        }
-        uniChoice[0].value = settings.uniChoice;
-        uniChoice[0].onchange = function(){
-            settings.uniChoice = uniChoice[0].value;
-            if (settings.uniChoice == "unify") {
-                uniChoice[0].title = unifyDesc;
-            } else {
-                uniChoice[0].title = rejectDesc;
-            }
-            console.log("Changing target to ", settings.uniChoice);
-            updateSettings();
-        };
-        tab.append(label2).append(target3);
+        let unifyStr = 'This setting chooses between Unifying or Reject Unification.';
+        let unifyDetails = $(`<div><span>${unifyStr}</span></div>`);
+        autoResearchContent.append(unifyDetails);
+        let unify = createDropDownControl(settings.unify, 'unify', 'Unification', {unify:'Unify',reject:'Reject'});
+        autoResearchContent.append(unify);
 
     }
 
