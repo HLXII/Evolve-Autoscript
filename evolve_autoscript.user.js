@@ -3626,7 +3626,7 @@ function main() {
     }
 
     function updateUI(){
-        if ($('.ea-autolog').length == 0) {
+        if ($('.as-autolog').length == 0) {
             createAutoLog();
         }
         if ($('#autoSettingTab').length == 0) {
