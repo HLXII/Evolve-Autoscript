@@ -1025,7 +1025,14 @@ function main() {
         }
 
         get unlocked() {
-            return this.data !== undefined;
+            if (buildings['space-star_dock'].numTotal > 0) {
+                if (this.id == 'spcdock-seeder') {
+                    return researched('tech-genesis_ship');
+                } else {
+                    return true;
+                }
+            }
+            return false;
         }
 
         get data() {
@@ -1410,8 +1417,7 @@ function main() {
         }
 
         click() {
-            let soldiers = soldierCount();
-            if (soldiers[0] === soldiers[1]) {return false;}
+            if (getAvailableSoldiers() === getMaxSoldiers()) {return false;}
             let btn = this.btn;
             if (btn === null) {return false;}
             btn.click();
