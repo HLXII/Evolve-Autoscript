@@ -2086,11 +2086,11 @@ function main() {
         let span = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span');
         if (span === null) {return 0;}
         span = span.attributes['data-label'].value;
-        span = /([\d\.]+)% ([\w])+/.exec(span);
+        span = /([\d\.]+)% ([\w]+)/.exec(span);
         let [ meh, winRate, advantage] = span;
         winRate = parseFloat(winRate);
         winRate *= (advantage == 'advantage') ? 1 : -1;
-        return parseFloat(span[1]);
+        return winRate;
     }
     function runCampaign() {
         let btn = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span > button');
@@ -2139,6 +2139,7 @@ function main() {
                 case 1: {
                     // Checking winrate
                     let winrate = getWinRate();
+                    //console.log("WIN:", winrate);
                     // Lower Win Rate
                     if (winrate <= settings.minWinRate) {
                         // Checking if campaign chosen
@@ -2167,7 +2168,7 @@ function main() {
                     }
                     // Higher Win Rate
                     else {
-                        //console.log("Can win at this campaign",getCurrentCampaign(),"subtracting soldiers");
+                        //console.log("Can win at this campaign",getWinRate(), getCurrentCampaign(),"subtracting soldiers");
                         chosenCampaign = true;
                         subSoldiers();
                         if (getCurrentSoldiers() == 0) {
@@ -5215,9 +5216,11 @@ function main() {
         for (let i = 0;i < nav.length;i++) {
             if (nav[i].innerText.trim() == name) {
                 let nth=i+1
+                nav = null;
                 return document.querySelector('#mainColumn > .content > .b-tabs > .tab-content > div:nth-child('+nth+')')
             }
         }
+        nav = null;
         return null;
     }
     function getTabLabel(name) {
