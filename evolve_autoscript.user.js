@@ -2206,6 +2206,7 @@ function main() {
         let totalPriority = 0;
         let priorities = [];
         let ratios = [];
+        let maxes = [];
         for (x in jobs) {
             if (jobs[x].unlocked) {
                 sortedJobs.push(jobs[x]);
@@ -2216,16 +2217,11 @@ function main() {
         }
         for (let i = 0;i < sortedJobs.length;i++) {
             ratios.push(sortedJobs[i].priority / totalPriority);
+            maxes.push(sortedJobs[i].maxEmployed);
         }
 
         // Allocating jobs
-        let maxCheck = function(index, allocation) {
-            if (sortedJobs[index].maxEmployed != -1 && sortedJobs[index].maxEmployed == allocation) {
-                return true;
-            }
-            return false;
-        };
-        let allocation = allocate(population,priorities,ratios,maxCheck);
+        let allocation = allocate(population,priorities,ratios,{max:maxes});
         //console.log(allocation);
 
         // Firing extra employees
@@ -2868,7 +2864,6 @@ function main() {
                 swarmConsumers_want.push(0);
             }
         }
-
         //console.log("Max",maximize);
         //console.log("Passive",passiveProducers);
         //console.log("Electricity", electricityConsumers);
@@ -3438,7 +3433,8 @@ function main() {
         }
     }
 
-    function allocate(totalNum,priorities,ratios,requireFunc) {
+    function allocate(totalNum,priorities,ratios,args) {
+        args = args || {};
         let allocationList = [];
         let curNum = [];
         for (let i = 0;i < priorities.length;i++) {curNum.push(0);}
@@ -3453,10 +3449,13 @@ function main() {
             let choice = -1;
             for (let j = 0;j < priorities.length;j++) {
                 if (priorities[j] == 0 || ratios[j] == 0) {continue;}
-                if (requireFunc !== undefined && requireFunc(j, curNum[j])) {continue;}
+                if (args.hasOwnProperty('requireFunc') && args.requireFunc(j, curNum[j])) {continue;}
+                if (args.hasOwnProperty('max') && args.max[j] != -1 && curNum[j] >= args.max[j]) {continue;}
                 let tempError = prevError;
                 tempError -= ((curNum[j] / total) - ratios[j]) ** 2;
                 tempError += (((curNum[j]+1) / total) - ratios[j]) ** 2;
+
+                if (args.hasOwnProperty('min') && curNum[j] < args.min[j]) {tempError = 0;}
 
                 if (error == -1 || tempError < error) {
                     error = tempError;
@@ -3468,6 +3467,9 @@ function main() {
             }
             allocationList[i] = choice;
             curNum[choice] += 1;
+            if (args.hasOwnProperty('allocFunc')) {
+                args.allocFunc(choice);
+            }
         }
         return {seq:allocationList,alloc:curNum};
     }
