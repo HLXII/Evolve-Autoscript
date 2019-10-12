@@ -790,7 +790,7 @@ function main() {
                 produce = [{res:"moon_support",cost:1}];
                 break;
             case "space-moon_base":
-                produce = [{res:"moon_support",cost:3}];
+                produce = [{res:"moon_support",cost:2}];
                 break;
             case "space-iridium_mine":
                 effectStr = def.effect();
@@ -1003,14 +1003,21 @@ function main() {
             return this.data.on;
         }
 
-        incPower() {
+        incPower(num) {
+            num = (num === undefined) ? 1 : num;
             if (this.incBtn === null) {return false;}
-            this.incBtn.click();
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                this.incBtn.click();
+            }
             return true;
         }
-        decPower() {
+        decPower(num) {
+            num = (num === undefined) ? 1 : num;
             if (this.decBtn === null) {return false;}
-            this.decBtn.click();
+            for (let i = 0;i < num;i++) {
+                this.decBtn.click();
+            }
             return true;
         }
 
@@ -2289,7 +2296,6 @@ function main() {
         }, 25);
     }
 
-    let moraleLabel = $('#morale').children(1)[0];
     let incTaxBtn = $('#tax_rates > .add');
     let decTaxBtn = $('#tax_rates > .sub');
     function getCurrentMorale() {
@@ -2990,31 +2996,17 @@ function main() {
         }, 100);
     }
 
-    function isFuelProducer(building) {
-        let fuels = ['Coal', 'Oil', 'Uranium', 'Helium_3','Elerium'];
-        let yes = false;
-        for (let i = 0;i < building.produce.length;i++) {
-            if (resources[building.produce[i].res] !== undefined) {
-                if (building.produce[i].res in fuels) {
-                    yes = true;
-                }
-            }
-        }
-        return yes;
-    }
     function autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
-        let x;
-        // Getting support categories
-        let maximize = []; let maximize_want = [];
-        let electricityConsumers = []; let electricityConsumers_want = [];
-        let passiveProducers = [];
-        let moonConsumers = []; let moonConsumers_want = [];
-        let redConsumers = []; let redConsumers_want = [];
-        let beltConsumers = []; let beltConsumers_want = [];
-        let swarmConsumers = []; let swarmConsumers_want = [];
-        for (x in buildings) {
+        let powered = [];
+        let totalPowered = 0;
+        let priorities = [];
+        let totalPriority = 0;
+        let ratios = [];
+        let maxes = [];
+        // Loading all buildings
+        for (let x in buildings) {
             // Ignore not unlocked buildings
             if (!buildings[x].unlocked) {continue;}
             // Ignore not power unlocked buildings
@@ -3038,51 +3030,16 @@ function main() {
 
                 }
             }
-            // Splitting buildings by type
-            if (buildings[x].consume.length >= 2) {
-                // Multiple consumptions means a complex powered building
-                maximize.push(buildings[x]);
-                maximize_want.push(0);
-            } else if (buildings[x].consume.length == 0) {
-                // No consumption means building's always on
-                passiveProducers.push(buildings[x]);
-            } else if (resources[buildings[x].consume[0].res] !== undefined) {
-                // Resource consumer
-                maximize.push(buildings[x]);
-                maximize_want.push(0);
-            } else if (isFuelProducer(buildings[x])) {
-                // Resource producer
-                maximize.push(buildings[x]);
-                maximize_want.push(0);
-            } else if (buildings[x].consume[0].res == "electricity") {
-                // Electricity consumer
-                electricityConsumers.push(buildings[x]);
-                electricityConsumers_want.push(0);
-            } else if (buildings[x].consume[0].res == "moon_support") {
-                // Moon Support consumer
-                moonConsumers.push(buildings[x]);
-                moonConsumers_want.push(0);
-            } else if (buildings[x].consume[0].res == "red_support") {
-                // Red Support consumer
-                redConsumers.push(buildings[x]);
-                redConsumers_want.push(0);
-            } else if (buildings[x].consume[0].res == "belt_support") {
-                // Belt Support consumer
-                beltConsumers.push(buildings[x]);
-                beltConsumers_want.push(0);
-            } else if (buildings[x].consume[0].res == "swarm_support") {
-                // Swarm Support consumer
-                swarmConsumers.push(buildings[x]);
-                swarmConsumers_want.push(0);
-            }
+            powered.push(buildings[x]);
+            totalPowered += buildings[x].numTotal;
+            let priority = buildings[x].powerPriority ** 4;
+            totalPriority += priority;
+            priorities.push(priority);
+            maxes.push(buildings[x].numTotal);
         }
-        //console.log("Max",maximize);
-        //console.log("Passive",passiveProducers);
-        //console.log("Electricity", electricityConsumers);
-        //console.log("Moon", moonConsumers);
-        //console.log("Red", redConsumers);
-        //console.log("Belt", beltConsumers);
-
+        for (let i = 0;i < powered.length;i++) {
+            ratios.push(priorities[i] / totalPriority);
+        }
         let support = {
             electricity:0,
             moon_support:0,
@@ -3090,157 +3047,66 @@ function main() {
             swarm_support:0,
             belt_support:0
         }
-
-        // Add all passive producers
-        for (let i = 0;i < passiveProducers.length;i++) {
-            let pp = passiveProducers[i];
-            for (let j = 0;j < pp.produce.length;j++) {
-                if (resources[pp.produce[j].res] !== undefined) {
-                    resources[pp.produce[j].res].temp_rate += pp.numTotal * pp.produce[j].cost;
+        let canTurnOn = function(index, curNum) {
+            let building = powered[index];
+            let can = true;
+            // Checking if this building can be turned on by resources
+            for (let j = 0;j < building.consume.length;j++) {
+                let res = building.consume[j].res;
+                let cost = building.consume[j].cost;
+                if (resources[res] !== undefined) {
+                    //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
+                    if (resources[res].temp_rate < cost) {
+                        can = false;
+                    }
                 } else {
-                    support[pp.produce[j].res] += pp.numTotal * pp.produce[j].cost;
+                    if (support[res] < cost) {
+                        can = false;
+                    }
+                }
+            }
+            return can;
+        };
+        let turnOn = function(index, curNum) {
+            let building = powered[index];
+            // Turning on building
+            for (let j = 0;j < building.consume.length;j++) {
+                let res = building.consume[j].res;
+                let cost = building.consume[j].cost;
+                if (resources[res] !== undefined) {
+                    resources[res].temp_rate -= cost;
+                } else {
+                    support[res] -= cost;
+                }
+            }
+            for (let j = 0;j < building.produce.length;j++) {
+                let res = building.produce[j].res;
+                let cost = building.produce[j].cost;
+                if (resources[res] !== undefined) {
+                    resources[res].temp_rate += cost * getMultiplier(res) * getMultiplier('Global');
+                } else {
+                    support[res] += cost;
                 }
             }
         }
-        // Add all swarm support (since it's only one thing
 
-        // Maximizing the maximize category
-        maximize.sort(function(a,b) {return b.powerPriority - a.powerPriority;});
-        let update = true;
-        // Looping until cannot turn on any more buildings
-        while(true) {
-            update = false;
-            // Looping to find building to turn on
-            for (let i = 0;i < maximize.length;i++) {
-                let building = maximize[i];
-                if (maximize_want[i] == building.numTotal) {continue;}
-                let canTurnOn = true;
-                // Checking if this building can be turned on by resources
-                for (let j = 0;j < building.consume.length;j++) {
-                    let res = building.consume[j].res;
-                    let cost = building.consume[j].cost;
-                    if (resources[res] !== undefined) {
-                        //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
-                        if (res.temp_rate < cost) {
-                            canTurnOn = false;
-                        }
-                    } else {
-                        if (support[res] < cost) {
-                            canTurnOn = false;
-                        }
-                    }
-                }
-                if (canTurnOn) {
-                    // Turning on building
-                    update = true;
-                    maximize_want[i] += 1;
-                    for (let j = 0;j < building.consume.length;j++) {
-                        let res = building.consume[j].res;
-                        let cost = building.consume[j].cost;
-                        if (resources[res] !== undefined) {
-                            res.temp_rate -= cost;
-                        } else {
-                            support[res] -= cost;
-                        }
-                    }
-                    for (let j = 0;j < building.produce.length;j++) {
-                        let res = building.produce[j].res;
-                        let cost = building.produce[j].cost;
-                        if (resources[res] !== undefined) {
-                            res.temp_rate += cost;
-                        } else {
-                            support[res] += cost;
-                        }
-                    }
-                    //console.log("Turning on", building.id, maximize_want[i], building.numTotal);
-                    break;
-                }
+        let allocation = allocate(totalPowered,priorities,ratios,{max:maxes,requireFunc:canTurnOn,allocFunc:turnOn})
+
+        //console.log(powered, priorities, ratios);
+        console.log("SUPPORT ALLOC:", allocation);
+        //console.log(support);
+
+        // Allocating
+        for (let i = 0;i < powered.length;i++) {
+            let building = powered[i];
+            if (building.numOn < allocation.alloc[i]) {
+                building.incPower(allocation.alloc[i] - building.numOn);
             }
-            if (!update) {
-                break;
+            else {
+                building.decPower(building.numOn - allocation.alloc[i]);
             }
         }
-        console.log(maximize, maximize_want);
-        electricityConsumers.sort(function(a,b) {return b.powerPriority - a.powerPriority;});
-        if (electricityConsumers.length) {
-            while (support.electricity > 0) {
-                update = false;
-                // Looping to find building to turn on
-                for (let i = 0;i < electricityConsumers.length;i++) {
-                    let building = electricityConsumers[i];
-                    if (electricityConsumers_want[i] == building.numTotal) {continue;}
-                    let canTurnOn = true;
-                    // Checking if this building can be turned on by resources
-                    for (let j = 0;j < building.consume.length;j++) {
-                        let res = building.consume[j].res;
-                        let cost = building.consume[j].cost;
-                        if (resources[res] !== undefined) {
-                            //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
-                            if (res.temp_rate < cost) {
-                                canTurnOn = false;
-                            }
-                        } else {
-                            if (support[res] < cost) {
-                                canTurnOn = false;
-                            }
-                        }
-                    }
-                    if (canTurnOn) {
-                        // Turning on building
-                        update = true;
-                        electricityConsumers_want[i] += 1;
-                        for (let j = 0;j < building.consume.length;j++) {
-                            let res = building.consume[j].res;
-                            let cost = building.consume[j].cost;
-                            if (resources[res] !== undefined) {
-                                res.temp_rate -= cost;
-                            } else {
-                                support[res] -= cost;
-                            }
-                        }
-                        for (let j = 0;j < building.produce.length;j++) {
-                            let res = building.produce[j].res;
-                            let cost = building.produce[j].cost;
-                            if (resources[res] !== undefined) {
-                                res.temp_rate += cost;
-                            } else {
-                                support[res] += cost;
-                            }
-                        }
-                        //console.log("Turning on", building.id, maximize_want[i], building.numTotal);
-                        break;
-                    }
-                }
-                if (!update) {
-                    break;
-                }
-            }
-        }
-        console.log(electricityConsumers,electricityConsumers_want);
-        for (let i = 0;i < maximize.length;i++) {
-            if (maximize[i].numOn < maximize_want[i]) {
-                for (let j = 0;j < maximize_want[i] - maximize[i].numOn;j++) {
-                    maximize[i].incPower();
-                }
-            } else {
-                for (let j = 0;j < maximize[i].numOn - maximize_want[i];j++) {
-                    maximize[i].decPower();
-                }
-            }
-        }
-        for (let i = 0;i < electricityConsumers.length;i++) {
-            if (electricityConsumers[i].numOn < electricityConsumers_want[i]) {
-                for (let j = 0;j < electricityConsumers_want[i] - electricityConsumers[i].numOn;j++) {
-                    electricityConsumers[i].incPower();
-                }
-            } else {
-                for (let j = 0;j < electricityConsumers[i].numOn - electricityConsumers_want[i];j++) {
-                    electricityConsumers[i].decPower();
-                }
-            }
-        }
-        console.log(support)
-        // Optimizing each support
+
     }
 
     function prioCompare(a, b) {
@@ -4959,6 +4825,7 @@ function main() {
             sortMethod = powerCompare;
         }
         if (sortMethod !== null) {
+            console.log("Sorting by", sort.value);
             var newPriorityList = priorityList.cloneNode(false);
 
             let header = priorityList.childNodes[0];
@@ -5246,7 +5113,7 @@ function main() {
         let search = $('<input type="text" id="priorityInput" placeholder="Search for actions (ex: \'iron loc:city res:money\')" style="width:400px;">');
         search.on('input', updatePriorityList);
         let sortLabel = $('<span style="padding-left:20px;padding-right:20px;">Sort:</span>');
-        let sort = $('<select style="width:110px;" id="prioritySort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option><option value="power_priority">Power Priority</option></select>');
+        let sort = $('<select style="width:110px;" id="prioritySort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option><option value="powerPriority">Power Priority</option></select>');
         sort.on('change', updatePriorityList);
         topLeft.append(search).append(sortLabel).append(sort);
 
