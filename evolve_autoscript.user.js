@@ -610,32 +610,16 @@ function main() {
             for (let i = 0;i < this.loc.length;i++) {
                 details = details[this.loc[i]];
             }
-            // Because tech-exotic_lab has a different key than id
-            if (this.id == 'tech-energy_lab') {
-                return details['exotic_lab'];
-            }
-            // Because city-basic_housing has a different key than id
-            if (this.id == 'city-house') {
-                return details['basic_housing'];
-            }
-            // Because tech-fort has a different key than id
-            if (this.id == 'tech-fort') {
-                return details['fortifications'];
-            }
-            return details[this.id.split('-')[1]];
+            return details;
         }
 
         get data() {
-            let [type, action] = this.id.split('-');
-            let temp_action = action;
-            // Because city-basic_housing has a different key than id
-            if (this.id == 'city-house') {
-                temp_action = 'basic_housing';
-            }
-            if (window.game.global[type] === undefined || window.game.global[type][temp_action] == undefined) {
+            let type = this.loc[0];
+            let action = this.loc[this.loc.length-1];
+            if (window.game.global[type] === undefined || window.game.global[type][action] == undefined) {
                 return null;
             }
-            return window.game.global[type][temp_action];
+            return window.game.global[type][action];
         }
 
         getResDep(resid) {
@@ -666,6 +650,7 @@ function main() {
             if (!settings.actions[this.id].hasOwnProperty('atLeast')) {settings.actions[this.id].atLeast = 0;}
             if (!settings.actions[this.id].hasOwnProperty('limit')) {settings.actions[this.id].limit = -1;}
             if (!settings.actions[this.id].hasOwnProperty('softCap')) {settings.actions[this.id].softCap = -1;}
+            this.color = 'has-text-warning';
         }
 
         get atLeast() {return settings.actions[this.id].atLeast;}
@@ -1086,66 +1071,68 @@ function main() {
     function loadBuildings() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         // City
-        for (var action in window.game.actions.city) {
+        for (let action in window.game.actions.city) {
             // Remove manual buttons
             if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter') {continue;}
-            if (action == 'basic_housing') {
-                buildings['city-house'] = new Building('city-house', ['city']);
-                continue;
-            }
+            let id = window.game.actions.city[action].id;
             if (window.game.actions.city[action].powered || window.game.actions.city[action].support) {
                 //console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
-                buildings['city-'+action] = new PoweredBuilding('city-'+action, ['city']);
+                buildings[id] = new PoweredBuilding(id, ['city', action]);
                 continue;
             }
+            // Windmill doesn't have powered/support prop, but still produces electricity
             if (action == 'windmill') {
                 //console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
-                buildings['city-'+action] = new PoweredBuilding('city-'+action, ['city']);
+                buildings[id] = new PoweredBuilding(id, ['city', action]);
                 continue;
             }
-            buildings['city-'+action] = new Building('city-'+action, ['city']);
+            buildings[id] = new Building(id, ['city', action]);
         }
         // Space
-        for (var location in window.game.actions.space) {
-            for (var action in window.game.actions.space[location]) {
+        for (let location in window.game.actions.space) {
+            for (let action in window.game.actions.space[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
+                let id = window.game.actions.space[location][action].id;
                 if (window.game.actions.space[location][action].powered || window.game.actions.space[location][action].support) {
                     //console.log(action,"POWER", window.game.actions.space[location][action].powered, "SUPPORT", window.game.actions.space[location][action].support);
-                    buildings['space-'+action] = new PoweredBuilding('space-'+action, ['space', location]);
+                    buildings[id] = new PoweredBuilding(id, ['space', location, action]);
                     continue;
                 }
-                buildings['space-'+action] = new Building('space-'+action, ['space', location]);
+                buildings[id] = new Building(id, ['space', location, action]);
             }
         }
         // Star Dock
-        for (var action in window.game.actions.starDock) {
+        for (let action in window.game.actions.starDock) {
             // Remove reset actions
             if (action == 'prep_ship' || action == 'launch_ship') {continue;}
-            buildings['spcdock-'+action] = new SpaceDockBuilding('spcdock-'+action, ['starDock']);
+            let id = window.game.actions.starDock[action].id;
+            buildings[id] = new SpaceDockBuilding(id, ['starDock', action]);
         }
         // Interstellar
-        for (var location in window.game.actions.interstellar) {
-            for (var action in window.game.actions.interstellar[location]) {
+        for (let location in window.game.actions.interstellar) {
+            for (let action in window.game.actions.interstellar[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
+                let id = window.game.actions.interstellar[location][action].id;
                 if (window.game.actions.interstellar[location][action].powered || window.game.actions.interstellar[location][action].support) {
-                    buildings['interstellar-'+action] = new PoweredBuilding('interstellar-'+action, ['interstellar', location]);
+                    buildings[id] = new PoweredBuilding(id, ['interstellar', location, action]);
                     continue;
                 }
-                buildings['interstellar-'+action] = new Building('interstellar-'+action, ['interstellar', location]);
+                buildings[id] = new Building(id, ['interstellar', location, action]);
             }
         }
         // Portal
-        for (var location in window.game.actions.portal) {
-            for (var action in window.game.actions.portal[location]) {
+        for (let location in window.game.actions.portal) {
+            for (let action in window.game.actions.portal[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
+                let id = window.game.actions.portal[location][action].id;
                 if (window.game.actions.portal[location][action].powered || window.game.actions.portal[location][action].support) {
-                    buildings['portal-'+action] = new PoweredBuilding('portal-'+action, ['portal', location]);
+                    buildings[id] = new PoweredBuilding(id, ['portal', location, action]);
                     continue;
                 }
-                buildings['portal-'+action] = new Building('portal-'+action, ['portal', location]);
+                buildings[id] = new Building(id, ['portal', location, action]);
             }
         }
         console.log(buildings);
@@ -1153,6 +1140,7 @@ function main() {
     class Research extends Action {
         constructor(id, loc) {
             super(id, loc);
+            this.color = 'has-text-danger';
         }
 
         get researched() {
@@ -1169,30 +1157,24 @@ function main() {
     function loadResearches() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         // Tech
-        for (var action in window.game.actions.tech) {
+        for (let action in window.game.actions.tech) {
             // Because tech-exotic_lab has a different key than id
-            if (action == "exotic_lab") {
-                researches['tech-energy_lab'] = new Research('tech-energy_lab', ['tech']);
-                continue;
-            }
-            if (action == "fortifications") {
-                researches['tech-fort'] = new Research('tech-fort', ['tech']);
-                continue;
-            }
-            researches['tech-'+action] = new Research('tech-'+action, ['tech']);
+            let id = window.game.actions.tech[action].id;
+            researches[id] = new Research(id, ['tech', action]);
         }
-        // Space
     }
     class MiscAction extends Action {
         constructor(id) {
             super(id, ['misc']);
+            this.color = 'has-text-advanced';
         }
     }
-    class ArpaAction extends MiscAction {
+    class ArpaAction extends Building {
         constructor(id, res) {
-            super(id);
+            super(id, ['misc']);
             this.loc.push('arpa');
             this.res = res;
+            this.color = 'has-text-special';
         }
 
         get label() {
@@ -1212,7 +1194,7 @@ function main() {
             return this.label.innerText;
         }
 
-        get rank() {
+        get numTotal() {
             if (window.game.global.arpa[this.id] !== undefined) {
                 return window.game.global.arpa[this.id].rank
             }
@@ -1223,7 +1205,7 @@ function main() {
             if (this.res === null) {
                 return null;
             }
-            return this.res[resid] * (1.05 ** this.rank) / 4;
+            return this.res[resid] * (1.05 ** this.numTotal) / 4;
         }
 
         click() {
@@ -2296,8 +2278,6 @@ function main() {
         }, 25);
     }
 
-    let incTaxBtn = $('#tax_rates > .add');
-    let decTaxBtn = $('#tax_rates > .sub');
     function getCurrentMorale() {
         let totalMorale = 100;
         for (var x in window.game.global.city.morale) {
@@ -2312,41 +2292,52 @@ function main() {
         maxMorale += buildings['city-casino'].numTotal;
         maxMorale += buildings['space-vr_center'].numOn * 2;
         if (researched('tech-superstars')) {maxMorale += window.game.global.civic.entertainer.workers;}
-        maxMorale += arpas['monument'].rank * 2;
+        maxMorale += arpas['monument'].numTotal * 2;
         if (window.game.global.civic.taxes.tax_rate < 20){
             maxMorale += 10 - Math.floor(window.game.global.civic.taxes.tax_rate / 2);
         }
         return maxMorale;
+    }
+    function decTax(num) {
+        num = (num === undefined) ? 1 : num;
+        let decTaxBtn = $('#tax_rates > .sub');
+        disableMult();
+        for (let i = 0;i < num;i++) {
+            decTaxBtn.click();
+        }
+    }
+    function incTax(num) {
+        num = (num === undefined) ? 1 : num;
+        let incTaxBtn = $('#tax_rates > .add');
+        disableMult();
+        for (let i = 0;i < num;i++) {
+            incTaxBtn.click();
+        }
     }
     function autoTax(priorityData) {
         // Don't start taxes if haven't researched
         if (!researched('tech-tax_rates')) {return;}
         let morale = getCurrentMorale();
         let maxMorale = getMaxMorale();
-        //console.log(morale, maxMorale);
+        let moneyRate = resources.Money.temp_rate || resources.Money.rate;
+        //console.log(morale, maxMorale, moneyRate);
         // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
         if (resources.Money.ratio == 1) {
-            for (let i = 0;i < 50;i++) {
-                decTaxBtn.click();
-            }
+            decTax(50);
         }
         // Currently above max Morale
         else if (morale >= maxMorale) {
-            for (let i = 0;i < morale - maxMorale;i++) {
-                incTaxBtn.click();
-            }
+            incTax(morale - maxMorale);
         }
         // Currently below minimum Morale
         else if (morale <= settings.minimumMorale) {
-            for (let i = 0;i < settings.minimumMorale - morale;i++) {
-                decTaxBtn.click();
-            }
+            decTax(settings.minimumMorale - morale);
         } else {
-            if (resources.Money.ratio < 0.99) {
-                incTaxBtn.click();
+            if (resources.Money.ratio < 0.99 || moneyRate < 0) {
+                incTax();
             }
             else {
-                decTaxBtn.click();
+                decTax();
             }
         }
     }
@@ -4863,7 +4854,7 @@ function main() {
                 continue;
             }
             // Checking if type shown
-            if (!settings.showBuilding && action instanceof Building) {
+            if (!settings.showBuilding && action instanceof Building && !(action instanceof ArpaAction)) {
                 div.style.display = 'none';
                 continue;
             }
@@ -4871,7 +4862,7 @@ function main() {
                 div.style.display = 'none';
                 continue;
             }
-            if (!settings.showMisc && (action instanceof MiscAction)) {
+            if (!settings.showMisc && (action instanceof MiscAction || action instanceof ArpaAction)) {
                 div.style.display = 'none';
                 continue;
             }
@@ -4936,42 +4927,42 @@ function main() {
 
         // Building At Least
         let atLeastSub = function() {
-            buildings[building.id].decAtLeast();
-            return buildings[building.id].atLeast;
+            building.decAtLeast();
+            return building.atLeast;
         }
         let atLeastAdd = function() {
-            buildings[building.id].incAtLeast();
-            return buildings[building.id].atLeast;
+            building.incAtLeast();
+            return building.atLeast;
         }
-        let atLeastControls = createNumControl(buildings[building.id].atLeast, building.id+'-at-least', atLeastSub, atLeastAdd);
+        let atLeastControls = createNumControl(building.atLeast, building.id+'-at-least', atLeastSub, atLeastAdd);
         let atLeastDiv = $('<div style="width:10%;" title="'+building.id+' At Least"></div>');
         atLeastDiv.append(atLeastControls);
         buildingDiv.append(atLeastDiv);
 
         // Building Limit
         let limSub = function() {
-            buildings[building.id].decLimit();
-            return buildings[building.id].limit;
+            building.decLimit();
+            return building.limit;
         }
         let limAdd = function() {
-            buildings[building.id].incLimit();
-            return buildings[building.id].limit;
+            building.incLimit();
+            return building.limit;
         }
-        let limControls = createNumControl(buildings[building.id].limit, building.id+'-limit', limSub, limAdd);
+        let limControls = createNumControl(building.limit, building.id+'-limit', limSub, limAdd);
         let limDiv = $('<div style="width:10%;" title="'+building.id+' Limit"></div>');
         limDiv.append(limControls);
         buildingDiv.append(limDiv);
 
         // Building SoftCap
         let softCapSub = function() {
-            buildings[building.id].decSoftCap();
-            return buildings[building.id].softCap;
+            building.decSoftCap();
+            return building.softCap;
         }
         let softCapAdd = function() {
-            buildings[building.id].incSoftCap();
-            return buildings[building.id].softCap;
+            building.incSoftCap();
+            return building.softCap;
         }
-        let softCapControls = createNumControl(buildings[building.id].softCap, building.id+'-softcap', softCapSub, softCapAdd);
+        let softCapControls = createNumControl(building.softCap, building.id+'-softcap', softCapSub, softCapAdd);
         let softCapDiv = $('<div style="width:10%;" title="'+building.id+' Soft Cap"></div>');
         softCapDiv.append(softCapControls);
         buildingDiv.append(softCapDiv);
@@ -4979,14 +4970,14 @@ function main() {
         // Power Priority
         if (building instanceof PoweredBuilding) {
             let powerSub = function() {
-                buildings[building.id].decPowerPriority();
-                return buildings[building.id].powerPriority;
+                building.decPowerPriority();
+                return building.powerPriority;
             }
             let powerAdd = function() {
-                buildings[building.id].incPowerPriority();
-                return buildings[building.id].powerPriority;
+                building.incPowerPriority();
+                return building.powerPriority;
             }
-            let powerControls = createNumControl(buildings[building.id].powerPriority, building.id+'-power-prio', powerSub, powerAdd);
+            let powerControls = createNumControl(building.powerPriority, building.id+'-power-prio', powerSub, powerAdd);
             let powerDiv = $('<div style="width:10%;" title="'+building.id+' Power Priority"></div>');
             powerDiv.append(powerControls);
             buildingDiv.append(powerDiv);
@@ -5023,64 +5014,19 @@ function main() {
                 name = action.name;
             }
             let nameDiv = $('<span style="width:20%;" title="'+action.id+'">'+name+'</span>');
-            if (action instanceof Building) {
-                nameDiv[0].classList.add('has-text-warning');
-            } else if (action instanceof Research) {
-                nameDiv[0].classList.add('has-text-danger');
-            } else {
-                nameDiv[0].classList.add('has-text-special');
-            }
+            nameDiv[0].classList.add(action.color);
             actionDiv.append(nameDiv);
 
             // Priority
             let prioSub = function() {
-                if (action.loc.includes('arpa')) {
-                    arpas[action.id].decBasePriority();
-                    return arpas[action.id].basePriority;
-                } else if (action.loc.includes('storage')) {
-                    storages[action.id].decBasePriority();
-                    return storages[action.id].basePriority;
-                } else if (action.loc.includes('tech')) {
-                    researches[action.id].decBasePriority();
-                    return researches[action.id].basePriority;
-                } else if (action.loc.includes('misc')) {
-                    miscActions[action.id].decBasePriority();
-                    return miscActions[action.id].basePriority;
-                } else {
-                    buildings[action.id].decBasePriority();
-                    return buildings[action.id].basePriority;
-                }
+                action.decBasePriority();
+                return action.basePriority;
             }
             let prioAdd = function() {
-                if (action.loc.includes('arpa')) {
-                    arpas[action.id].incBasePriority();
-                    return arpas[action.id].basePriority;
-                } else if (action.loc.includes('storage')) {
-                    storages[action.id].incBasePriority();
-                    return storages[action.id].basePriority;
-                } else if (action.loc.includes('tech')) {
-                    researches[action.id].incBasePriority();
-                    return researches[action.id].basePriority;
-                } else if (action.loc.includes('misc')) {
-                    miscActions[action.id].incBasePriority();
-                    return miscActions[action.id].basePriority;
-                } else {
-                    buildings[action.id].incBasePriority();
-                    return buildings[action.id].basePriority;
-                }
+                action.incBasePriority();
+                return action.basePriority;
             }
-            let settingVal = "";
-            if (action.loc.includes('arpa')) {
-                settingVal = arpas[action.id].basePriority;
-            } else if (action.loc.includes('storage')) {
-                settingVal = storages[action.id].basePriority;
-            } else if (action.loc.includes('tech')) {
-                settingVal = researches[action.id].basePriority;
-            } else if (action.loc.includes('misc')) {
-                settingVal = miscActions[action.id].basePriority;
-            } else {
-                settingVal = buildings[action.id].basePriority;
-            }
+            let settingVal = action.basePriority;
             let prioControls = createNumControl(settingVal,"action_"+name+"_priority",prioSub,prioAdd);
             let prioDiv = $('<div style="width:10%;" title="'+action.id+' Priority"></div>');
             prioDiv.append(prioControls);
@@ -5092,7 +5038,7 @@ function main() {
             let toggle = createToggleControl(action.id+'_enabled', '', {path:[action, 'enabled'],small:true});
             enableDiv.append(toggle);
 
-            if (action instanceof Building) {
+            if (action instanceof Building && !(action instanceof ArpaAction)) {
                 drawBuildingItem(action,actionDiv);
             }
         }
