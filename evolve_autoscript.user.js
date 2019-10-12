@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.2.3
+// @version      1.2.4
 // @description  try to take over the world!
 // @author       Fafnir
 // @author       HLXII
@@ -3596,13 +3596,13 @@ function main() {
         <span class="control-label"><span class="is-primary is-bottom is-small is-animated is-multiline">${toggleName}</span>
         </span>
         </label>`);
-        let setting = (args.root !== undefined) ? args.root : settings;
-        let attr = toggleId;
-        if (Array.isArray(toggleId)) {
-            for (let i = 0;i < toggleId.length-1;i++) {
-                setting = setting[toggleId[i]];
+        let setting = settings;
+        if (args.hasOwnProperty('path')) {
+            setting = args.path[0];
+            for (let i = 1;i < args.path.length-1;i++) {
+                setting = setting[args.path[i]];
             }
-            toggleId = toggleId[toggleId.length-1];
+            toggleId = args.path[args.path.length-1];
         }
         toggle.children('input').on('click', function(e){
             if (e.which != 1) {return;}
@@ -3795,34 +3795,23 @@ function main() {
     function createMarketSetting(resource){
         let marketDiv = $(`<div style="display:flex;" class="as-market-settings as-market-${resource.id}"></div>`);
 
+
+
         let manualBuy = $('<div style="display:flex;"></div>');
         marketDiv.append(manualBuy);
-        let toggleBuy = $('<label tabindex="0" class="switch" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
-        manualBuy.append(toggleBuy);
-        toggleBuy.on('click', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-            resources[resource.id].autoBuy = state;
-            let otherState = toggleSell.children('input').attr('value') === 'true';
+        let buyToggleOnChange = function(state) {
+            let sellToggle = $(`#${resource.id}-autoSell_toggle`);
+            let otherState = sellToggle.children('input').attr('value') === 'true';
             if(state && otherState){
-                toggleSell.click();
-                console.log("Turning off toggleSell");
-                resources[resource.id].autoSell = false;
-                toggleSell.children('input')[0].setAttribute('value',false);
+                sellToggle.click();
+                console.log("Turning off sellToggle");
+                resource.autoSell = false;
+                sellToggle.children('input')[0].setAttribute('value',false);
             }
-            resources[resource.id].autoBuy = state;
-            updateSettings();
             loadTradeUI();
-        });
-        if(resource.autoBuy){
-            setTimeout( function() {
-                console.log("Setting initially to true");
-                toggleBuy.children('span.check').click();
-                toggleBuy.children('input').attr('value', true);
-            }, 1000);
         }
+        let buyToggle = createToggleControl(resource.id+'-autoBuy', '', {path:[resources, resource.id, 'autoBuy'],small:true,onChange:buyToggleOnChange});
+        manualBuy.append(buyToggle);
 
         let buyRatioSub = function() {
             resource.buyDec();
@@ -3839,31 +3828,19 @@ function main() {
 
         let manualSell = $('<div style="display:flex;"></div>');
         marketDiv.append(manualSell);
-        let toggleSell = $('<label tabindex="0" class="switch" style=""><input type="checkbox" value=false> <span class="check" style="height:5px;"></span><span class="state"></span></label>');
-        manualSell.append(toggleSell);
-        toggleSell.on('click', function(e){
-            if (e.which != 1) {return;}
-            let input = e.currentTarget.children[0];
-            let state = !(input.getAttribute('value') === "true");
-            input.setAttribute('value', state);
-            resources[resource.id].autoSell = state;
-            let otherState = toggleBuy.children('input').attr('value') === 'true';
+        let sellToggleOnChange = function(state) {
+            let buyToggle = $(`#${resource.id}-autoBuy_toggle`);
+            let otherState = sellToggle.children('input').attr('value') === 'true';
             if(state && otherState){
-                toggleBuy.click();
-                console.log("Turning off toggleBuy");
-                resources[resource.id].autoBuy = false;
-                toggleBuy.children('input')[0].setAttribute('value',false);
+                buyToggle.click();
+                console.log("Turning off buyToggle");
+                resource.autoBuy = false;
+                buyToggle.children('input')[0].setAttribute('value',false);
             }
-            updateSettings();
             loadTradeUI();
-        });
-        if(resource.autoSell){
-            setTimeout( function() {
-                console.log("Setting initially to true");
-                toggleSell.children('span.check').click();
-                toggleSell.children('input').attr('value', true);
-            }, 1000);
         }
+        let sellToggle = createToggleControl(resource.id+'-autoSell', '', {path:[resources, resource.id, 'autoSell'],small:true,onChange:sellToggleOnChange});
+        manualSell.append(sellToggle);
 
         let sellRatioSub = function() {
             resource.sellDec();
@@ -4396,7 +4373,7 @@ function main() {
                 }
                 createMarketSettings();
             }
-            let buyToggle = createToggleControl([id, 'autoBuy'], '', {root:resources,small:true,onChange:buyToggleOnChange});
+            let buyToggle = createToggleControl(id+'_autoBuy', '', {path:[resources, id, 'autoBuy'],small:true,onChange:buyToggleOnChange});
             manualBuy.append(buyToggle);
 
             let buyDec = function() {
@@ -4427,7 +4404,7 @@ function main() {
                 }
                 createMarketSettings();
             }
-            let sellToggle = createToggleControl([id, 'autoSell'], '', {root:resources,small:true,onChange:sellToggleOnChange});
+            let sellToggle = createToggleControl(id+'_autoSell', '', {path:[resources, id, 'autoSell'],small:true,onChange:sellToggleOnChange});
             manualSell.append(sellToggle);
 
             let sellDec = function() {
@@ -4542,7 +4519,7 @@ function main() {
             let label = $(`<span class="has-text-danger" style="width:12rem;">${resources[x].name}</h3>`);
             div.append(label);
             let id = x;
-            let toggle = createToggleControl([id, 'enabled'], '', {root:resources,small:true});
+            let toggle = createToggleControl(id+'_enabled', '', {path:[resources, id, 'enabled'],small:true});
             div.append(toggle);
         }
 
@@ -5037,7 +5014,7 @@ function main() {
             // Enable Toggle
             let enableDiv = $('<div style="width:10%;" title="'+action.id+' Enabled"></div>');
             actionDiv.append(enableDiv);
-            let toggle = createToggleControl('enabled', '', {root:action,small:true});
+            let toggle = createToggleControl(action.id+'_enabled', '', {path:[action, 'enabled'],small:true});
             enableDiv.append(toggle);
 
             if (action instanceof Building) {
