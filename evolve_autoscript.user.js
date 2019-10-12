@@ -3404,8 +3404,8 @@ function main() {
         }
         // Allocating trade routes
         focusSequence = allocations['seq'];
-        let newTradeRoutes = [];
-        let curTradeRoutes = [];
+        let newTradeRoutes = {};
+        let curTradeRoutes = {};
         for (let x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             newTradeRoutes[x] = 0;
@@ -3439,6 +3439,7 @@ function main() {
                 }
             }
         }
+        console.log("TRADE ROUTES:", newTradeRoutes);
         for (let x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             // Removing routes that don't need routes
