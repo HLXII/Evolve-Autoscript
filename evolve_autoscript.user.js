@@ -411,18 +411,26 @@ function main() {
             }
         }
 
-        tradeDec() {
+        tradeDec(num) {
+            num = (num === undefined) ? 1 : num;
             if (this.tradeDecBtn !== null) {
-                this.tradeDecBtn.click();
+                disableMult();
+                for (let i = 0;i < num;i++) {
+                    this.tradeDecBtn.click();
+                }
                 return true;
             } else {
                 console.log("Error:", this.id, "Trade Decrement");
                 return false;
             }
         }
-        tradeInc() {
+        tradeInc(num) {
+            num = (num === undefined) ? 1 : num;
             if (this.tradeIncBtn !== null) {
-                this.tradeIncBtn.click();
+                disableMult();
+                for (let i = 0;i < num;i++) {
+                    this.tradeIncBtn.click();
+                }
                 return true;
             } else {
                 console.log("Error:", this.id, "Trade Increment");
@@ -3159,18 +3167,13 @@ function main() {
                 let resource = resources[x];
                 resource.temp_rate = resource.rate;
                 if (!(resource instanceof TradeableResource)) {continue;}
+                resource.temp_rate -= resource.tradeAmount * resource.tradeNum;
                 if (resource.tradeNum < 0) {
-                    for (let i = 0;i < -resource.tradeNum;i++) {
-                        resource.tradeInc();
-                        resource.temp_rate += resource.tradeAmount;
-                        resources.Money.temp_rate -= resource.tradeSellCost;
-                    }
+                    resources.Money.temp_rate -= resource.tradeSellCost * resource.tradeNum;
+                    //resource.tradeInc(-resource.tradeNum);
                 } else {
-                    for (let i = 0;i < resource.tradeNum;i++) {
-                        resource.tradeDec();
-                        resource.temp_rate -= resource.tradeAmount;
-                        resources.Money.temp_rate += resource.tradeBuyCost;
-                    }
+                    resources.Money.temp_rate += resource.tradeBuyCost * resource.tradeNum;
+                    //resource.tradeDec(resource.tradeNum);
                 }
             }
         }
@@ -3403,6 +3406,13 @@ function main() {
         }
         // Allocating trade routes
         focusSequence = allocations['seq'];
+        let newTradeRoutes = [];
+        let curTradeRoutes = [];
+        for (let x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            newTradeRoutes[x] = 0;
+            curTradeRoutes[x] = resources[x].tradeNum;
+        }
         let curFocus = 0;
         let curSell = 0;
         if (focusList.length > 0) {
@@ -3417,18 +3427,58 @@ function main() {
                 if (focusSequence.length > 0 && resources.Money.temp_rate > resources[keys[focusSequence[curFocus]]].tradeBuyCost) {
                     // Can buy trade route
                     //console.log("Buying", focusSequence[curFocus], curFocus);
-                    resources[keys[focusSequence[curFocus]]].tradeInc();
+                    newTradeRoutes[keys[focusSequence[curFocus]]] += 1;
                     resources.Money.temp_rate -= resources[keys[focusSequence[curFocus]]].tradeBuyCost;
                     curFreeTradeRoutes -= 1;
                     curFocus += 1;
                 } else {
                     // Cannot buy trade route, sell instead
                     if (curSell == sellSequence.length) {break;}
-                    resources[sellSequence[curSell]].tradeDec();
+                    newTradeRoutes[sellSequence[curSell]] -= 1;
                     resources.Money.temp_rate += resources[sellSequence[curSell]].tradeSellCost;
                     curFreeTradeRoutes -= 1;
                     curSell += 1;
                 }
+            }
+        }
+        console.log("TRADE ROUTES:", newTradeRoutes);
+        for (let x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            // Removing routes that don't need routes
+            if (newTradeRoutes[x] == 0) {
+                if (curTradeRoutes[x] > 0) {
+                    resources[x].tradeDec(curTradeRoutes[x]);
+                    curTradeRoutes[x] = 0;
+                }
+                else {
+                    resources[x].tradeInc(-curTradeRoutes[x]);
+                    curTradeRoutes[x] = 0;
+                }
+            }
+            // Changing all routes that require less
+            else {
+                if (Math.abs(newTradeRoutes[x]) <= Math.abs(curTradeRoutes[x])) {
+                    let routeChange = newTradeRoutes[x] - curTradeRoutes[x];
+                    if (routeChange < 0) {
+                        resources[x].tradeDec(-routeChange);
+                        curTradeRoutes[x] -= routeChange;
+                    }
+                    else {
+                        resources[x].tradeInc(routeChange);
+                        curTradeRoutes[x] += routeChange;
+                    }
+                }
+            }
+        }
+        for (let x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            // Fixing the rest of the routes
+            let routeChange = newTradeRoutes[x] - curTradeRoutes[x];
+            if (routeChange < 0) {
+                resources[x].tradeDec(-routeChange);
+            }
+            else {
+                resources[x].tradeInc(routeChange);
             }
         }
     }
