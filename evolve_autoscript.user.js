@@ -2333,7 +2333,7 @@ function main() {
                 decTaxBtn.click();
             }
         } else {
-            if (resources.Money.ratio < 0.5) {
+            if (resources.Money.ratio < 0.99) {
                 incTaxBtn.click();
             }
             else {
@@ -3169,11 +3169,9 @@ function main() {
                 if (!(resource instanceof TradeableResource)) {continue;}
                 resource.temp_rate -= resource.tradeAmount * resource.tradeNum;
                 if (resource.tradeNum < 0) {
-                    resources.Money.temp_rate -= resource.tradeSellCost * resource.tradeNum;
-                    //resource.tradeInc(-resource.tradeNum);
+                    resources.Money.temp_rate -= resource.tradeSellCost * -resource.tradeNum;
                 } else {
                     resources.Money.temp_rate += resource.tradeBuyCost * resource.tradeNum;
-                    //resource.tradeDec(resource.tradeNum);
                 }
             }
         }
@@ -3441,7 +3439,6 @@ function main() {
                 }
             }
         }
-        console.log("TRADE ROUTES:", newTradeRoutes);
         for (let x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             // Removing routes that don't need routes
