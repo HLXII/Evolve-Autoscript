@@ -8,8 +8,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 
 The inline Auto Employ settings don't update after a job is unlocked. You can fix this by using the Reset UI button on the General tab.
 
-Also thinking of moving some buttons back under the resource section for easy access, rather than searching the Auto Settings tab.
-
 # Stuff to do
 
 ## Bugfix
@@ -24,7 +22,7 @@ Also thinking of moving some buttons back under the resource section for easy ac
 * Add multiplier functionality to custom UI
 * Add hover text to some labels for more details (see Reset UI button for dom class and syntax)
 * Add setting to display/hide inline UI
-* Fix up Auto Tax. Current implementation needs some work.
+* Add quick menu under resources (non-specific buttons)
 
 ## Large
 * Auto Fortress

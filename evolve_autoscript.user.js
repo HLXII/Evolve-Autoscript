@@ -4729,10 +4729,10 @@ function main() {
         let autoResearchDesc = 'Controls which research branches to take. Turning this off will have irregular research purchases.';
         let [autoResearchTitle, autoResearchContent] = createAutoSettingToggle('autoResearch', 'Auto Research', autoResearchDesc, true, tab);
         // Creating Fanaticism/Anthropology choice
-        let religionStr1 = 'This setting chooses between Fanaticism and Anthropology. There is also a third setting for after you get Transcendence.';
+        let religionStr1 = 'This setting chooses between Fanaticism and Anthropology. This setting becomes obsolete after getting Transcendence.';
         let religionDetails1 = $(`<div><span>${religionStr1}</span></div>`);
         autoResearchContent.append(religionDetails1);
-        let religion1 = createDropDownControl(settings.religion1, 'religion1', 'Religion Tier 1', {fanaticism:'Fanaticism',anthropology:'Anthropology',transcendence:'Transcendence'});
+        let religion1 = createDropDownControl(settings.religion1, 'religion1', 'Religion Tier 1', {fanaticism:'Fanaticism',anthropology:'Anthropology'});
         autoResearchContent.append(religion1);
 
         // Creating Fanaticism/Anthropology choice
@@ -5038,7 +5038,7 @@ function main() {
             let toggle = createToggleControl(action.id+'_enabled', '', {path:[action, 'enabled'],small:true});
             enableDiv.append(toggle);
 
-            if (action instanceof Building && !(action instanceof ArpaAction)) {
+            if (action instanceof Building) {
                 drawBuildingItem(action,actionDiv);
             }
         }
