@@ -27,7 +27,6 @@ Also thinking of moving some buttons back under the resource section for easy ac
 * Fix up Auto Tax. Current implementation needs some work.
 
 ## Large
-* Auto Support Update. Currently simplistic allocation, and support buildings not implemented
 * Auto Fortress
 * Auto Ejector
 * Refactor priority system to use single priority queue
