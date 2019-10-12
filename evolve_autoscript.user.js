@@ -3360,22 +3360,22 @@ function main() {
         //console.log(actions);
 
         // Storing temporary rates
-        for (var x in resources) {
+        for (let x in resources) {
             resources[x].temp_rate = resources[x].rate;
         }
 
         // Removing trade routes (if exists) for accurate rate
         if (settings.autoTrade && researched('tech-trade')) {
             // Clearing out trade routes
-            for (x in resources) {
+            for (let x in resources) {
                 let resource = resources[x];
-                resource.temp_rate = resource.rate;
                 if (!(resource instanceof TradeableResource)) {continue;}
-                resource.temp_rate -= resource.tradeAmount * resource.tradeNum;
                 if (resource.tradeNum < 0) {
                     resources.Money.temp_rate -= resource.tradeSellCost * -resource.tradeNum;
+                    resource.temp_rate += resource.tradeAmount * -resource.tradeNum;
                 } else {
                     resources.Money.temp_rate += resource.tradeBuyCost * resource.tradeNum;
+                    resource.temp_rate -= resource.tradeAmount * resource.tradeNum
                 }
             }
         }
@@ -3486,7 +3486,7 @@ function main() {
         for (let i = 0;i < actions.length;i++) {
             let action = actions[i];
             let canBuy = true;
-            for (x in action.completion) {
+            for (let x in action.completion) {
                 if (!action.completion[x]) {
                     canBuy = false;
                     break;
@@ -3645,7 +3645,7 @@ function main() {
                 }
             }
         }
-        console.log("TRADE ROUTES:", newTradeRoutes);
+        console.log("NEW TRADE ROUTES:", newTradeRoutes);
         for (let x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             // Removing routes that don't need routes
