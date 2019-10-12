@@ -76,7 +76,7 @@ function main() {
                           "evo-human", "evo-elven", "evo-orc",
                           "evo-orge", "evo-cyclops", "evo-troll",
                           "evo-kobold", "evo-goblin", "evo-gnome",
-                          "evo-cath", "evo-wolven", "evo-centuar",
+                          "evo-cath", "evo-wolven", "evo-centaur",
                           "evo-mantis", "evo-scorpid", "evo-antid",
                           "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp",'evo-seraph','evo-unicorn'];
     let evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
@@ -103,7 +103,7 @@ function main() {
         "gnome":["evo-phagocytosis", "evo-mammals", "evo-dwarfism", "evo-gnome"],
         "cath":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-cath"],
         "wolven":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-wolven"],
-        "centuar":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-centuar"],
+        "centaur":["evo-phagocytosis", "evo-mammals", "evo-animalism", "evo-centaur"],
         "mantis":["evo-phagocytosis", "evo-athropods", "evo-mantis"],
         "scorpid":["evo-phagocytosis", "evo-athropods", "evo-scorpid"],
         "antid":["evo-phagocytosis", "evo-athropods", "evo-antid"],
