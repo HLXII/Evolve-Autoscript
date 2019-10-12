@@ -2706,6 +2706,102 @@ function main() {
         }, 100);
     }
 
+    function getFactoryUIData() {
+        let data = {};
+        // Finding relevent elements
+        let decBtns = $('#specialModal > div > .sub');
+        let incBtns = $('#specialModal > div > .add');
+        let labels = $('#specialModal > div > span.current');
+        let datas = $('#specialModal > div > span.is-primary');
+        // Getting Data values
+        if (decBtns.length > 0) {
+            data.Lux = {};
+            data.Lux.dec = decBtns[0];
+            data.Lux.inc = incBtns[0];
+            let str = datas[0].attributes['data-label'].value;
+            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
+            data.Lux.Furs = temp[1];
+            data.Lux.Money = temp[2];
+            data.Lux.num = +labels[0].innerText
+        }
+        if (decBtns.length > 1) {
+            data.Alloy = {};
+            data.Alloy.dec = decBtns[1];
+            data.Alloy.inc = incBtns[1];
+            let str = datas[1].attributes['data-label'].value;
+            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            data.Alloy.Copper = temp[1];
+            data.Alloy.Aluminium = temp[2];
+            data.Alloy.num = +labels[1].innerText
+            data.Alloy.produce = 0;
+            try {
+                let total = window.game.breakdown.p.Alloy.Factory;
+                total = +total.substring(0, total.length - 1);
+                total *= getMultiplier('Alloy') * getMultiplier('Global');
+                if (data.Alloy.num > 0) {
+                    data.Alloy.produce = total / data.Alloy.num;
+                }
+            } catch(e) {}
+        }
+        if (decBtns.length > 2) {
+            data.Polymer = {};
+            data.Polymer.dec = decBtns[2];
+            data.Polymer.inc = incBtns[2];
+            let str = datas[2].attributes['data-label'].value;
+            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            data.Polymer.Oil = temp[1];
+            data.Polymer.Lumber = temp[2];
+            data.Polymer.num = +labels[2].innerText
+            data.Polymer.produce = 0;
+            try {
+                let total = window.game.breakdown.p.Polymer.Factory;
+                total = +total.substring(0, total.length - 1);
+                total *= getMultiplier('Polymer') * getMultiplier('Global');
+                if (data.Polymer.num > 0) {
+                    data.Polymer.produce = total / data.Polymer.num;
+                }
+            } catch(e) {}
+        }
+        if (decBtns.length > 3) {
+            data.Nano_Tube = {};
+            data.Nano_Tube.dec = decBtns[3];
+            data.Nano_Tube.inc = incBtns[3];
+            let str = datas[3].attributes['data-label'].value;
+            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            data.Nano_Tube.Coal = temp[1];
+            data.Nano_Tube.Neutronium = temp[2];
+            data.Nano_Tube.num = +labels[3].innerText
+            data.Nano_Tube.produce = 0;
+            try {
+                let total = window.game.breakdown.p.Nano_Tube.Factory;
+                total = +total.substring(0, total.length - 1);
+                total *= getMultiplier('Nano_Tube') * getMultiplier('Global');
+                if (data.Nano_Tube.num > 0) {
+                    data.Nano_Tube.produce = total / data.Nano_Tube.num;
+                }
+            } catch(e) {}
+        }
+        if (decBtns.length > 4) {
+            data.Stanene = {};
+            data.Stanene.dec = decBtns[4];
+            data.Stanene.inc = incBtns[4];
+            let str = datas[4].attributes['data-label'].value;
+            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            data.Stanene.Aluminium = temp[1];
+            data.Stanene.Nano_Tube = temp[2];
+            data.Stanene.num = +labels[4].innerText
+            data.Stanene.produce = 0;
+            try {
+                let total = window.game.breakdown.p.Stanene.Factory;
+                total = +total.substring(0, total.length - 1);
+                total *= getMultiplier('Stanene') * getMultiplier('Global');
+                if (data.Stanene.num > 0) {
+                    data.Stanene.produce = total / data.Stanene.num;
+                }
+            } catch(e) {}
+        }
+        return data;
+    }
     function autoFactory(limits) {
         // Don't Auto factory if not unlocked
         if (!researched('tech-industrialization')) {return;}
@@ -2724,163 +2820,169 @@ function main() {
         // Delaying for modal animation
         setTimeout(function() {
             // Finding relevent elements
-            let decBtns = $('#specialModal > div > .sub');
-            let incBtns = $('#specialModal > div > .add');
-            let labels = $('#specialModal > div > span.current');
-            let datas = $('#specialModal > div > span.is-primary');
-            let luxNum = null; let alloyNum = null; let polymerNum = null; let nanoTubeNum = null;
-            let luxFurCost = null; let luxMoneyProduct = null;
-            let alloyCopperCost = null; let alloyAluminiumCost = null;
-            let polymerOilCost = null; let polymerLumberCost = null;
-            let nanoTubeCoalCost = null; let nanoTubeNeutroniumCost = null;
-            // Getting Data values
-            if (decBtns.length > 0) {
-                let str = datas[0].attributes['data-label'].value;
-                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
-                luxFurCost = temp[1];
-                luxMoneyProduct = temp[2];
-                luxNum = +labels[0].innerText
+            let data = getFactoryUIData();
+            console.log('Factory Data:', data);
+
+            let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn;
+
+            // Reverting current allocation
+            if (data.hasOwnProperty('Lux')) {
+                resources.Furs.temp_rate += data.Lux.Furs * data.Lux.num;
+                resources.Money.temp_rate += data.Lux.Money * data.Lux.num;
             }
-            if (decBtns.length > 1) {
-                let str = datas[1].attributes['data-label'].value;
-                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
-                alloyCopperCost = temp[1];
-                alloyAluminiumCost = temp[2];
-                alloyNum = +labels[1].innerText
+            if (data.hasOwnProperty('Alloy')) {
+                resources.Copper.temp_rate += data.Alloy.Copper * data.Alloy.num;
+                resources.Aluminium.temp_rate += data.Alloy.Aluminium * data.Alloy.num;
+                resources.Alloy.temp_rate -= data.Alloy.produce * data.Alloy.num;
             }
-            if (decBtns.length > 2) {
-                let str = datas[2].attributes['data-label'].value;
-                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
-                polymerOilCost = temp[1];
-                polymerLumberCost = temp[2];
-                polymerNum = +labels[2].innerText
+            if (data.hasOwnProperty('Polymer')) {
+                resources.Lumber.temp_rate += data.Polymer.Lumber * data.Polymer.num;
+                resources.Oil.temp_rate += data.Polymer.Oil * data.Polymer.num;
+                resources.Polymer.temp_rate -= data.Polymer.produce * data.Polymer.num;
             }
-            if (decBtns.length > 3) {
-                let str = datas[3].attributes['data-label'].value;
-                let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
-                nanoTubeCoalCost = temp[1];
-                nanoTubeNeutroniumCost = temp[2];
-                nanoTubeNum = +labels[3].innerText
+            if (data.hasOwnProperty('Nano_Tube')) {
+                resources.Coal.temp_rate += data.Nano_Tube.Coal * data.Nano_Tube.num;
+                resources.Neutronium.temp_rate += data.Nano_Tube.Neutronium * data.Nano_Tube.num;
+                resources.Nano_Tube.temp_rate -= data.Nano_Tube.produce * data.Nano_Tube.num;
             }
-            console.log("L", luxNum, luxFurCost, luxMoneyProduct, "A", alloyNum, alloyCopperCost, alloyAluminiumCost, "P", polymerNum, polymerOilCost, polymerLumberCost, "N", nanoTubeNum, nanoTubeCoalCost ,nanoTubeNeutroniumCost);
-            // Resetting temp rates
-            if (luxNum !== null) {resources.Money.temp_rate -= luxMoneyProduct * luxNum; resources.Furs.temp_rate += luxFurCost * luxNum;}
-            if (alloyNum !== null) {resources.Copper.temp_rate += alloyCopperCost * alloyNum; resources.Aluminium.temp_rate += alloyAluminiumCost * alloyNum;}
-            if (polymerNum !== null) {resources.Oil.temp_rate += polymerOilCost * polymerNum; resources.Lumber.temp_rate += polymerLumberCost * polymerNum;}
-            if (nanoTubeNum !== null) {resources.Coal.temp_rate += nanoTubeCoalCost * nanoTubeNum; resources.Neutronium.temp_rate += nanoTubeNeutroniumCost * nanoTubeNum;}
-            // TODO: Alloy/Polymer/Nanotube production numbers aren't reset, since their numbers can't be found in the data values. Some how find this info
-            // Calculating changes
-            let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn
-            let wantedLux = 0; let luxPriority = 0;
-            let wantedAlloy = 0; let alloyPriority = 0;
-            let wantedPolymer = 0; let polymerPriority = 0;
-            let wantedNanoTube = 0; let nanoTubePriority = 0;
+            if (data.hasOwnProperty('Stanene')) {
+                resources.Aluminium.temp_rate += data.Stanene.Aluminium * data.Stanene.num;
+                resources.Nano_Tube.temp_rate += data.Stanene.Nano_Tube * data.Stanene.num;
+                resources.Stanene.temp_rate -= data.Stanene.produce * data.Stanene.num;
+            }
+
+            // Finding Allocation
+            let keys = [];
+            let priorities = [];
             let totalPriority = 0;
-            if (limits.Money !== null && limits.Money !== undefined && settings.factorySettings.Luxury_Goods) {luxPriority = limits.Money.priority * settings.factorySettings.Luxury_Goods; totalPriority += luxPriority; }
-            if (limits.Alloy !== null && limits.Alloy !== undefined && settings.factorySettings.Alloy) {alloyPriority = limits.Alloy.priority * settings.factorySettings.Alloy; totalPriority += alloyPriority;}
-            if (limits.Polymer !== null && limits.Polymer !== undefined && settings.factorySettings.Polymer) {polymerPriority = limits.Polymer.priority * settings.factorySettings.Polymer; totalPriority += polymerPriority;}
-            if (limits.Nano_Tube !== null && limits.Nano_Tube !== undefined && settings.factorySettings.Nano_Tube) {nanoTubePriority = limits.Nano_Tube.priority * settings.factorySettings.Nano_Tube; totalPriority += nanoTubePriority;}
-            console.log("L", luxPriority, "A", alloyPriority, "P", polymerPriority, "N", nanoTubePriority);
+            let ratios = [];
+            if (data.hasOwnProperty('Lux')) {
+                keys.push('Lux');
+                let priority = settings.factorySettings.Luxury_Goods;
+                if (limits && limits.Money !== null) {
+                    priority *= limits.Money.priority;
+                }
+                priorities.push(priority);
+                totalPriority += priority;
+            }
+            if (data.hasOwnProperty('Alloy')) {
+                keys.push('Alloy');
+                let priority = settings.factorySettings.Alloy;
+                if (limits && limits.Alloy !== null) {
+                    priority *= limits.Alloy.priority;
+                }
+                priorities.push(priority);
+                totalPriority += priority;
+            }
+            if (data.hasOwnProperty('Polymer')) {
+                keys.push('Polymer');
+                let priority = settings.factorySettings.Polymer;
+                if (limits && limits.Polymer !== null) {
+                    priority *= limits.Polymer.priority;
+                }
+                priorities.push(priority);
+                totalPriority += priority;
+            }
+            if (data.hasOwnProperty('Nano_Tube')) {
+                keys.push('Nano_Tube');
+                let priority = settings.factorySettings.Nano_Tube;
+                if (limits && limits.Nano_Tube !== null) {
+                    priority *= limits.Nano_Tube.priority;
+                }
+                priorities.push(priority);
+                totalPriority += priority;
+            }
+            if (data.hasOwnProperty('Stanene')) {
+                keys.push('Stanene');
+                let priority = settings.factorySettings.Stanene;
+                if (limits && limits.Stanene !== null) {
+                    priority *= limits.Stanene.priority;
+                }
+                priorities.push(priority);
+                totalPriority += priority;
+            }
+            for (let i = 0;i < priorities.length;i++) {
+                ratios[i] = priorities[i] / totalPriority;
+            }
+            let resourceCheck = function(index, curNum) {
+                switch(keys[index]) {
+                    case 'Lux': {
+                        return resources.Furs.temp_rate > data.Lux.Furs;
+                    }
+                    case 'Alloy': {
+                        let copperCheck = resources.Copper.temp_rate > data.Alloy.Copper;
+                        let aluminiumCheck = resources.Aluminium.temp_rate > data.Alloy.Aluminium;
+                        return copperCheck && aluminiumCheck;
+                    }
+                    case 'Polymer': {
+                        let lumberCheck = resources.Lumber.temp_rate > data.Polymer.Lumber;
+                        let oilCheck = resources.Oil.temp_rate > data.Polymer.Oil;
+                        return lumberCheck && oilCheck;
+                    }
+                    case 'Nano_Tube': {
+                        let coalCheck = resources.Coal.temp_rate > data.Nano_Tube.Coal;
+                        let neutroniumCheck = resources.Neutronium.temp_rate > data.Nano_Tube.Neutronium;
+                        return coalCheck && neutroniumCheck;
+                    }
+                    case 'Stanene': {
+                        let aluminiumCheck = resources.Aluminium.temp_rate > data.Stanene.Aluminium;
+                        let nanoTubeCheck = resources.Nano_Tube.temp_rate > data.Stanene.Nano_Tube;
+                        return aluminiumCheck && nanoTubeCheck;
+                    }
+                }
+                return false;
+            };
+            let allocFunc = function(index, curNum) {
+                switch(keys[index]) {
+                    case 'Lux': {
+                        resources.Furs.temp_rate -= data.Lux.Furs;
+                        break;
+                    }
+                    case 'Alloy': {
+                        resources.Copper.temp_rate -= data.Alloy.Copper;
+                        resources.Aluminium.temp_rate -= data.Alloy.Aluminium;
+                        break;
+                    }
+                    case 'Polymer': {
+                        resources.Lumber.temp_rate -= data.Polymer.Lumber;
+                        resources.Oil.temp_rate -= data.Polymer.Oil;
+                        break;
+                    }
+                    case 'Nano_Tube': {
+                        resources.Coal.temp_rate -= data.Nano_Tube.Coal;
+                        resources.Neutronium.temp_rate -= data.Nano_Tube.Neutronium;
+                        break;
+                    }
+                    case 'Stanene': {
+                        resources.Aluminium.temp_rate -= data.Stanene.Aluminium;
+                        resources.Nano_Tube.temp_rate -= data.Stanene.Nano_Tube;
+                        break;
+                    }
+                }
+            };
+
             // Creating allocation list
-            let prioMultipliers = [settings.factorySettings.Luxury_Goods, settings.factorySettings.Alloy, settings.factorySettings.Polymer, settings.factorySettings.Nano_Tube];
-            let allocation = [];
-            for (let i = 0;i < totalFactories;i++) {
-                // Attempting to allocate
-                // Must be possible (positive temp_rates), as well as lowers ratio error
-                let posAllocation = null
-                let posAllocationError = 1e10;
-                for (let j = 0;j < decBtns.length;j++) {
-                    let tempError = 0;
-                    switch(j) {
-                        case 0: {
-                            // Luxury Goods
-                            if (luxPriority > 0 && resources.Furs.temp_rate > luxFurCost) {
-                                tempError += ((wantedLux+1)/(i+1) - luxPriority/totalPriority)**2
-                                tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
-                                tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
-                                tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
-                                tempError += .0000000001;
-                            } else if (luxPriority > 0 && resources.Furs.temp_rate > luxFurCost) {
-                                tempError = 1e10 / prioMultipliers[0];
-                            }
-                            break;
-                        }
-                        case 1: {
-                            // Alloy
-                            if (alloyPriority > 0 && resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
-                                tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
-                                tempError += ((wantedAlloy+1)/(i+1) - alloyPriority/totalPriority)**2
-                                tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
-                                tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
-                                tempError += .0000000001;
-                            } else if (alloyPriority > 0 && resources.Copper.temp_rate > alloyCopperCost && resources.Aluminium.temp_rate > alloyAluminiumCost) {
-                                tempError = 1e10 / prioMultipliers[1];
-                            }
-                            break;
-                        }
-                        case 2: {
-                            // Polymer
-                            if (polymerPriority > 0 && resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
-                                tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
-                                tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
-                                tempError += ((wantedPolymer+1)/(i+1) - polymerPriority/totalPriority)**2
-                                tempError += ((wantedNanoTube)/(i+1) - nanoTubePriority/totalPriority)**2
-                                tempError += .0000000001;
-                            } else if (polymerPriority > 0 && resources.Oil.temp_rate > polymerOilCost && resources.Lumber.temp_rate > polymerLumberCost) {
-                                tempError = 1e10 / prioMultipliers[2];
-                            }
-                            break;
-                        }
-                        case 3: {
-                            // Nano Tubes
-                            console.log(nanoTubePriority, resources.Coal.temp_rate, resources.Neutronium.temp_rate);
-                            if (nanoTubePriority > 0 && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
-                                tempError += ((wantedLux)/(i+1) - luxPriority/totalPriority)**2
-                                tempError += ((wantedAlloy)/(i+1) - alloyPriority/totalPriority)**2
-                                tempError += ((wantedPolymer)/(i+1) - polymerPriority/totalPriority)**2
-                                tempError += ((wantedNanoTube+1)/(i+1) - nanoTubePriority/totalPriority)**2
-                                tempError += .0000000001;
-                            } else if (nanoTubePriority > 0 && resources.Coal.temp_rate > nanoTubeCoalCost && resources.Neutronium.temp_rate > nanoTubeNeutroniumCost) {
-                                tempError = 1e10 / prioMultipliers[3];
-                            }
-                            break;
-                        }
-                        default:
-                            break;
-                    }
-                    // Availible Choice
-                    console.log(j, tempError)
-                    if (tempError != 0) {
-                        if (tempError < posAllocationError) {
-                            posAllocation = j;
-                            posAllocationError = tempError;
-                        }
-                    } else {
-                        continue;
-                    }
-                }
-                if (posAllocation === null) {
-                    break;
-                } else {
-                    allocation.push(posAllocation);
-                    switch(posAllocation) {
-                        case 0: {wantedLux += 1; resources.Furs.temp_rate -= luxFurCost; break;}
-                        case 1: {wantedAlloy += 1; resources.Copper.temp_rate -= alloyCopperCost; resources.Aluminium.temp_rate -= alloyAluminiumCost; break;}
-                        case 2: {wantedPolymer += 1; resources.Oil.temp_rate -= polymerOilCost; resources.Lumber.temp_rate -= polymerLumberCost; break;}
-                        case 3: {wantedNanoTube += 1; resources.Coal.temp_rate -= nanoTubeCoalCost; resources.Neutronium.temp_rate -= nanoTubeNeutroniumCost; break;}
-                        default: break;
-                    }
-                }
-            }
-            console.log("L",wantedLux,"A",wantedAlloy,"P",wantedPolymer,"N",wantedNanoTube);
+            let allocation = allocate(totalFactories,priorities,ratios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+
+            console.log(priorities,ratios);
             console.log(allocation);
-            // Removing all settings
-            for (let i = 0;i < totalFactories;i++) {
-                decBtns.click();
+
+            // Allocating
+            for (let i = 0;i < keys.length;i++) {
+                if (data[keys[i]].num > allocation.alloc[i]) {
+                    for (let j = 0;j < data[keys[i]].num - allocation.alloc[i];j++) {
+                        data[keys[i]].dec.click();
+                    }
+                }
             }
-            for (let i = 0;i < allocation.length;i++) {
-                incBtns[allocation[i]].click();
+            for (let i = 0;i < keys.length;i++) {
+                if (data[keys[i]].num < allocation.alloc[i]) {
+                    for (let j = 0;j < allocation.alloc[i] - data[keys[i]].num;j++) {
+                        data[keys[i]].inc.click();
+                    }
+                }
             }
+
             // Closing modal
             let closeBtn = $('.modal-close')[0];
             if (closeBtn !== undefined) {closeBtn.click();}
