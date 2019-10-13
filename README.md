@@ -9,7 +9,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 # Stuff to do
 
 ## Bugfix
-* Money is attached to the helium control in the inline trade settings. Need to connect it to the one that's currently visible. However, the inline settings don't update unless you click Reset UI. Maybe reset UI in a timer?
 
 ## Small
 * Update autoCraft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
