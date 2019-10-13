@@ -28,5 +28,6 @@ The inline Auto Employ settings don't update after a job is unlocked. You can fi
 ## Large
 * Auto Fortress
 * Refactor priority system to use single priority queue
+* Once refactored, add way of viewing priority queue (probably on demand, since loading the DOM will be expensive)
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits) (AutoEmploy, AutoTax, AutoCraft[?], AutoTrade, AutoSupport, AutoSmelter, AutoFactory, AutoDroid, AutoGraphene)
 * Auto Gene

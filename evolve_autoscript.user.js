@@ -3700,9 +3700,28 @@ function main() {
 
     function resetUICheck(action) {
         switch(action.id) {
+            // Manual Farm Buttons
             case 'tech-club':
             case 'tech-bone_tools':
                 loadFarm();
+                break;
+            // Job Unlocker
+            case 'city-lumber_yard':
+            case 'city-rock_quarry':
+            case 'city-cement_plant':
+            case 'city-foundry':
+            case 'city-metal_refinery':
+            case 'city-mine':
+            case 'city-coal_mine':
+            case 'city-amphitheatre':
+            case 'city-university':
+            case 'city-wardenclyffe':
+            case 'tech-investing':
+            case 'tech-reclaimer':
+            case 'space-living_quarters':
+            case 'space-space_station':
+            case 'portal-carport':
+                createEmploySettings();
                 break;
         }
     }
