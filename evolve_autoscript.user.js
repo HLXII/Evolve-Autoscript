@@ -1157,7 +1157,8 @@ function main() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         // Tech
         for (let action in window.game.actions.tech) {
-            // Because tech-exotic_lab has a different key than id
+            // Remove reset tech
+            if (action == 'exotic_infusion' || action == 'infusion_check' || action == 'infusion_confirm') {continue;}
             let id = window.game.actions.tech[action].id;
             researches[id] = new Research(id, ['tech', action]);
         }
@@ -1748,6 +1749,9 @@ function main() {
         if (!settings.hasOwnProperty('autoPrestige')) {
             settings.autoPrestige = false;
         }
+        if (!settings.hasOwnProperty('prestige')) {
+            settings.prestige = 'mad';
+        }
 
         if (!settings.hasOwnProperty('autoEvolution')) {
             settings.autoEvolution = false;
@@ -1908,6 +1912,64 @@ function main() {
             if (!settings.autoRefresh && !(refreshInterval === null)) {
                 clearInterval(refreshInterval);
                 refreshInterval = null;
+            }
+        }
+    }
+
+    let prestigeCheck = false;
+    function autoPrestige() {
+        switch(settings.prestige) {
+            case 'mad': {
+                // Checking if MAD unlocked
+                if (!window.game.vues.mad.display) {return;}
+                // Checking if already clicked
+                if (prestigeCheck) {return;}
+                window.game.vues.mad.launch();
+                prestigeCheck = true;
+                break;
+            }
+            case 'bioseed': {
+                // Checking if seeder is available
+                if (!window.game.global.starDock.hasOwnProperty('seeder')) {return;}
+                // Checking if seeding is complete
+                let seedCount = window.game.global.starDock.seeder.count;
+                if (seedCount !== 100) {return;}
+                // Checking if already clicked
+                if (prestigeCheck) {return;}
+                // Checking if modal already open
+                if ($('.modal').length != 0) {
+                    return;
+                }
+                // Ensuring no modal conflicts
+                if (modal) {return;}
+                modal = true;
+                // Opening modal
+                $('#space-star_dock > .special').click();
+                // Delaying for modal animation
+                setTimeout(function() {
+                    // Getting buttons
+                    let prep_ship = document.querySelector('#spcdock-prep_ship > a');
+                    let launch_ship = document.querySelector('#spcdock-launch_ship > a');
+                    if (prep_ship) {prep_ship.click();}
+                    if (launch_ship) {launch_ship.click();}
+                    // Closing modal
+                    let closeBtn = $('.modal-close')[0];
+                    if (closeBtn !== undefined) {closeBtn.click();}
+                    modal = false;
+                }, 100);
+                prestigeCheck = true;
+                break;
+            }
+            case 'blackhole': {
+                // Loading reset tech buttons
+                let exotic_infusion = document.querySelector('#tech-exotic_infusion > .button')
+                let infusion_check = document.querySelector('#tech-infusion_check > .button')
+                let infusion_confirm = document.querySelector('#tech-infusion_confirm > .button')
+                // Clicking if available
+                if (exotic_infusion) {exotic_infusion.click();}
+                if (infusion_check) {infusion_check.click();}
+                if (infusion_confirm) {infusion_confirm.click();}
+                break;
             }
         }
     }
@@ -3623,6 +3685,9 @@ function main() {
             if (settings.autoStorage) {
                 autoStorage();
             }
+            if (settings.autoPrestige) {
+                autoPrestige();
+            }
         }
         count += 1;
     }
@@ -4174,15 +4239,15 @@ function main() {
     function createAutoSettingGeneralPage(tab) {
 
         // Auto Print
-        let autoPrintDesc = 'This setting will print out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
+        let autoPrintDesc = 'Prints out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
         let [autoPrintTitle, autoPrintContent] = createAutoSettingToggle('autoPrint', 'Auto Print', autoPrintDesc, false, tab);
 
         // Auto Farm
-        let autoFarmDesc = 'This setting will auto-click the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
+        let autoFarmDesc = 'Auto-clicks the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
         let [autoFarmTitle, autoFarmContent] = createAutoSettingToggle('autoFarm', 'Auto Farm', autoFarmDesc, false, tab);
 
         // Auto Refresh
-        let autoRefreshDesc = 'This setting will automatically reload the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
+        let autoRefreshDesc = 'Automatically reloads the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
         let [autoRefreshTitle, autoRefreshContent] = createAutoSettingToggle('autoRefresh', 'Auto Refresh', autoRefreshDesc, false, tab);
         let reloadBtnDetails = 'Resets the UI and reloads the backend variables.';
         let reloadBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${reloadBtnDetails}"><button class="button is-primary"><span>Reset UI</span></button></div>`);
@@ -4195,8 +4260,11 @@ function main() {
         autoRefreshTitle.append(reloadBtn);
 
         // Auto Prestige
-        let autoPrestigeDesc = 'This setting will automatically prestige when the options are availible. Currently not implemented.';
+        let autoPrestigeDesc = 'Automatically prestiges when the options are availible. Maybe will add min prestige resource gain setting if wanted.';
         let [autoPrestigeTitle, autoPrestigeContent] = createAutoSettingToggle('autoPrestige', 'Auto Prestige', autoPrestigeDesc, true, tab);
+
+        let prestige = createDropDownControl(settings.prestige, 'prestige', 'Prestige Choice', {mad:'MAD',bioseed:'Bioseed',blackhole:'Blackhole'});
+        autoPrestigeContent.append(prestige);
 
         // Advanced
 
