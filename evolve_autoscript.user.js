@@ -3,7 +3,6 @@
 // @namespace    http://tampermonkey.net/
 // @version      1.2.5
 // @description  try to take over the world!
-// @author       Fafnir
 // @author       HLXII
 // @match        https://pmotschmann.github.io/Evolve/
 // @grant        GM_log
