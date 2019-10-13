@@ -4164,7 +4164,7 @@ function main() {
             }
             let marketRow = $('#market-'+resources[x].id);
             marketRow.append(marketDiv);
-            lastRow = [tradeControl, marketDiv, marketRow];
+            if (marketRow[0].style.display != 'none') {lastRow = [tradeControl, marketDiv, marketRow];}
         }
 
         // Creating trade setting for money
