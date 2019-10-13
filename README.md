@@ -6,8 +6,6 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 
 Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because the script pulls game info from the global. However, during the evolution stage, some of the info isn't loaded. This causes the tabs to load incorrectly/crash. I don't feel like figuring out a clean solution, so I'm choosing to ignore it. You only really need the General and Evolution tabs during the evolution stage anyways.
 
-The inline Auto Employ settings don't update after a job is unlocked. You can fix this by using the Reset UI button on the General tab.
-
 # Stuff to do
 
 ## Bugfix
@@ -16,13 +14,12 @@ The inline Auto Employ settings don't update after a job is unlocked. You can fi
 ## Small
 * Update autoCraft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
 * Add click rate setting for Auto Farm
-* Add granularity to Auto Print (only Auto Priority right now, idk what else I could split it into)
+* Add granularity to Auto Print (Auto Priority / Auto Settings / Auto Battle / ???)
 * Add install instructions to README
 * Maybe add sacrifical alter? Never played new mantis yet
-* Add multiplier functionality to custom UI
 * Add setting to display/hide inline UI
 * Add quick menu under resources (non-specific buttons)
-* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle, ...?idk)
+* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle, Auto Storage)
 * add Auto Ejector inline settings
 
 ## Large

@@ -323,25 +323,27 @@ function main() {
         }
 
 
-        decStorePriority() {
+        decStorePriority(mult) {
             if (this.storePriority == 0) {return;}
-            this.storePriority -= 1;
+            this.storePriority -= mult;
+            if (this.storePriority < 0) {this.storePriority = 0;}
             updateSettings();
             console.log("Decrementing Store Priority", this.id, this.storePriority);
         }
-        incStorePriority() {
-            this.storePriority += 1;
+        incStorePriority(mult) {
+            this.storePriority += mult;
             updateSettings();
             console.log("Incrementing Store Priority", this.id, this.storePriority);
         }
-        decStoreMin() {
+        decStoreMin(mult) {
             if (this.storeMin == 0) {return;}
-            this.storeMin -= 1;
+            this.storeMin -= mult;
+            if (this.storeMin < 0) {this.storeMin = 0;}
             updateSettings();
             console.log("Decrementing Store Minimum", this.id, this.storeMin);
         }
-        incStoreMin() {
-            this.storeMin += 1;
+        incStoreMin(mult) {
+            this.storeMin += mult;
             updateSettings();
             console.log("Incrementing Store Minimum", this.id, this.storeMin);
         }
@@ -350,14 +352,15 @@ function main() {
         set basePriority(basePriority) {settings.resources[this.id].basePriority = basePriority;}
         get priority() {return settings.resources[this.id].basePriority;}
 
-        decBasePriority() {
+        decBasePriority(mult) {
             if (this.basePriority == 0) {return;}
-            this.basePriority -= 1;
+            this.basePriority -= mult;
+            if (this.basePriority < 0) {this.basePrioriity = 0;}
             updateSettings();
             console.log("Decrementing Base Priority", this.id, this.basePriority);
         }
-        incBasePriority() {
-            this.basePriority += 1;
+        incBasePriority(mult) {
+            this.basePriority += mult;
             updateSettings();
             console.log("Incrementing Base Priority", this.id, this.basePriority);
         }
@@ -381,30 +384,35 @@ function main() {
         get sellRatio() {return settings.resources[this.id].sellRatio};
         set sellRatio(sellRatio) {settings.resources[this.id].sellRatio = sellRatio;}
 
-        buyDec() {
+        buyDec(mult) {
             if (this.buyRatio > 0) {
-                this.buyRatio = parseFloat(Number(this.buyRatio - 0.1).toFixed(1));
+                this.buyRatio = parseFloat(Number(this.buyRatio - 0.1 * mult).toFixed(1));
+                if (this.buyRatio < 0) {this.buyRatio = 0;}
                 updateSettings();
                 console.log(this.id, "Decrementing Buy Ratio", this.buyRatio);
             }
         }
-        buyInc() {
+        buyInc(mult) {
             if (this.buyRatio < 1) {
-                this.buyRatio = parseFloat(Number(this.buyRatio + 0.1).toFixed(1));
+                this.buyRatio = parseFloat(Number(this.buyRatio + 0.1 * mult).toFixed(1));
+                if (this.buyRatio > 1) {this.buyRatio = 0;}
                 updateSettings();
                 console.log(this.id, "Incrementing Buy Ratio", this.buyRatio);
             }
         }
-        sellDec() {
+        sellDec(mult) {
             if (this.sellRatio > 0) {
-                this.sellRatio = parseFloat(Number(this.sellRatio - 0.1).toFixed(1));
+                this.sellRatio = parseFloat(Number(this.sellRatio - 0.1 * mult).toFixed(1));
+                if (this.sellRatio < 0) {this.sellRatio = 0;}
                 updateSettings();
                 console.log(this.id, "Decrementing Sell Ratio", this.sellRatio);
             }
         }
-        sellInc() {
+        sellInc(mult) {
             if (this.sellRatio < 1) {
-                this.sellRatio = parseFloat(Number(this.sellRatio + 0.1).toFixed(1));
+                this.sellRatio = parseFloat(Number(this.sellRatio + 0.1 * mult).toFixed(1));
+                if (this.sellRatio > 1) {this.sellRatio = 1;}
+                updateSettings();
                 console.log(this.id, "Incrementing Sell Ratio", this.sellRatio);
             }
         }
@@ -572,13 +580,13 @@ function main() {
         set enabled(enabled) {settings.actions[this.id].enabled = enabled;}
         get basePriority() {return settings.actions[this.id].basePriority;}
         set basePriority(basePriority) {settings.actions[this.id].basePriority = basePriority;}
-        decBasePriority() {
-            this.basePriority -= 1;
+        decBasePriority(mult) {
+            this.basePriority -= mult;
             updateSettings();
             console.log("Decrementing Priority", this.id, this.basePriority);
         }
-        incBasePriority() {
-            this.basePriority += 1;
+        incBasePriority(mult) {
+            this.basePriority += mult;
             updateSettings();
             console.log("Incrementing Priority", this.id, this.basePriority);
         }
@@ -677,38 +685,41 @@ function main() {
             return this.data.count;
         }
 
-        decAtLeast() {
+        decAtLeast(mult) {
             if (this.atLeast == 0) {return;}
-            this.atLeast -= 1;
+            this.atLeast -= mult;
+            if (this.atLeast < 0) {this.atLeast = 0;}
             updateSettings();
             console.log("Decrementing At Least", this.id, this.atLeast);
         }
-        incAtLeast() {
-            this.atLeast += 1;
+        incAtLeast(mult) {
+            this.atLeast += mult;
             updateSettings();
             console.log("Incrementing At Least", this.id, this.atLeast);
         }
 
-        decLimit() {
+        decLimit(mult) {
             if (this.limit == -1) {return;}
-            this.limit -= 1;
+            this.limit -= mult;
+            if (this.limit < -1) {this.limit = -1;}
             updateSettings();
             console.log("Decrementing Limit", this.id, this.limit);
         }
-        incLimit() {
-            this.limit += 1;
+        incLimit(mult) {
+            this.limit += mult;
             updateSettings();
             console.log("Incrementing Limit", this.id, this.limit);
         }
 
-        decSoftCap() {
+        decSoftCap(mult) {
             if (this.softCap == -1) {return;}
-            this.softCap -= 1;
+            this.softCap -= mult;
+            if (this.softCap < -1) {this.softCap = 1;}
             updateSettings();
             console.log("Decrementing SoftCap", this.id, this.softCap);
         }
-        incSoftCap() {
-            this.softCap += 1;
+        incSoftCap(mult) {
+            this.softCap += mult;
             updateSettings();
             console.log("Incrementing SoftCap", this.id, this.softCap);
         }
@@ -1008,15 +1019,15 @@ function main() {
             return true;
         }
 
-        decPowerPriority() {
+        decPowerPriority(mult) {
             if (this.powerPriority == 0) {return;}
-            this.powerPriority -= 1;
+            this.powerPriority -= mult;
+            if (this.powerPriority < 0) {this.powerPriority = 0;}
             updateSettings();
             console.log("Decrementing Power Priority", this.id, this.powerPriority);
         }
-        incPowerPriority() {
-            if (this.powerPriority == 99) {return;}
-            this.powerPriority += 1;
+        incPowerPriority(mult) {
+            this.powerPriority += mult;
             updateSettings();
             console.log("Incrementing Priority", this.id, this.powerPriority);
         }
@@ -1400,7 +1411,7 @@ function main() {
         }
 
         get unlocked() {
-            return this.btn !== null;
+            return window.game.global.civic.garrison.mercs;
         }
 
         get name() {
@@ -1483,15 +1494,15 @@ function main() {
             return this._priority;
         }
 
-        lowerPriority() {
+        lowerPriority(mult) {
             if (this._priority == 0) {return;}
-            this._priority -= 1;
+            this._priority -= mult;
+            if (this._priority < 0) {this._priority = 0;}
             updateSettings();
             console.log("Lowering", this.name, "Priority", this._priority);
         }
-        higherPriority() {
-            if (this._priority == 99) {return;}
-            this._priority += 1;
+        higherPriority(mult) {
+            this._priority += mult;
             updateSettings();
             console.log("Increasing", this.name, "Priority", this._priority);
         }
@@ -3728,9 +3739,9 @@ function main() {
 
     let count = 1;
     function fastAutomate() {
-        console.clear();
+        //console.clear();
         //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
-        console.log(count);
+        //console.log(count);
         updateUI();
         updateSettings();
         autoFarm();
@@ -3785,12 +3796,14 @@ function main() {
         let subBtn = $(`<span role="button" aria-label="Decrease ${name}" class="sub">«</span>`);
         let label = $(`<span id="${name}_control" class="count current" style="width:2rem;">${currentValue}</span>`);
         subBtn.on('click', function(e) {
-            document.getElementById(name+'_control').innerText = subFunc();
+            let mult = keyMult(e);
+            document.getElementById(name+'_control').innerText = subFunc(mult);
             updateSettings();
         });
         let addBtn = $(`<span role="button" aria-label="Increase ${name}" class="add">»</span>`);
         addBtn.on('click', function(e) {
-            document.getElementById(name+'_control').innerText = addFunc();
+            let mult = keyMult(e);
+            document.getElementById(name+'_control').innerText = addFunc(mult);
             updateSettings();
         });
         let control = $(`<div class="controls as-${name}-settings" style="display:flex"></div>`).append(subBtn).append(label).append(addBtn);
@@ -3957,26 +3970,26 @@ function main() {
         if (!resources[id].crateable) {return;}
         let resourceSpan = $('#stack-'+resources[id].id);
         let div = $('<div class="as-storage-settings" style="display:flex"></div>');
-        let prioritySub = function() {
-            resources[id].decStorePriority();
+        let prioritySub = function(mult) {
+            resources[id].decStorePriority(mult);
             loadStorageUI();
             return resources[id].storePriority;
         }
         let priorityAdd = function() {
-            resources[id].incStorePriority();
+            resources[id].incStorePriority(mult);
             loadStorageUI();
             return resources[id].storePriority;
         }
         let priorityControls = createNumControl(resources[id].storePriority, id+"-store-priority", prioritySub, priorityAdd);
         div.append(priorityControls)
 
-        let minSub = function() {
-            resources[id].decStoreMin();
+        let minSub = function(mult) {
+            resources[id].decStoreMin(mult);
             loadStorageUI();
             return resources[id].storeMin;
         }
-        let minAdd = function() {
-            resources[id].incStoreMin();
+        let minAdd = function(mult) {
+            resources[id].incStoreMin(mult);
             loadStorageUI();
             return resources[id].storeMin;
         }
@@ -4024,13 +4037,13 @@ function main() {
         let buyToggle = createToggleControl(resource.id+'-autoBuy', '', {path:[resources, resource.id, 'autoBuy'],small:true,onChange:buyToggleOnChange});
         manualBuy.append(buyToggle);
 
-        let buyRatioSub = function() {
-            resource.buyDec();
+        let buyRatioSub = function(mult) {
+            resource.buyDec(mult);
             loadTradeUI();
             return resource.buyRatio;
         }
-        let buyRatioAdd = function() {
-            resource.buyInc();
+        let buyRatioAdd = function(mult) {
+            resource.buyInc(mult);
             loadTradeUI();
             return resource.buyRatio;
         }
@@ -4053,13 +4066,13 @@ function main() {
         let sellToggle = createToggleControl(resource.id+'-autoSell', '', {path:[resources, resource.id, 'autoSell'],small:true,onChange:sellToggleOnChange});
         manualSell.append(sellToggle);
 
-        let sellRatioSub = function() {
-            resource.sellDec();
+        let sellRatioSub = function(mult) {
+            resource.sellDec(mult);
             loadTradeUI();
             return resource.sellRatio;
         }
-        let sellRatioAdd = function() {
-            resource.sellInc();
+        let sellRatioAdd = function(mult) {
+            resource.sellInc(mult);
             loadTradeUI();
             return resource.sellRatio;
         }
@@ -4097,13 +4110,13 @@ function main() {
     function createTradeSetting(resource) {
         let marketDiv = $(`<div style="display:flex;" class="as-trade-settings as-trade-${resource.id}"></div>`);
 
-        let prioritySub = function() {
-            resource.decBasePriority();
+        let prioritySub = function(mult) {
+            resource.decBasePriority(mult);
             loadTradeUI();
             return resource.basePriority;
         }
-        let priorityAdd = function() {
-            resource.incBasePriority();
+        let priorityAdd = function(mult) {
+            resource.incBasePriority(mult);
             loadTradeUI();
             return resource.basePriority;
         }
@@ -4141,13 +4154,13 @@ function main() {
         let moneyLabel = $('<div style="position:absolute;bottom:4rem;width:5.25rem;text-align:center;"><span>$$$</span></div>');
         lastRow[0].prepend(moneyLabel);
         let priorityDiv = $('<div style="position:absolute;bottom:3rem;width:5.25rem;text-align:center;"</div>');
-        let prioritySub = function() {
-            resources.Money.decBasePriority();
+        let prioritySub = function(mult) {
+            resources.Money.decBasePriority(mult);
             loadTradeUI();
             return resources.Money.basePriority;
         }
-        let priorityAdd = function() {
-            resources.Money.incBasePriority();
+        let priorityAdd = function(mult) {
+            resources.Money.incBasePriority(mult);
             loadTradeUI();
             return resources.Money.basePriority;
         }
@@ -4178,13 +4191,13 @@ function main() {
         for (var x in jobs) {
             let job = jobs[x];
             if (!job.unlocked) {continue;}
-            let prioritySub = function() {
-                job.lowerPriority();
+            let prioritySub = function(mult) {
+                job.lowerPriority(mult);
                 loadEmployUI();
                 return job._priority;
             }
-            let priorityAdd = function() {
-                job.higherPriority();
+            let priorityAdd = function(mult) {
+                job.higherPriority(mult);
                 loadEmployUI();
                 return job._priority;
             }
@@ -4216,13 +4229,13 @@ function main() {
         for (x in craftJobs) {
             let cjob = craftJobs[x];
             if (!cjob.unlocked) {continue;}
-            let prioritySub = function() {
-                cjob.lowerPriority();
+            let prioritySub = function(mult) {
+                cjob.lowerPriority(mult);
                 loadEmployUI();
                 return cjob._priority;
             }
-            let priorityAdd = function() {
-                cjob.higherPriority();
+            let priorityAdd = function(mult) {
+                cjob.higherPriority(mult);
                 loadEmployUI();
                 return cjob._priority;
             }
@@ -4426,13 +4439,13 @@ function main() {
 
             let priorityDiv = $('<div style="width:12rem;"></div>');
             div.append(priorityDiv);
-            let prioritySub = function() {
-                jobs[id].lowerPriority();
+            let prioritySub = function(mult) {
+                jobs[id].lowerPriority(mult);
                 createEmploySettings();
                 return jobs[id]._priority;
             }
-            let priorityAdd = function() {
-                jobs[id].higherPriority();
+            let priorityAdd = function(mult) {
+                jobs[id].higherPriority(mult);
                 createEmploySettings();
                 return jobs[id]._priority;
             }
@@ -4455,13 +4468,13 @@ function main() {
 
             let priorityDiv = $('<div style="width:12rem;"></div>');
             div.append(priorityDiv);
-            let prioritySub = function() {
-                craftJobs[id].lowerPriority();
+            let prioritySub = function(mult) {
+                craftJobs[id].lowerPriority(mult);
                 createEmploySettings();
                 return craftJobs[id]._priority;
             }
-            let priorityAdd = function() {
-                craftJobs[id].higherPriority();
+            let priorityAdd = function(mult) {
+                craftJobs[id].higherPriority(mult);
                 createEmploySettings();
                 return craftJobs[id]._priority;
             }
@@ -4480,12 +4493,12 @@ function main() {
         let minMoraleTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Morale:</span>')
         minMoraleDiv.append(minMoraleTxt);
 
-        let minMoraleSub = function() {
-            settings.minimumMorale -= 1;
+        let minMoraleSub = function(mult) {
+            settings.minimumMorale -= mult;
             return settings.minimumMorale;
         }
-        let minMoraleAdd = function() {
-            settings.minimumMorale += 1;
+        let minMoraleAdd = function(mult) {
+            settings.minimumMorale += mult;
             return settings.minimumMorale;
         }
         let minMoraleControl = createNumControl(settings.minimumMorale, "minimum_morale", minMoraleSub, minMoraleAdd);
@@ -4560,13 +4573,13 @@ function main() {
         moneyDiv.append(moneyLabel);
         let padding = $('<div style="width:24rem;"></div>');
         moneyDiv.append(padding);
-        let moneyPrioritySub = function() {
-            resources['Money'].decBasePriority();
+        let moneyPrioritySub = function(mult) {
+            resources['Money'].decBasePriority(mult);
             createMarketSettings();
             return resources['Money'].basePriority;
         }
-        let moneyPriorityAdd = function() {
-            resources['Money'].incBasePriority();
+        let moneyPriorityAdd = function(mult) {
+            resources['Money'].incBasePriority(mult);
             createMarketSettings();
             return resources['Money'].basePriority;
         }
@@ -4604,13 +4617,13 @@ function main() {
             let buyToggle = createToggleControl(id+'_autoBuy', '', {path:[resources, id, 'autoBuy'],small:true,onChange:buyToggleOnChange});
             manualBuy.append(buyToggle);
 
-            let buyDec = function() {
-                resources[id].buyDec();
+            let buyDec = function(mult) {
+                resources[id].buyDec(mult);
                 createMarketSettings();
                 return resources[id].buyRatio;
             }
-            let buyInc = function() {
-                resources[id].buyInc();
+            let buyInc = function(mult) {
+                resources[id].buyInc(mult);
                 createMarketSettings();
                 return resources[id].buyRatio;
             }
@@ -4635,13 +4648,13 @@ function main() {
             let sellToggle = createToggleControl(id+'_autoSell', '', {path:[resources, id, 'autoSell'],small:true,onChange:sellToggleOnChange});
             manualSell.append(sellToggle);
 
-            let sellDec = function() {
-                resources[id].sellDec();
+            let sellDec = function(mult) {
+                resources[id].sellDec(mult);
                 createMarketSettings();
                 return resources[id].sellRatio;
             }
-            let sellInc = function() {
-                resources[id].sellInc();
+            let sellInc = function(mult) {
+                resources[id].sellInc(mult);
                 createMarketSettings();
                 return resources[id].sellRatio;
             }
@@ -4693,13 +4706,13 @@ function main() {
 
             let storePriorityDiv = $('<div style="width:12rem;"></div>');
             div.append(storePriorityDiv);
-            let storePrioritySub = function() {
-                resources[x].decStorePriority();
+            let storePrioritySub = function(mult) {
+                resources[x].decStorePriority(mult);
                 createStorageSettings();
                 return resources[id].storePriority;
             }
-            let storePriorityAdd = function() {
-                resources[id].incStorePriority();
+            let storePriorityAdd = function(mult) {
+                resources[id].incStorePriority(mult);
                 createStorageSettings();
                 return resources[id].storePriority;
             }
@@ -4708,13 +4721,13 @@ function main() {
 
             let storeMinDiv = $('<div style="width:12rem;"></div>');
             div.append(storeMinDiv);
-            let storeMinSub = function() {
-                resources[id].decStoreMin();
+            let storeMinSub = function(mult) {
+                resources[id].decStoreMin(mult);
                 createStorageSettings();
                 return resources[id].storeMin;
             }
-            let storeMinAdd = function() {
-                resources[id].incStoreMin();
+            let storeMinAdd = function(mult) {
+                resources[id].incStoreMin(mult);
                 createStorageSettings();
                 return resources[id].storeMin;
             }
@@ -4853,12 +4866,12 @@ function main() {
             } else {
                 resText = $('<h3 class="has-text-warning" style="width:12rem;">'+res+' Priority:</h3>');
             }
-            let resSub = function() {
-                settings.smelterSettings[res] -= 1;
+            let resSub = function(mult) {
+                settings.smelterSettings[res] -= mult;
                 return settings.smelterSettings[res];
             }
-            let resAdd = function() {
-                settings.smelterSettings[res] += 1;
+            let resAdd = function(mult) {
+                settings.smelterSettings[res] += mult;
                 return settings.smelterSettings[res];
             }
             let resControls = createNumControl(settings.smelterSettings[res], "smelter_"+res+"_priority", resSub, resAdd);
@@ -4884,12 +4897,12 @@ function main() {
             } else {
                 resText = $('<h3 class="has-text-warning" style="width:12rem;">'+res+' Priority:</h3>');
             }
-            let resSub = function() {
-                settings.factorySettings[res] -= 1;
+            let resSub = function(mult) {
+                settings.factorySettings[res] -= mult;
                 return settings.factorySettings[res];
             }
-            let resAdd = function() {
-                settings.factorySettings[res] += 1;
+            let resAdd = function(mult) {
+                settings.factorySettings[res] += mult;
                 return settings.factorySettings[res];
             }
             let resControls = createNumControl(settings.factorySettings[res], "factory_"+res+"_priority", resSub, resAdd);
@@ -5119,12 +5132,12 @@ function main() {
     function drawBuildingItem(building, buildingDiv) {
 
         // Building At Least
-        let atLeastSub = function() {
-            building.decAtLeast();
+        let atLeastSub = function(mult) {
+            building.decAtLeast(mult);
             return building.atLeast;
         }
-        let atLeastAdd = function() {
-            building.incAtLeast();
+        let atLeastAdd = function(mult) {
+            building.incAtLeast(mult);
             return building.atLeast;
         }
         let atLeastControls = createNumControl(building.atLeast, building.id+'-min', atLeastSub, atLeastAdd);
@@ -5133,12 +5146,12 @@ function main() {
         buildingDiv.append(atLeastDiv);
 
         // Building Limit
-        let limSub = function() {
-            building.decLimit();
+        let limSub = function(mult) {
+            building.decLimit(mult);
             return building.limit;
         }
-        let limAdd = function() {
-            building.incLimit();
+        let limAdd = function(mult) {
+            building.incLimit(mult);
             return building.limit;
         }
         let limControls = createNumControl(building.limit, building.id+'-max', limSub, limAdd);
@@ -5147,12 +5160,12 @@ function main() {
         buildingDiv.append(limDiv);
 
         // Building SoftCap
-        let softCapSub = function() {
-            building.decSoftCap();
+        let softCapSub = function(mult) {
+            building.decSoftCap(mult);
             return building.softCap;
         }
-        let softCapAdd = function() {
-            building.incSoftCap();
+        let softCapAdd = function(mult) {
+            building.incSoftCap(mult);
             return building.softCap;
         }
         let softCapControls = createNumControl(building.softCap, building.id+'-softcap', softCapSub, softCapAdd);
@@ -5162,12 +5175,12 @@ function main() {
 
         // Power Priority
         if (building instanceof PoweredBuilding) {
-            let powerSub = function() {
-                building.decPowerPriority();
+            let powerSub = function(mult) {
+                building.decPowerPriority(mult);
                 return building.powerPriority;
             }
-            let powerAdd = function() {
-                building.incPowerPriority();
+            let powerAdd = function(mult) {
+                building.incPowerPriority(mult);
                 return building.powerPriority;
             }
             let powerControls = createNumControl(building.powerPriority, building.id+'-power-prio', powerSub, powerAdd);
@@ -5211,12 +5224,12 @@ function main() {
             actionDiv.append(nameDiv);
 
             // Priority
-            let prioSub = function() {
-                action.decBasePriority();
+            let prioSub = function(mult) {
+                action.decBasePriority(mult);
                 return action.basePriority;
             }
-            let prioAdd = function() {
-                action.incBasePriority();
+            let prioAdd = function(mult) {
+                action.incBasePriority(mult);
                 return action.basePriority;
             }
             let settingVal = action.basePriority;
@@ -5410,6 +5423,14 @@ function main() {
     function disableMult() {
         var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
         document.dispatchEvent (evt);
+    }
+    // Finds total key multiplier from keyEvent
+    function keyMult(e) {
+        let mult = 1;
+        mult *= (e.ctrlKey) ? 10 : 1;
+        mult *= (e.shiftKey) ? 25 : 1;
+        mult *= (e.altKey) ? 100 : 1;
+        return mult;
     }
 
     // Convert from abbreviated value to actual number
