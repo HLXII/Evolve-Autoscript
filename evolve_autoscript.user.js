@@ -3709,39 +3709,57 @@ function main() {
         return {seq:allocationList,alloc:curNum,total:totalAllocated};
     }
 
+    let farmReset = ['tech-club', 'tech-bone_tools'];
+    let jobReset = ['city-lumber_yard',
+                    'city-rock_quarry',
+                    'city-cement_plant',
+                    'city-foundry',
+                    'city-metal_refinery',
+                    'city-mine',
+                    'city-coal_mine',
+                    'city-amphitheatre',
+                    'city-university',
+                    'city-wardenclyffe',
+                    'tech-investing',
+                    'tech-reclaimer',
+                    'space-living_quarters',
+                    'space-space_station',
+                    'portal-carport',];
+    let resourceReset = ['city-garrison',
+                         'city-storage_yard',
+                         'city-warehouse',
+                         'city-cement_plant',
+                         'city-foundry',
+                         'city-factory',
+                         'city-metal_refinery',
+                         'city-mine',
+                         'city-coal_mine',
+                         'city-oil_well',
+                         'space-iridium_mine',
+                         'space-helium_mine',
+                         'space-outpost',
+                         'interstellar-mining_droid',
+                         'interstellar-g_factory',
+                         'interstellar-nexus',
+                         'portal-carport',];
     function resetUICheck(action) {
-        switch(action.id) {
-            // Manual Farm Buttons
-            case 'tech-club':
-            case 'tech-bone_tools':
-                loadFarm();
-                break;
-            // Job Unlocker
-            case 'city-lumber_yard':
-            case 'city-rock_quarry':
-            case 'city-cement_plant':
-            case 'city-foundry':
-            case 'city-metal_refinery':
-            case 'city-mine':
-            case 'city-coal_mine':
-            case 'city-amphitheatre':
-            case 'city-university':
-            case 'city-wardenclyffe':
-            case 'tech-investing':
-            case 'tech-reclaimer':
-            case 'space-living_quarters':
-            case 'space-space_station':
-            case 'portal-carport':
-                createEmploySettings();
-                break;
+        if (farmReset.includes(action.id)) {loadFarm();}
+        if (jobReset.includes(action.id)) {
+            if (settings.autoEmploy) {createEmploySettings();}
+        }
+        if (resourceReset.includes(action.id)) {
+            if (settings.autoMarket) {createMarketSettings();}
+            if (settings.autoTrade) {createTradeSettings();}
+            if (settings.autoStorage) {createStorageSettings();}
+            if (settings.autoEjector) {createEjectorSettings();}
         }
     }
 
     let count = 1;
     function fastAutomate() {
-        //console.clear();
+        console.clear();
         //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
-        //console.log(count);
+        console.log(count);
         updateUI();
         updateSettings();
         autoFarm();
