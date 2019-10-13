@@ -25,9 +25,9 @@ unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
 $(document).ready(function() {
     let injectScript = `
 import { global, vues, breakdown } from './vars.js';
-import { actions } from './actions.js';
+import { actions, checkTechRequirements } from './actions.js';
 import { races } from './races.js';
-import {tradeRatio, craftCost, atomic_mass } from './resources.js';
+import {tradeRatio, tradeBuyPrice, tradeSellPrice, craftCost, atomic_mass } from './resources.js';
 window.game =  {
     global: global,
     vues: vues,
@@ -35,8 +35,11 @@ window.game =  {
     actions: actions,
     races: races,
     tradeRatio: tradeRatio,
+    tradeBuyPrice:tradeBuyPrice,
+    tradeSellPrice:tradeSellPrice,
     craftCost: craftCost,
     atomic_mass: atomic_mass,
+    techUnlocked:checkTechRequirements,
 };
 window.dispatchEvent(new CustomEvent('customModuleAdded'));
 `;
@@ -406,24 +409,6 @@ function main() {
             }
         }
 
-        get tradeDecSpan() {
-            let nodes = document.querySelectorAll('#market-'+this.id+' > .trade > .is-primary');
-            if (nodes.length == 0) {
-                console.log("Error:", this.id, "Trade Dec Span");
-                return null;
-            } else {
-                return nodes[0];
-            }
-        }
-        get tradeIncSpan() {
-            let nodes = document.querySelectorAll('#market-'+this.id+' > .trade > .is-primary');
-            if (nodes.length != 2) {
-                console.log("Error:", this.id, "Trade Inc Span");
-                return null;
-            } else {
-                return nodes[1];
-            }
-        }
         get tradeDecBtn() {
             return document.querySelector('#market-'+this.id+' > .trade > .is-primary > .add');
         }
@@ -452,28 +437,14 @@ function main() {
 
         tradeDec(num) {
             num = (num === undefined) ? 1 : num;
-            if (this.tradeDecBtn !== null) {
-                disableMult();
-                for (let i = 0;i < num;i++) {
-                    this.tradeDecBtn.click();
-                }
-                return true;
-            } else {
-                console.log("Error:", this.id, "Trade Decrement");
-                return false;
+            for (let i = 0;i < num;i++) {
+                window.game.vues['market_'+this.id].autoSell(this.id)
             }
         }
         tradeInc(num) {
             num = (num === undefined) ? 1 : num;
-            if (this.tradeIncBtn !== null) {
-                disableMult();
-                for (let i = 0;i < num;i++) {
-                    this.tradeIncBtn.click();
-                }
-                return true;
-            } else {
-                console.log("Error:", this.id, "Trade Increment");
-                return false;
+            for (let i = 0;i < num;i++) {
+                window.game.vues['market_'+this.id].autoBuy(this.id)
             }
         }
 
@@ -481,24 +452,10 @@ function main() {
             return window.game.global.resource[this.id].trade;
         }
         get tradeBuyCost() {
-            if (this.tradeDecSpan !== null) {
-                let dataStr = this.tradeDecSpan.attributes['data-label'].value;
-                var reg = /Auto-buy\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
-                return parseFloat(reg[2]);
-            } else {
-                console.log("Error:", this.id, "Trade Buy Cost");
-                return -1;
-            }
+            return window.game.tradeBuyPrice(this.id);
         }
         get tradeSellCost() {
-            if (this.tradeIncSpan !== null) {
-                let dataStr = this.tradeIncSpan.attributes['data-label'].value;
-                var reg = /Auto-sell\s([\d\.]+)[\w\s]*\$([\d\.]+)/.exec(dataStr);
-                return parseFloat(reg[2]);
-            } else {
-                console.log("Error:", this.id, "Trade Sell Cost");
-                return -1;
-            }
+            return window.game.tradeSellPrice(this.id);
         }
         get tradeAmount() {
             return window.game.tradeRatio[this.id];
@@ -663,8 +620,9 @@ function main() {
         }
 
         getResDep(resid) {
-            if (this.def.cost[resid] !== undefined) {
-                return this.def.cost[resid]();
+            let cost = this.def.cost[resid];
+            if (cost !== undefined) {
+                return cost();
             }
             return null;
         }
@@ -699,6 +657,10 @@ function main() {
         set limit(limit) {settings.actions[this.id].limit = limit;}
         get softCap() {return settings.actions[this.id].softCap;}
         set softCap(softCap) {settings.actions[this.id].softCap = softCap;}
+
+        get unlocked() {
+            return this.data !== null;
+        }
 
         get priority() {
             // Setting priority to 100 if building hasn't reached the At Least value
@@ -1183,6 +1145,10 @@ function main() {
             this.color = 'has-text-danger';
         }
 
+        get unlocked() {
+            return window.game.techUnlocked(this.loc[this.loc.length-1]);
+        }
+
         get researched() {
             let researched = $('#oldTech > div');
             for (let i = 0;i < researched.length;i++) {
@@ -1223,9 +1189,6 @@ function main() {
         }
         get btn() {
             return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x25');
-        }
-        get rankLabel() {
-            return document.querySelector('#arpa'+this.id+' > .head > .rank');
         }
 
         get name() {
@@ -1445,7 +1408,8 @@ function main() {
         }
 
         getResDep(resid) {
-            let str = $('.hire > span')[0].attributes['data-label'].value;
+            let str = window.game.vues.civ_garrison.hireLabel();
+            //let str = $('.hire > span')[0].attributes['data-label'].value;
             let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
             this.res.Money = val[1];
             if (this.res === null) {
@@ -3291,6 +3255,8 @@ function main() {
             if (researches[x].researched) {continue;}
             // Don't check researches that can't be bought
             let btn = document.getElementById(researches[x].id);
+            // Don't check researches that don't exist
+            if (btn === null) {continue;}
             if (btn.className.indexOf('cnam') >= 0) {continue;}
             // Research filters
             if (settings.autoResearch) {
