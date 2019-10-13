@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.2.5
+// @version      1.2.6
 // @description  try to take over the world!
 // @author       HLXII
 // @match        https://pmotschmann.github.io/Evolve/
@@ -3577,7 +3577,7 @@ function main() {
         }
         // Sort by sell cost
         sellingRes.sort(function(a,b) {
-            return a.tradeSellCost - b.tradeSellCost;
+            return b.tradeSellCost - a.tradeSellCost;
         });
         // Finding sequence of selling trade routes
         let sellSequence = [];

@@ -23,10 +23,10 @@ The inline Auto Employ settings don't update after a job is unlocked. You can fi
 * Add setting to display/hide inline UI
 * Add quick menu under resources (non-specific buttons)
 * Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle, ...?idk)
+* add Auto Ejector inline settings
 
 ## Large
 * Auto Fortress
-* Auto Ejector
 * Refactor priority system to use single priority queue
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits) (AutoEmploy, AutoTax, AutoCraft[?], AutoTrade, AutoSupport, AutoSmelter, AutoFactory, AutoDroid, AutoGraphene)
 * Auto Gene
