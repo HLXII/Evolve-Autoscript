@@ -3763,7 +3763,7 @@ function main() {
         console.clear();
         //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
         console.log(count);
-        //updateUI();
+        updateUI();
         updateSettings();
         autoFarm();
         autoRefresh();
