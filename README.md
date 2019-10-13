@@ -30,4 +30,3 @@ The inline Auto Employ settings don't update after a job is unlocked. You can fi
 * Refactor priority system to use single priority queue
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits) (AutoEmploy, AutoTax, AutoCraft[?], AutoTrade, AutoSupport, AutoSmelter, AutoFactory, AutoDroid, AutoGraphene)
 * Auto Gene
-* Update ArpaActions to take into account rank

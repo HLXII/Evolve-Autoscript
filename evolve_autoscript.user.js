@@ -27,7 +27,7 @@ $(document).ready(function() {
 import { global, vues, breakdown } from './vars.js';
 import { actions } from './actions.js';
 import { races } from './races.js';
-import {tradeRatio, craftCost } from './resources.js';
+import {tradeRatio, craftCost, atomic_mass } from './resources.js';
 window.game =  {
     global: global,
     vues: vues,
@@ -36,6 +36,7 @@ window.game =  {
     races: races,
     tradeRatio: tradeRatio,
     craftCost: craftCost,
+    atomic_mass: atomic_mass,
 };
 window.dispatchEvent(new CustomEvent('customModuleAdded'));
 `;
@@ -149,13 +150,25 @@ function main() {
         maxEvo['evo-mitochondria'] = (maxEvo['evo-mitochondria'] <= 0) ? 1 : maxEvo['evo-mitochondria'];
     }
 
+    let advancedResources = ['Deuterium','Neutronium','Adamantite','Infernite','Elerium','Nano_Tube','Graphene','Stanene'];
     class Resource {
         constructor(id) {
             this.id = id;
+            this.color = 'has-text-info';
+            if (id == 'Money') {this.color = 'has-text-success';}
+            if (advancedResources.includes(id)) {this.color = 'has-text-advanced';}
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
             if (!settings.resources[this.id].hasOwnProperty('basePriority')) {settings.resources[this.id].basePriority = 0;}
-            if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = 0;}
-            if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = 0;}
+            if (this.crateable) {
+                if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = 0;}
+                if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = 0;}
+            }
+            if (this.ejectable) {
+                if (!settings.resources[this.id].hasOwnProperty('eject')) {
+                    settings.resources[this.id].eject = false;
+                }
+            }
+
         }
 
         get mainDiv() {
@@ -193,6 +206,32 @@ function main() {
         set storePriority(storePriority) {settings.resources[this.id].storePriority = storePriority;}
         get storeMin() {return settings.resources[this.id].storeMin;}
         set storeMin(storeMin) {settings.resources[this.id].storeMin = storeMin;}
+
+        get eject() {return settings.resources[this.id].eject;};
+        set eject(eject) {settings.resources[this.id].eject = eject;};
+        get ejectable() {
+            return window.game.atomic_mass.hasOwnProperty(this.id);
+        }
+        get ejectRate() {
+            return window.game.global.interstellar.mass_ejector[this.id];
+        }
+        get ejectMass() {
+            return window.game.atomic_mass[this.id].mass / window.game.atomic_mass[this.id].size;
+        }
+        ejectInc(num) {
+            num = (num === undefined) ? 1 : num;
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                window.game.vues['eject_'+this.id].ejectMore(this.id);
+            }
+        }
+        ejectDec(num) {
+            num = (num === undefined) ? 1 : num;
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                window.game.vues['eject_'+this.id].ejectLess(this.id);
+            }
+        }
 
         get crateIncBtn() {
             let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
@@ -279,6 +318,7 @@ function main() {
                 return false;
             }
         }
+
 
         decStorePriority() {
             if (this.storePriority == 0) {return;}
@@ -488,6 +528,7 @@ function main() {
     class CraftableResource extends Resource {
         constructor(id) {
             super(id);
+            this.color = 'has-text-danger';
             this.sources = window.game.craftCost[id];
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
             if (!settings.resources[this.id].hasOwnProperty('enabled')) {settings.resources[this.id].enabled = false;}
@@ -1808,6 +1849,9 @@ function main() {
         if (!settings.hasOwnProperty('autoStorage')) {
             settings.autoStorage = false;
         }
+        if (!settings.hasOwnProperty('autoEjector')) {
+            settings.autoEjector = false;
+        }
 
         if (!settings.hasOwnProperty('autoSupport')) {
             settings.autoSupport = false;
@@ -2071,6 +2115,59 @@ function main() {
             }
             if (researched('tech-steel_containers') && storage[x].needed_containers > 0) {
                 storage[x].containerInc(storage[x].needed_containers);
+            }
+        }
+    }
+
+    function autoEjector() {
+        // Don't do autoEjector if haven't unlocked mass ejectors
+        if (!window.game.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
+        if (window.game.global.interstellar.mass_ejector.count == 0) {return;}
+        // Don't do autoEjector if none are turned on
+        let totalEjection = window.game.global.interstellar.mass_ejector.on * 1000;
+        if (totalEjection == 0) {return;}
+
+        // Getting ejectable resources
+        let ejectables = [];
+        for (let x in resources) {
+            if (resources[x].ejectable) {
+                ejectables.push(resources[x]);
+                console.log(x, resources[x].ejectMass);
+            }
+        }
+        // Sort by ejectMass
+        ejectables.sort(function(a,b) {
+            return a.ejectMass - b.ejectMass;
+        });
+        console.log("SORTED:", ejectables);
+        // Finding sequence of selling trade routes
+        let ejectAllocation = [];
+        for (let i = 0;i < ejectables.length;i++) {
+            let res = ejectables[i];
+            // Ignoring non-full, non-enabled resources
+            if (res.ratio != 1 && !res.eject) {
+                ejectAllocation.push(0);
+                continue;
+            }
+            let maxEject = Math.floor(res.temp_rate);
+            let ejection = (maxEject < totalEjection) ? maxEject : totalEjection;
+            ejectAllocation.push(ejection);
+            totalEjection -= ejection;
+        }
+        console.log("EJECTABLE:", ejectables, ejectAllocation, "TEST");
+        // Allocating
+        for (let i = 0;i < ejectables.length;i++) {
+            let res = ejectables[i];
+            // Removing ejections
+            if (res.ejectRate > ejectAllocation[i]) {
+                res.ejectDec(res.ejectRate - ejectAllocation[i]);
+            }
+        }
+        for (let i = 0;i < ejectables.length;i++) {
+            let res = ejectables[i];
+            // Adding ejections
+            if (res.ejectRate < ejectAllocation[i]) {
+                res.ejectInc(ejectAllocation[i] - res.ejectRate);
             }
         }
     }
@@ -3285,7 +3382,7 @@ function main() {
         }
 
         // Removing trade routes (if exists) for accurate rate
-        if (settings.autoTrade && researched('tech-trade')) {
+        if (researched('tech-trade')) {
             // Clearing out trade routes
             for (let x in resources) {
                 let resource = resources[x];
@@ -3296,6 +3393,17 @@ function main() {
                 } else {
                     resources.Money.temp_rate += resource.tradeBuyCost * resource.tradeNum;
                     resource.temp_rate -= resource.tradeAmount * resource.tradeNum
+                }
+            }
+        }
+
+        // Removing mass ejection (if exists) for accurate rate
+        if (window.game.global.interstellar.hasOwnProperty('mass_ejector')) {
+            if (window.game.global.interstellar.mass_ejector.on > 0) {
+                for (let x in resources) {
+                    let resource = resources[x];
+                    if (!resource.ejectable) {continue;}
+                    resource.temp_rate += window.game.global.interstellar.mass_ejector[x];
                 }
             }
         }
@@ -3469,7 +3577,7 @@ function main() {
         }
         // Sort by sell cost
         sellingRes.sort(function(a,b) {
-            return a.tradeSellCost < b.tradeSellCost;
+            return a.tradeSellCost - b.tradeSellCost;
         });
         // Finding sequence of selling trade routes
         let sellSequence = [];
@@ -3655,7 +3763,7 @@ function main() {
         console.clear();
         //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
         console.log(count);
-        updateUI();
+        //updateUI();
         updateSettings();
         autoFarm();
         autoRefresh();
@@ -3672,6 +3780,7 @@ function main() {
                 priorityData = autoPriority(count);
             }
             if(settings.autoTrade){autoTrade(priorityData);}
+            if (settings.autoEjector) {autoEjector();}
             if(settings.autoCraft){
                 autoCraft();
             }
@@ -4078,6 +4187,20 @@ function main() {
     }
     function removeTradeSettings() {
         $('.as-trade-settings').remove();
+    }
+
+    function createEjectorSetting(resource) {
+
+    }
+    function createEjectorSettings() {
+        // Don't render if haven't unlocked mass ejectors
+        if (!window.game.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
+        if (window.game.global.interstellar.mass_ejector.count == 0) {return;}
+        removeEjectorSettings();
+
+    }
+    function removeEjectorSettings() {
+        $('.as-ejector-settings').remove();
     }
 
     function createEmploySettings() {
@@ -4629,6 +4752,31 @@ function main() {
             storeMinDiv.append(storeMinControl);
         }
     }
+    function loadEjectorUI(content) {
+        let labelDiv = $('<div style="display:flex" class="alt market-item"></div>');
+        content.append(labelDiv);
+        let resourceLabel = $('<span class="has-text-warning" style="width:12rem;">Ejectable Resource</h3>');
+        labelDiv.append(resourceLabel);
+        let enableLabel = $('<span class="has-text-warning" style="width:12rem;">Enable</h3>');
+        labelDiv.append(enableLabel);
+        let i = 0;
+        for (var x in resources) {
+            if (!(resources[x].ejectable)) {continue;}
+            let div = null;
+            i += 1;
+            if (i % 2) {
+                div = $('<div style="display:flex" class="market-item"></div>');
+            } else {
+                div = $('<div style="display:flex" class="alt market-item"></div>');
+            }
+            content.append(div);
+            let label = $(`<span class="${resources[x].color}" style="width:12rem;">${resources[x].name}</h3>`);
+            div.append(label);
+            let id = x;
+            let toggle = createToggleControl(id+'_eject', '', {path:[resources, id, 'eject'],small:true});
+            div.append(toggle);
+        }
+    }
     function createAutoSettingResourcePage(tab) {
 
         // Auto Craft
@@ -4709,9 +4857,14 @@ function main() {
         loadTradeUI(autoTradeContent);
 
         // Auto Storage
-        let autoStorageDesc = 'Allocates crates and containers to resources based on priority. Also as a minimum storage setting for steel and other resources that need initial storage.';
+        let autoStorageDesc = 'Allocates crates and containers to resources based on priority. Also has a minimum storage setting for steel and other resources that need initial storage.';
         let [autoStorageTitle, autoStorageContent] = createAutoSettingToggle('autoStorage', 'Auto Storage', autoStorageDesc, true, tab, createStorageSettings, removeStorageSettings);
         loadStorageUI(autoStorageContent);
+
+        // Auto Ejector
+        let autoEjectorDesc = 'Automatically ejects resources to maximize ejection volume. Full resources will override the enable setting (If a resource is full, it\'ll be seen as enabled). Enabling a resource will eject the resource until the rate is close to 0.';
+        let [autoEjectorTitle, autoEjectorContent] = createAutoSettingToggle('autoEjector', 'Auto Ejector', autoEjectorDesc, true, tab, createEjectorSettings, removeEjectorSettings);
+        loadEjectorUI(autoEjectorContent);
     }
 
     function createAutoSettingBuildingPage(tab) {
