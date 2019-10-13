@@ -3223,6 +3223,8 @@ function main() {
             if (!arpas[x].unlocked) {continue;}
             // Don't add ARPAs that are not enabled
             if (!arpas[x].enabled) {continue;}
+            // Don't check ARPAs that met their limit
+            if (arpas[x].limit != -1 && arpas[x].numTotal >= arpas[x].limit) {continue;}
             arpa.push(arpas[x]);
         }
         return arpa;
