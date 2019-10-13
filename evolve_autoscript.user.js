@@ -3634,6 +3634,7 @@ function main() {
     *
     ***/
 
+    let toolTipClass = 'is-primary is-bottom is-small b-tooltip is-animated is-multiline';
     function createNumControl(currentValue, name, subFunc, addFunc) {
         let subBtn = $(`<span role="button" aria-label="Decrease ${name}" class="sub">«</span>`);
         let label = $(`<span id="${name}_control" class="count current" style="width:2rem;">${currentValue}</span>`);
@@ -4933,8 +4934,8 @@ function main() {
             building.incAtLeast();
             return building.atLeast;
         }
-        let atLeastControls = createNumControl(building.atLeast, building.id+'-at-least', atLeastSub, atLeastAdd);
-        let atLeastDiv = $('<div style="width:10%;" title="'+building.id+' At Least"></div>');
+        let atLeastControls = createNumControl(building.atLeast, building.id+'-min', atLeastSub, atLeastAdd);
+        let atLeastDiv = $('<div style="width:10%;" title="'+building.id+' Minimum"></div>');
         atLeastDiv.append(atLeastControls);
         buildingDiv.append(atLeastDiv);
 
@@ -4947,8 +4948,8 @@ function main() {
             building.incLimit();
             return building.limit;
         }
-        let limControls = createNumControl(building.limit, building.id+'-limit', limSub, limAdd);
-        let limDiv = $('<div style="width:10%;" title="'+building.id+' Limit"></div>');
+        let limControls = createNumControl(building.limit, building.id+'-max', limSub, limAdd);
+        let limDiv = $('<div style="width:10%;" title="'+building.id+' Maximum"></div>');
         limDiv.append(limControls);
         buildingDiv.append(limDiv);
 
@@ -5012,7 +5013,7 @@ function main() {
             } else {
                 name = action.name;
             }
-            let nameDiv = $('<span style="width:20%;" title="'+action.id+'">'+name+'</span>');
+            let nameDiv = $(`<span class="${toolTipClass}" style="width:20%;" data-label="Id:${action.id}, Loc:${action.loc[action.loc.length-1]}">${name}</span>`);
             nameDiv[0].classList.add(action.color);
             actionDiv.append(nameDiv);
 
@@ -5125,13 +5126,13 @@ function main() {
 
         let priorityList = $('<div id="priorityList"></div>');
         let priorityListLabel = $(`<div style="display:flex;">
-                                    <span class="name has-text-warning" style="width:20%;text-align:left;padding-left:1rem;" title="Action Name. Can be lowercase id if not currently available">Action</span>
-                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Sets the priority of this action">Priority</span>
-                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Enables this action for being automatically taken">Enabled</span>
-                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Will focus on buying this amount of this building before anything else.">At Least</span>
-                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Will stop building this building after reaching this limit">Limit</span>
-                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span>
-                                    <span class="name has-text-warning" style="width:10%;text-align:left;padding-left:1rem;" title="Sets the priority for powering this building">Power</span>
+                                    <div style="width:20%;text-align:left;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Action Name. Can be lowercase id if not currently available">Action</span></div>
+                                    <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the priority of this action">Priority</span></div>
+                                    <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Enables this action for being automatically taken">Enabled</span></div>
+                                    <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will focus on buying this amount of this building before anything else.">Min</span></div>
+                                    <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will stop building this building after reaching this limit">Max</span></div>
+                                    <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span></div>
+                                    <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the priority for powering this building">Power</span></div>
                                     </div>`);
         priorityList.append(priorityListLabel);
         settingsTab.append(priorityList);

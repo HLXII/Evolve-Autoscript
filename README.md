@@ -20,9 +20,9 @@ The inline Auto Employ settings don't update after a job is unlocked. You can fi
 * Add install instructions to README
 * Maybe add sacrifical alter? Never played new mantis yet
 * Add multiplier functionality to custom UI
-* Add hover text to some labels for more details (see Reset UI button for dom class and syntax)
 * Add setting to display/hide inline UI
 * Add quick menu under resources (non-specific buttons)
+* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle, ...?idk)
 
 ## Large
 * Auto Fortress
