@@ -1659,36 +1659,12 @@ function main() {
     let dnaBtn = null;
     let slaughterBtn = null;
     function loadFarm () {
-        try {
-            foodBtn = document.getElementById("city-food").getElementsByTagName("a")[0];
-        } catch(e) {
-            //console.log("Error: Food button could not be loaded");
-        }
-        try {
-            lumberBtn = document.getElementById("city-lumber").getElementsByTagName("a")[0];
-        } catch(e) {
-            //console.log("Error: Lumber button could not be loaded");
-        }
-        try {
-            stoneBtn = document.getElementById("city-stone").getElementsByTagName("a")[0];
-        } catch(e) {
-            //console.log("Error :Stone button could not be loaded");
-        }
-        try {
-            rnaBtn = document.getElementById("evo-rna").getElementsByTagName("a")[0];
-        } catch(e) {
-            //console.log("Error: RNA button could not be loaded");
-        }
-        try {
-            dnaBtn = document.getElementById("evo-dna").getElementsByTagName("a")[0];
-        } catch(e) {
-            //console.log("Error :DNA button could not be loaded");
-        }
-        try {
-            slaughterBtn = document.getElementById("city-slaughter").getElementsByTagName("a")[0];
-        } catch(e) {
-            //console.log("Error :DNA button could not be loaded");
-        }
+        rnaBtn = document.querySelector('#evo-rna > a');
+        dnaBtn = document.querySelector('#evo-dna > a');
+        foodBtn = document.querySelector('#city-food > a');
+        lumberBtn = document.querySelector('#city-lumber > a');
+        stoneBtn = document.querySelector('#city-stone > a');
+        slaughterBtn = document.querySelector('#city-slaughter > a');
     }
 
     function loadSmelter() {
@@ -3496,10 +3472,8 @@ function main() {
                 if (clicked) {
                     if (settings.autoPrint) {
                         messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
-                        //if (action.id == 'tech-mad') {
-                        //    settings.log.push(getTotalGameDays());
-                        //}
                     }
+                    resetUICheck(action);
                     break;
                 }
             }
@@ -3724,6 +3698,15 @@ function main() {
         return {seq:allocationList,alloc:curNum,total:totalAllocated};
     }
 
+    function resetUICheck(action) {
+        switch(action.id) {
+            case 'tech-club':
+            case 'tech-bone_tools':
+                loadFarm();
+                break;
+        }
+    }
+
     let count = 1;
     function fastAutomate() {
         console.clear();
@@ -3738,6 +3721,8 @@ function main() {
             // Evolution Automation
             if(settings.autoEvolution) {
                 autoEvolution();
+                // Loading buttons again to get DNA button
+                loadFarm();
             }
         } else {
             // Civilization Automation
