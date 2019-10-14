@@ -4529,6 +4529,7 @@ function main() {
 
         let minMoraleSub = function(mult) {
             settings.minimumMorale -= mult;
+            if (settings.minimumMorale < 50) {settings.minimumMorale = 50;}
             return settings.minimumMorale;
         }
         let minMoraleAdd = function(mult) {
@@ -4902,6 +4903,7 @@ function main() {
             }
             let resSub = function(mult) {
                 settings.smelterSettings[res] -= mult;
+                if (settings.smelterSettings[res] < 0) {settings.smelterSettings[res] = 0;}
                 return settings.smelterSettings[res];
             }
             let resAdd = function(mult) {
@@ -4933,6 +4935,7 @@ function main() {
             }
             let resSub = function(mult) {
                 settings.factorySettings[res] -= mult;
+                if (settings.factorySettings[res] < 0) {settings.factorySettings[res] = 0;}
                 return settings.factorySettings[res];
             }
             let resAdd = function(mult) {

@@ -9,9 +9,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 # Stuff to do
 
 ## Bugfix
-* Some custom UI needs to be set to have a minimum of 0
-* Priority list tech shows up when not available. Need to add more requirements than just tech to the unlocked function
-* Master Craftsman doesn't get unlocked. This is due to demonic_craftsman and master_craftsman tech having the same id but different locations.
 * Check on Auto Support bug
 
 ## Small
