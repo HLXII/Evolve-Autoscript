@@ -730,11 +730,15 @@ function main() {
         var isMet = true;
         if (c_action['power_reqs']){
             Object.keys(c_action.power_reqs).forEach(function (req){
-                if (window.game.global.tech[req] && window.game.global.tech[req] < c_action.power_reqs[req]){
+                if (!window.game.global.tech.hasOwnProperty(req)) {
+                    isMet = false;
+                }
+                else if (window.game.global.tech[req] < c_action.power_reqs[req]){
                     isMet = false;
                 }
             });
         }
+
         return isMet;
     }
     function getPowerData(id, def) {
@@ -3205,9 +3209,9 @@ function main() {
 
         let allocation = allocate(totalPowered,priorities,ratios,{max:maxes,requireFunc:canTurnOn,allocFunc:turnOn})
 
-        //console.log(powered, priorities, ratios);
+        console.log("POWERED:", powered, "PRIO:", priorities, "RATIO:", ratios);
         console.log("SUPPORT ALLOC:", allocation);
-        //console.log(support);
+        console.log("REMAIN:", support);
 
         // Allocating
         for (let i = 0;i < powered.length;i++) {
