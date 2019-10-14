@@ -600,7 +600,7 @@ function main() {
         }
 
         get unlocked() {
-            return this.label !== null;
+            return window.game.vues[this.id] !== undefined;
         }
         get name() {
             let title = this.def.title;
@@ -665,10 +665,6 @@ function main() {
         set limit(limit) {settings.actions[this.id].limit = limit;}
         get softCap() {return settings.actions[this.id].softCap;}
         set softCap(softCap) {settings.actions[this.id].softCap = softCap;}
-
-        get unlocked() {
-            return this.data !== null;
-        }
 
         get priority() {
             // Setting priority to 100 if building hasn't reached the At Least value
@@ -1157,7 +1153,19 @@ function main() {
         }
 
         get unlocked() {
-            return window.game.techUnlocked(this.loc[this.loc.length-1]);
+            // Remove old/disabled research
+            let [grant, val] = this.def.grant;
+            let old = false;
+            if (window.game.global.tech[grant] === undefined) {
+                old = true;
+            }
+            else if (window.game.global.tech[grant] >= val) {
+                old = true;
+            }
+            // Remove locked research
+            let notLocked = window.game.techUnlocked(this.loc[this.loc.length-1]);
+
+            return !old && notLocked;
         }
 
         get researched() {
