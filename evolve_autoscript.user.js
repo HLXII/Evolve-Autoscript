@@ -1209,6 +1209,14 @@ function main() {
             return this.label.innerText;
         }
 
+        get unlocked() {
+            if (!window.game.global.arpa.hasOwnProperty(this.id)) {return false;}
+            if (this.id === 'launch_facility') {
+                return window.game.global.arpa[this.id].rank !== 1;
+            }
+            return true;
+        }
+
         get numTotal() {
             if (window.game.global.arpa[this.id] !== undefined) {
                 return window.game.global.arpa[this.id].rank
