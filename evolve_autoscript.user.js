@@ -83,6 +83,7 @@ function main() {
                           "evo-mantis", "evo-scorpid", "evo-antid",
                           "evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp",'evo-seraph','evo-unicorn'];
     let evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
+    let evoHardChallengeActions = ['evo-junker', 'evo-joyless', 'evo-decay'];
     let evoUniverses = ['uni-standard','uni-heavy','uni-antimatter','uni-evil','uni-micro'];
     let evoRaceTrees = {
         "entish":["evo-chloroplasts", "evo-entish"],
@@ -2008,7 +2009,14 @@ function main() {
             if(evoRaceActions.includes(action.id) && !evoRaceTrees[settings.evolution].includes(action.id)) {continue;}
             let newPriority = 0;
             if (evoChallengeActions.includes(action.id)) {
-                newPriority = 10;
+                if (evoHardChallengeActions.includes(action.id)) {
+                    newPriority = 2;
+                }
+                else {
+                    if (!action.classList.contains('hl')) {
+                        newPriority = 10;
+                    }
+                }
             } else if (evoRaceActions.includes(action.id)) {
                 newPriority = 5;
             } else if (action.id == 'evo-sentience') {
