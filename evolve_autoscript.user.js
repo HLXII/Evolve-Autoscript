@@ -601,7 +601,7 @@ function main() {
         }
 
         get unlocked() {
-            return window.game.vues[this.id] !== undefined;
+            return this.label !== null;
         }
         get name() {
             let title = this.def.title;
@@ -673,6 +673,10 @@ function main() {
                 return 100;
             }
             return this.basePriority;
+        }
+
+        get unlocked() {
+            return window.game.vues[this.id] !== undefined;
         }
 
         get numTotal() {
@@ -1153,8 +1157,7 @@ function main() {
             this.color = 'has-text-danger';
         }
 
-        get unlocked() {
-            // Remove old/disabled research
+        get researched() {
             let [grant, val] = this.def.grant;
             let old = false;
             if (window.game.global.tech[grant] === undefined) {
@@ -1163,20 +1166,6 @@ function main() {
             else if (window.game.global.tech[grant] >= val) {
                 old = true;
             }
-            // Remove locked research
-            let notLocked = window.game.techUnlocked(this.loc[this.loc.length-1]);
-
-            return !old && notLocked;
-        }
-
-        get researched() {
-            let researched = $('#oldTech > div');
-            for (let i = 0;i < researched.length;i++) {
-                if (this.id == researched[i].id) {
-                    return true;
-                }
-            }
-            return false;
         }
     }
     var researches = {};
