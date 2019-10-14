@@ -9,12 +9,11 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 # Stuff to do
 
 ## Bugfix
-* Check on Auto Support bug
 
 ## Small
 * Update autoCraft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
 * Add click rate setting for Auto Farm
-* Add granularity to Auto Print (Auto Priority / Auto Settings / Auto Battle / ???)
+* Add granularity to Auto Print (Auto Settings / Auto Battle / ???)
 * Add install instructions to README
 * Maybe add sacrifical alter? Never played new mantis yet
 * Add setting to display/hide inline UI

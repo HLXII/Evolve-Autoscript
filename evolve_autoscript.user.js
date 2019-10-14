@@ -1707,6 +1707,8 @@ function main() {
         if (!settings.factorySettings.hasOwnProperty('Stanene')) {settings.factorySettings.Stanene = 4;}
     }
 
+    let printSettings = ['Buildings','Researches','Misc'];
+
     /***
     *
     * Settings
@@ -1741,6 +1743,14 @@ function main() {
 
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
+        }
+        if (!settings.hasOwnProperty('printSettings')) {
+            settings.printSettings = {};
+        }
+        for (let i = 0;i < printSettings.length;i++) {
+            if (!settings.hasOwnProperty(printSettings[i])) {
+                settings.printSettings[printSettings[i]] = true;
+            }
         }
         if (!settings.hasOwnProperty('autoFarm')) {
             settings.autoFarm = false;
@@ -3499,7 +3509,22 @@ function main() {
                 }
                 if (clicked) {
                     if (settings.autoPrint) {
-                        messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
+                        if (action instanceof Building && !(action instanceof ArpaAction)) {
+                            if (settings.printSettings.Buildings) {
+                                messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
+                            }
+                        }
+                        else if (action instanceof Research) {
+                            if (settings.printSettings.Researches) {
+                                messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
+                            }
+                        }
+                        else {
+                            if (settings.printSettings.Misc) {
+                                messageQueue(getTotalGameDays().toString() + " [AUTO-PRIORITY] " + action.name, 'warning');
+                            }
+                        }
+
                     }
                     resetUICheck(action);
                     break;
@@ -3910,13 +3935,22 @@ function main() {
         option.append(decision);
         return option;
     }
-    function createCheckBoxControl(currentValue, id, name, enabledCallBack, disabledCallBack) {
+    function createCheckBoxControl(currentValue, id, name, args) {
+        args = args || {};
         let checkBox = $(`
         <label class="b-checkbox checkbox" id="${id}">
         <input type="checkbox" true-value="Yes" false-value="No" value="false">
         <span class="check is-dark"></span>
         <span class="control-label">${name}</span>
         </label>`);
+        let setting = settings;
+        if (args.hasOwnProperty('path')) {
+            setting = args.path[0];
+            for (let i = 1;i < args.path.length-1;i++) {
+                setting = setting[args.path[i]];
+            }
+            id = args.path[args.path.length-1];
+        }
         checkBox.children('input').on('click', function(e){
             if (e.which != 1) {return;}
             let input = e.currentTarget;
@@ -3925,10 +3959,10 @@ function main() {
             settings[id] = state;
             console.log("Setting", id, "to", state);
             updateSettings();
-            if(state && enabledCallBack !== undefined){
-                enabledCallBack();
-            } else if(disabledCallBack !== undefined){
-                disabledCallBack()
+            if (state && args.enabledCallBack !== undefined){
+                args.enabledCallBack();
+            } else if(args.disabledCallBack !== undefined){
+                args.disabledCallBack()
             }
         });
         if(settings[id]){
@@ -4382,8 +4416,24 @@ function main() {
     function createAutoSettingGeneralPage(tab) {
 
         // Auto Print
-        let autoPrintDesc = 'Prints out script details in the script printing window. I may add more granularity in the print settings later on, but currently it only prints Auto Priority messages.';
-        let [autoPrintTitle, autoPrintContent] = createAutoSettingToggle('autoPrint', 'Auto Print', autoPrintDesc, false, tab);
+        let autoPrintDesc = 'Prints out script details in the script printing window. Currently only action details are implemented. Toggle to ignore certain actions from appearing in the message queue.';
+        let [autoPrintTitle, autoPrintContent] = createAutoSettingToggle('autoPrint', 'Auto Print', autoPrintDesc, true, tab);
+
+        let printOption = $('<div style="display:flex;"></div>');
+        autoPrintContent.append(printOption);
+        printOption.append($('<span class="has-text-warning" style="width:12rem;">Print Settings:</span>'));
+        let printToggles = $('<div></div>');
+        printOption.append(printToggles);
+        for (let i = 0;i < printSettings.length;i++) {
+            let toggleVal = settings.printSettings[printSettings[i]];
+            let toggleId = printSettings[i];
+            let str = evoChallengeActions[i].split('-')[1];
+            let toggleName = printSettings[i];
+            let toggle = createCheckBoxControl(toggleVal, toggleId, toggleName, {path:[settings, 'printSettings', toggleId]});
+            let toggleDiv = $('<div></div>');
+            toggleDiv.append(toggle);
+            printToggles.append(toggleDiv);
+        }
 
         // Auto Farm
         let autoFarmDesc = 'Auto-clicks the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
@@ -5307,10 +5357,10 @@ function main() {
         sort.on('change', updatePriorityList);
         topLeft.append(search).append(sortLabel).append(sort);
 
-        let showAll = createCheckBoxControl(settings.showAll, 'showAll', 'Show All', updatePriorityList, updatePriorityList);
-        let showBuilding = createCheckBoxControl(settings.showBuilding, 'showBuilding', 'Show Buildings', updatePriorityList, updatePriorityList);
-        let showResearch = createCheckBoxControl(settings.showResearch, 'showResearch', 'Show Researches', updatePriorityList, updatePriorityList);
-        let showMisc = createCheckBoxControl(settings.showMisc, 'showMisc', 'Show Misc.', updatePriorityList, updatePriorityList);
+        let showAll = createCheckBoxControl(settings.showAll, 'showAll', 'Show All', {enabledCallBack:updatePriorityList, disabledCallBack:updatePriorityList});
+        let showBuilding = createCheckBoxControl(settings.showBuilding, 'showBuilding', 'Show Buildings', {enabledCallBack:updatePriorityList, disabledCallBack:updatePriorityList});
+        let showResearch = createCheckBoxControl(settings.showResearch, 'showResearch', 'Show Researches', {enabledCallBack:updatePriorityList, disabledCallBack:updatePriorityList});
+        let showMisc = createCheckBoxControl(settings.showMisc, 'showMisc', 'Show Misc.', {enabledCallBack:updatePriorityList, disabledCallBack:updatePriorityList});
         bottomLeft.append(showAll).append(showBuilding).append(showResearch).append(showMisc);
 
         let enableLabel = $('<span style="padding-right:10px;">Enable:</span>');
