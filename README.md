@@ -1,6 +1,11 @@
 # Evolve-Autoscript
 My personal userscript for the game Evolve by Demagorddon - https://pmotschmann.github.io/Evolve/
 
+# Installation
+Install the [Tampermonkey]{tampermonkey.net} plugin. (I tried my script with Greasemonkey but it didn't work).
+
+Goto this [page](https://github.com/HLXII/Evolve-Autoscript/raw/master/evolve_autoscript.user.js) to install the plugin. Tampermonkey should redirect you to an install page. Or just create a new script in Tampermonkey and copy/paste this script into the editor.
+
 # Known Issues (AKA I won't fix)
 If the game is run for long enough without refreshing, then clicking buttons on the modal windows (smelter, factory, etc) will lag the game. I don't know why this is, and I don't know how to fix it. So... I added an Auto Refresh setting to reload the page every 200 seconds. Use if you want (but most people don't).
 
@@ -14,7 +19,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Update autoCraft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
 * Add click rate setting for Auto Farm
 * Add granularity to Auto Print (Auto Settings / Auto Battle / ???)
-* Add install instructions to README
 * Add Sacrifical Alter to MiscActions
 * Add Slave Market to MiscActions
 * Add setting to display/hide inline UI
