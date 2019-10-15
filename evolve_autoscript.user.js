@@ -1754,6 +1754,9 @@ function main() {
         if (!settings.hasOwnProperty('autoFarm')) {
             settings.autoFarm = false;
         }
+        if (!settings.hasOwnProperty('farmRate')) {
+            settings.farmRate = 10;
+        }
         if (!settings.hasOwnProperty('autoRefresh')) {
             settings.autoRefresh = false;
         }
@@ -1909,7 +1912,8 @@ function main() {
     let farmInterval = null;
     function autoFarm() {
         if(settings.autoFarm && farmInterval === null) {
-            farmInterval = setInterval(farm, 10);
+            console.log("Setting farm interval");
+            farmInterval = setInterval(farm, settings.farmRate);
         } else {
             if (!settings.autoFarm && !(farmInterval === null)) {
                 clearInterval(farmInterval);
@@ -4061,6 +4065,7 @@ function main() {
             if (val === null) {input.val(setting[id]);return;}
             console.log(`Setting input ${name} to ${val}`);
             setting[id] = val;
+            input.val(val);
             updateSettings();
             // CallBack function
             if (args.setFunc !== undefined) {args.setFunc(setting.id);}
@@ -4528,7 +4533,8 @@ function main() {
 
         let printOption = $('<div style="display:flex;"></div>');
         autoPrintContent.append(printOption);
-        printOption.append($('<span class="has-text-warning" style="width:12rem;">Print Settings:</span>'));
+        let printToolTip = 'Checking these will send the print messages to the script message queue.';
+        printOption.append($(`<div><span class="has-text-warning ${toolTipClass}" style="width:12rem;" data-label="${printToolTip}">Print Settings:</span></div>`));
         let printToggles = $('<div></div>');
         printOption.append(printToggles);
         for (let i = 0;i < printSettings.length;i++) {
@@ -4543,8 +4549,28 @@ function main() {
         }
 
         // Auto Farm
-        let autoFarmDesc = 'Auto-clicks the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Currently clicks ~100/s. I may add a setting to change this.';
-        let [autoFarmTitle, autoFarmContent] = createAutoSettingToggle('autoFarm', 'Auto Farm', autoFarmDesc, false, tab);
+        let autoFarmDesc = 'Auto-clicks the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Defaults to click at 100/s (10 ms).';
+        let [autoFarmTitle, autoFarmContent] = createAutoSettingToggle('autoFarm', 'Auto Farm', autoFarmDesc, true, tab);
+
+        let farmRate = $('<div style="display:flex;"></div>');
+        autoFarmContent.append(farmRate);
+        let farmToolTip = 'Determines how fast the manual buttons will be clicked (every # milliseconds)';
+        farmRate.append($(`<div><span class="has-text-warning ${toolTipClass}" style="width:12rem;" data-label="${farmToolTip}">Farm Rate:</span></div>`));
+        let convertFunc = function(val) {
+            if (isNaN(val)) {return null;}
+            val = parseInt(val);
+            if (val <= 0) {return null;}
+            return val;
+        }
+        let setFunc = function(val) {
+            // Clearing farmInterval to refresh with new farm rate
+            if (farmInterval !== null) {
+                clearInterval(farmInterval);
+                farmInterval = null;
+            }
+        }
+        let farmRateInput = createInputControl(settings.farmRate, 'farmRate', 'Farm Rate', {convertFunc:convertFunc,setFunc:setFunc});
+        farmRate.append(farmRateInput);
 
         // Auto Refresh
         let autoRefreshDesc = 'Automatically reloads the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
