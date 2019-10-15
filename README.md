@@ -18,7 +18,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 # Stuff to do
 
 ## Bugfix
-* Auto Evolution should break on Hard Challenges since Decay and Joyless are now toggles (but Junker isn't). Need to update script to accomodate.
 
 ## Small
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger

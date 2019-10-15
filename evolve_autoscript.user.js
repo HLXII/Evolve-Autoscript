@@ -4037,6 +4037,36 @@ function main() {
         }
         return checkBox;
     }
+    function createInputControl(currentValue, id, name, args) {
+        args = args || {};
+        let div = $(`<div style="display:flex"></div>`);
+        let input = $(`<input type="text" class="input is-small" id="${id}_input" style="width:10rem;"/>`);
+        div.append(input);
+        let setting = settings;
+        if (args.hasOwnProperty('path')) {
+            setting = args.path[0];
+            for (let i = 1;i < args.path.length-1;i++) {
+                setting = setting[args.path[i]];
+            }
+            id = args.path[args.path.length-1];
+        }
+        input.val(currentValue);
+        let setBtn = $(`<a class="button is-dark is-small" id="${id}_input_set" style="width:2rem;"><span>Set</span></a>`);
+        div.append(setBtn);
+        setBtn.on('click', function(e) {
+            if (e.which != 1) {return;}
+            let val = input.val();
+            // Converting input
+            if (args.convertFunc !== undefined) {val = args.convertFunc(val);}
+            if (val === null) {input.val(setting[id]);return;}
+            console.log(`Setting input ${name} to ${val}`);
+            setting[id] = val;
+            updateSettings();
+            // CallBack function
+            if (args.setFunc !== undefined) {args.setFunc(setting.id);}
+        });
+        return div;
+    }
 
     function updateUI(){
         if ($('.as-autolog').length == 0) {
@@ -4683,24 +4713,17 @@ function main() {
 
         let minWinRateDiv = $('<div style="display:flex;"></div>');
         autoBattleContent.append(minWinRateDiv);
-        autoBattleContent.append($('<br></br>'));
         let minWinRateTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Win Rate:</span>')
         minWinRateDiv.append(minWinRateTxt);
-        let minWinRateInput = $('<input type="text" class="input is-small" style="width:10rem;"/>');
-        minWinRateInput.val(settings.minWinRate);
+        let convertFunc = function(val) {
+            if (isNaN(val)) {return null;}
+            val = parseFloat(val);
+            if (val < 0 || val > 100) {return null;}
+            return val;
+        }
+        let minWinRateInput = createInputControl(settings.minWinRate, 'minWinRate', 'Minimum Win Rate', {convertFunc:convertFunc});
         minWinRateDiv.append(minWinRateInput);
-        let setBtn = $('<a class="button is-dark is-small" id="set-min-winrate" style="width:2rem;"><span>Set</span></a>');
-        minWinRateDiv.append(setBtn);
-        setBtn.on('click', function(e) {
-            if (e.which != 1) {return;}
-            let val = minWinRateInput.val();
-            let minWinRate = getRealValue(val);
-            if(!isNaN(minWinRate) && minWinRate >= 0 && minWinRate <= 100){
-                console.log("Setting minimum win rate", minWinRate);
-                settings.minWinRate = minWinRate;
-                updateSettings();
-            }
-        });
+        autoBattleContent.append($('<br></br>'));
 
         let woundedCheckStr = 'Enable "Check Wounded" to wait for no wounded soldiers before battle. Uncheck to start battles as soon as there are enough healthy soldiers to fight. Unchecked causes slightly more lag due to the fact that the algorithm continuously manipulates the garrison.';
         let woundedCheckDetails = $(`<div><span>${woundedCheckStr}</span></div>`);
@@ -4996,23 +5019,17 @@ function main() {
 
         let minMoneyDiv = $('<div style="display:flex;"></div>');
         autoMarketContent.append(minMoneyDiv);
-        let minMoneyTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Money:</span>')
+        let minMoneyTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Money:</span>');
         minMoneyDiv.append(minMoneyTxt);
-        let minMoneyInput = $('<input type="text" class="input is-small" style="width:10rem;"/>');
-        minMoneyInput.val(settings.minimumMoney);
-        minMoneyDiv.append(minMoneyInput);
-        let setBtn = $('<a class="button is-dark is-small" id="set-min-money" style="width:2rem;"><span>Set</span></a>');
-        minMoneyDiv.append(setBtn);
-        setBtn.on('click', function(e) {
-            if (e.which != 1) {return;}
-            let val = minMoneyInput.val();
-            let minMoney = getRealValue(val);
-            if(!isNaN(minMoney)){
-                console.log("Setting minimum Money", minMoney);
-                settings.minimumMoney = minMoney;
-                updateSettings();
+        let convertFunc = function(val) {
+            val = getRealValue(val);
+            if (!isNaN(val)) {
+                return val;
             }
-        });
+            return null;
+        }
+        let minMoneyInput = createInputControl(settings.minimumMoney, 'minimumMoney', 'Minimum Money', {convertFunc:convertFunc});
+        minMoneyDiv.append(minMoneyInput);
 
         // Auto Trade
         let autoTradeDesc = 'Allocates trade routes based on the trade priority (as well as Auto Prioritize).';
@@ -5443,8 +5460,7 @@ function main() {
         let bottomLeft = $('<div id="prioritySettingsBottomLeft"></div>');
         let topRight = $('<div id="prioritySettingsTopRight" style="float:right"></div>');
         let bottomRight = $('<div id="prioritySettingsBottomRight"></div>');
-
-        let search = $('<input type="text" id="priorityInput" placeholder="Search for actions (ex: \'iron loc:city res:money\')" style="width:400px;">');
+        let search = $('<input type="text" id="priorityInput" placeholder="Search for actions (ex: \'iron loc:city res:money\')" style="width:20rem;">');
         search.on('input', updatePriorityList);
         let sortLabel = $('<span style="padding-left:20px;padding-right:20px;">Sort:</span>');
         let sort = $('<select style="width:110px;" id="prioritySort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option><option value="powerPriority">Power Priority</option></select>');
