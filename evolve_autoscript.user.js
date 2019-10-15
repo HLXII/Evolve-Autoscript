@@ -3783,29 +3783,30 @@ function main() {
         for (let i = 0;i < priorities.length;i++) {curNum.push(0);}
         for (let i = 0;i < totalNum;i++) {
             let total = i+1;
-            // Calculating error based on next value choice
-            let prevError = 0;
+            let error = null;
+            let choice = null;
             for (let j = 0;j < priorities.length;j++) {
-                prevError = ((curNum[j] / total) - ratios[j]) ** 2;
-            }
-            let error = -1;
-            let choice = -1;
-            for (let j = 0;j < priorities.length;j++) {
+                // Ignoring zero priority zero ratio choices
                 if (priorities[j] == 0 || ratios[j] == 0) {continue;}
+                // Checking requirement function
                 if (args.hasOwnProperty('requireFunc') && !args.requireFunc(j, curNum[j])) {continue;}
+                // Checking maxes
                 if (args.hasOwnProperty('max') && args.max[j] != -1 && curNum[j] >= args.max[j]) {continue;}
-                let tempError = prevError;
-                tempError -= ((curNum[j] / total) - ratios[j]) ** 2;
-                tempError += (((curNum[j]+1) / total) - ratios[j]) ** 2;
+                // Finding error differential
+                let tempError = (((curNum[j]+1) / total) - ratios[j]) ** 2 - ((curNum[j] / total) - ratios[j]) ** 2;
 
-                if (args.hasOwnProperty('min') && curNum[j] < args.min[j]) {tempError = 0;}
+                // Checking mins
+                if (args.hasOwnProperty('min') && curNum[j] < args.min[j]) {
+                    choice = j;
+                    break;
+                }
 
-                if (error == -1 || tempError < error) {
+                if (error === null || tempError < error) {
                     error = tempError;
                     choice = j;
                 }
             }
-            if (choice == -1) {
+            if (choice === null) {
                 break;
             }
             allocationList[i] = choice;

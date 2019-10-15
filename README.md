@@ -21,7 +21,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 
 ## Small
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
-* Implement Auto Farm click rate setting
 * Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market / Auto <Buildings>)
 * Add Sacrifical Alter to MiscActions (Priority setting will be useless, add special setting for max population gap)
 * Add Slave Market to MiscActions
@@ -30,7 +29,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle)
 * Add Auto Ejector inline settings
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy amount, mercs max money)
-* Optimize allocate function (Can remove initial prevError calc and choose allocation by differential)
 * Optimize researched function (Can use querySelector or somehow use the vues/def)
 * Optimize UI clicks with multiplier buttons
 * Add Auto Battle campaign run fall timer (If checkWounded is unchecked or if you don't have enough soldiers, the run campaign check runs infinitely. If a successful campaign can't be found, set a wait timer so it doesn't infinitely loop and hog clicks)
