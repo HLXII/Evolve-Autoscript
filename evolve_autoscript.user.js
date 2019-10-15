@@ -4080,7 +4080,7 @@ function main() {
             loadStorageUI();
             return resources[id].storePriority;
         }
-        let priorityAdd = function() {
+        let priorityAdd = function(mult) {
             resources[id].incStorePriority(mult);
             loadStorageUI();
             return resources[id].storePriority;
@@ -4845,7 +4845,7 @@ function main() {
             let storePriorityDiv = $('<div style="width:12rem;"></div>');
             div.append(storePriorityDiv);
             let storePrioritySub = function(mult) {
-                resources[x].decStorePriority(mult);
+                resources[id].decStorePriority(mult);
                 createStorageSettings();
                 return resources[id].storePriority;
             }
