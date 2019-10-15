@@ -29,3 +29,4 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Once refactored, add way of viewing priority queue (probably on demand, since loading the DOM will be expensive)
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits) (AutoEmploy, AutoTax, AutoCraft[?], AutoTrade, AutoSupport, AutoSmelter, AutoFactory, AutoDroid, AutoGraphene)
 * Auto Gene
+* Cheat Menu (Demagorddon plz ignore). Will allow editing the global variable of the save. Hopefully for people wanting to restore some lost resources or fixing a save bug.
