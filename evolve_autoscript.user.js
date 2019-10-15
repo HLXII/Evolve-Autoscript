@@ -2069,9 +2069,9 @@ function main() {
             return b.storePriority - a.storePriority;
         });
 
-        console.log("Current Crate Usage", totalCrates);
-        console.log("Current Container Usage", totalContainers);
-        console.log(storage);
+        //console.log("Current Crate Usage", totalCrates);
+        //console.log("Current Container Usage", totalContainers);
+        //console.log(storage);
         // Getting minStorage
         let minStorage = [];
         for (let i = 0;i < storage.length;i++) {if (storage[i].storeMin != 0) {minStorage.push(storage[i]);}}
@@ -2111,7 +2111,7 @@ function main() {
             storage[i].wanted_containers = givenContainers;
             remainingContainers -= givenContainers;
 
-            console.log(storage[i].name, "CR_WANT", storage[i].wanted_crates, "CO_WANT", storage[i].wanted_containers);
+            //console.log(storage[i].name, "CR_WANT", storage[i].wanted_crates, "CO_WANT", storage[i].wanted_containers);
         }
 
         // Removing extra storage
@@ -4102,6 +4102,19 @@ function main() {
         let minControls = createNumControl(resources[id].storeMin, id+"-store-min", minSub, minAdd);
         div.append(minControls)
 
+        let maxSub = function(mult) {
+            resources[id].decStoreMax(mult);
+            loadStorageUI();
+            return resources[id].storeMax;
+        }
+        let maxAdd = function(mult) {
+            resources[id].incStoreMax(mult);
+            loadStorageUI();
+            return resources[id].storeMax;
+        }
+        let maxControls = createNumControl(resources[id].storeMax, id+"-store-max", maxSub, maxAdd);
+        div.append(maxControls);
+
         resourceSpan.append(div);
     }
     function createStorageSettings() {
@@ -4112,7 +4125,8 @@ function main() {
         let labelSpan = $('#createHead');
         let prioLabel = $('<div class="as-storage-settings" style="display:inline-flex;margin-left:2rem"><span class="has-text-warning">Priority</span></div>');
         let minLabel = $('<div class="as-storage-settings" style="display:inline-flex;margin-left:3rem"><span class="has-text-warning">Min</span></div>');
-        labelSpan.append(prioLabel).append(minLabel);
+        let maxLabel = $('<div class="as-storage-settings" style="display:inline-flex;margin-left:3rem"><span class="has-text-warning">Max</span></div>');
+        labelSpan.append(prioLabel).append(minLabel).append(maxLabel);
         // Creating individual counters
         for (var x in resources) {
             createStorageSetting(x);
@@ -4811,6 +4825,8 @@ function main() {
         labelDiv.append(priorityLabel);
         let minLabel = $('<span class="has-text-warning" style="width:12rem;">Minimum Storage</h3>');
         labelDiv.append(minLabel);
+        let maxLabel = $('<span class="has-text-warning" style="width:12rem;">Maximum Storage</h3>');
+        labelDiv.append(maxLabel);
 
         for (var x in resources) {
             let id = x;
@@ -4856,6 +4872,21 @@ function main() {
             }
             let storeMinControl = createNumControl(resources[id].storeMin, resources[id].id+'_store_min',storeMinSub,storeMinAdd);
             storeMinDiv.append(storeMinControl);
+
+            let storeMaxDiv = $('<div style="width:12rem;"></div>');
+            div.append(storeMaxDiv);
+            let storeMaxSub = function(mult) {
+                resources[id].decStoreMax(mult);
+                createStorageSettings();
+                return resources[id].storeMax;
+            }
+            let storeMaxAdd = function(mult) {
+                resources[id].incStoreMax(mult);
+                createStorageSettings();
+                return resources[id].storeMax;
+            }
+            let storeMaxControl = createNumControl(resources[id].storeMax, resources[id].id+'_store_max',storeMaxSub,storeMaxAdd);
+            storeMaxDiv.append(storeMaxControl);
         }
     }
     function loadEjectorUI(content) {

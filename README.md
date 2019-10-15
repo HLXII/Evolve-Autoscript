@@ -20,7 +20,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Add quick menu under resources (non-specific buttons)
 * Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle, Auto Storage)
 * add Auto Ejector inline settings
-* Add max setting to AutoStorage
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy, mercs max money)
 
 ## Large
