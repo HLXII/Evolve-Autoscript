@@ -166,6 +166,7 @@ function main() {
             if (this.crateable) {
                 if (!settings.resources[this.id].hasOwnProperty('storePriority')) {settings.resources[this.id].storePriority = 0;}
                 if (!settings.resources[this.id].hasOwnProperty('storeMin')) {settings.resources[this.id].storeMin = 0;}
+                if (!settings.resources[this.id].hasOwnProperty('storeMax')) {settings.resources[this.id].storeMax = -1;}
             }
             if (this.ejectable) {
                 if (!settings.resources[this.id].hasOwnProperty('eject')) {
@@ -210,6 +211,8 @@ function main() {
         set storePriority(storePriority) {settings.resources[this.id].storePriority = storePriority;}
         get storeMin() {return settings.resources[this.id].storeMin;}
         set storeMin(storeMin) {settings.resources[this.id].storeMin = storeMin;}
+        get storeMax() {return settings.resources[this.id].storeMax;}
+        set storeMax(storeMax) {settings.resources[this.id].storeMax = storeMax;}
 
         get eject() {return settings.resources[this.id].eject;};
         set eject(eject) {settings.resources[this.id].eject = eject;};
@@ -279,47 +282,31 @@ function main() {
             return window.game.global.resource[this.id].stackable;
         }
         crateInc(num) {
-            let crateIncBtn = this.crateIncBtn;
-            if (crateIncBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    crateIncBtn.click();
-                }
-                return true;
-            } else {
-                return false;
+            num = (num === undefined) ? 1 : num;
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                window.game.vues['stack_'+this.id].addCrate(this.id);
             }
         }
         crateDec(num) {
-            let crateDecBtn = this.crateDecBtn;
-            if (crateDecBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    crateDecBtn.click();
-                }
-                return true;
-            } else {
-                return false;
+            num = (num === undefined) ? 1 : num;
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                window.game.vues['stack_'+this.id].subCrate(this.id);
             }
         }
         containerInc(num) {
-            let containerIncBtn = this.containerIncBtn;
-            if (containerIncBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    containerIncBtn.click();
-                }
-                return true;
-            } else {
-                return false;
+            num = (num === undefined) ? 1 : num;
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                window.game.vues['stack_'+this.id].addCon(this.id);
             }
         }
         containerDec(num) {
-            let containerDecBtn = this.containerDecBtn;
-            if (containerDecBtn !== null) {
-                for (let i = 0;i < num;i++) {
-                    containerDecBtn.click();
-                }
-                return true;
-            } else {
-                return false;
+            num = (num === undefined) ? 1 : num;
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                window.game.vues['stack_'+this.id].subCon(this.id);
             }
         }
 
@@ -347,6 +334,18 @@ function main() {
             this.storeMin += mult;
             updateSettings();
             console.log("Incrementing Store Minimum", this.id, this.storeMin);
+        }
+        decStoreMax(mult) {
+            if (this.storeMax == -1) {return;}
+            this.storeMax -= mult;
+            if (this.storeMax < -1) {this.storeMax = -1;}
+            updateSettings();
+            console.log("Decrementing Store Maximum", this.id, this.storeMax);
+        }
+        incStoreMax(mult) {
+            this.storeMax += mult;
+            updateSettings();
+            console.log("Incrementing Store Maximum", this.id, this.storeMax);
         }
 
         get basePriority() {return settings.resources[this.id].basePriority;}
@@ -2050,49 +2049,87 @@ function main() {
         // Don't do autoStorage if haven't unlocked storage
         if (!researched('tech-containerization')) {return;}
         // Finding values
-        let totalCrates = parseInt($('#cntCrates')[0].innerText.split(' / ')[0]);
-        let totalContainers = parseInt($('#cntContainers')[0].innerText.split(' / ')[0]);
+        let totalCrates = window.game.global.resource.Crates.amount;
+        let totalContainers = window.game.global.resource.Containers.amount;
         // Creating crateable object
-        let storage = {}
-        for (var x in resources) {
-            if (resources[x].crateable) {storage[x]=resources[x];}
-        }
-        for (var x in storage) {
-            totalCrates += storage[x].crateNum;
-            totalContainers += storage[x].containerNum;
-        }
-
-        //console.log("Current Crate Usage", totalCrates);
-        //console.log("Current Container Usage", totalContainers);
-
-        // Getting total priority
+        let storage = [];
         let totalPriority = 0;
-        for (x in storage) {totalPriority += storage[x].storePriority}
-        // Calculating crate differentials
-        for (x in storage) {
-            storage[x].wanted_crates = Math.round(totalCrates * storage[x].storePriority / totalPriority);
-            storage[x].wanted_crates = Math.max(storage[x].wanted_crates, storage[x].storeMin);
-            storage[x].needed_crates = storage[x].wanted_crates - storage[x].crateNum;
-            storage[x].wanted_containers = Math.round(totalContainers * storage[x].storePriority / totalPriority);
-            storage[x].needed_containers = storage[x].wanted_containers - storage[x].containerNum;
-            //console.log(x, "CR_WANT", storage[x].wanted_crates, "CR_NEED", storage[x].needed_crates, "CO_WANT", storage[x].wanted_containers, "CO_NEED", storage[x].needed_containers);
+        for (let x in resources) {
+            if (resources[x].unlocked && resources[x].crateable) {
+                storage.push(resources[x]);
+                totalCrates += resources[x].crateNum;
+                totalContainers += resources[x].containerNum;
+                totalPriority += resources[x].storePriority;
+
+                resources[x].wanted_crates = 0;
+                resources[x].wanted_containers = 0;
+            }
         }
+        storage.sort(function(a,b) {
+            return b.storePriority - a.storePriority;
+        });
+
+        console.log("Current Crate Usage", totalCrates);
+        console.log("Current Container Usage", totalContainers);
+        console.log(storage);
+        // Getting minStorage
+        let minStorage = [];
+        for (let i = 0;i < storage.length;i++) {if (storage[i].storeMin != 0) {minStorage.push(storage[i]);}}
+
+        let remainingCrates = totalCrates;
+        let remainingContainers = totalContainers;
+
+        // Allocating minStorage first
+        for (let i = 0;i < minStorage.length;i++) {
+            let givenCrates = Math.min(remainingCrates, minStorage[i].storeMin);
+            minStorage[i].wanted_crates += givenCrates;
+            remainingCrates -= givenCrates;
+        }
+
+        // Allocating normal storage
+        for (let i = 0;i < storage.length;i++) {
+            let givenCrates = Math.ceil(totalCrates * storage[i].storePriority / totalPriority);
+            givenCrates = Math.min(givenCrates, remainingCrates);
+            if (storage[i].storeMax != -1) {
+                givenCrates = Math.min(givenCrates, storage[i].storeMax);
+            }
+            // Has minStorage assigned
+            if (storage[i].wanted_crates != 0) {
+                givenCrates = Math.max(storage[i].wanted_crates, givenCrates);
+                remainingCrates -= givenCrates - storage[i].wanted_crates;
+                storage[i].wanted_crates = givenCrates;
+            }
+            else {
+                storage[i].wanted_crates = givenCrates;
+                remainingCrates -= givenCrates;
+            }
+            let givenContainers = Math.ceil(totalContainers * storage[i].storePriority / totalPriority);
+            givenContainers = Math.min(givenContainers, remainingContainers);
+            if (storage[i].storeMax != -1) {
+                givenContainers = Math.min(givenContainers, storage[i].storeMax);
+            }
+            storage[i].wanted_containers = givenContainers;
+            remainingContainers -= givenContainers;
+
+            console.log(storage[i].name, "CR_WANT", storage[i].wanted_crates, "CO_WANT", storage[i].wanted_containers);
+        }
+
         // Removing extra storage
-        let excessStorage = [];
-        for (x in storage) {
-            if (storage[x].needed_crates < 0) {
-                storage[x].crateDec(-storage[x].needed_crates);
+        for (let i = 0;i < storage.length;i++) {
+            if (storage[i].wanted_crates < storage[i].crateNum) {
+                storage[i].crateDec(storage[i].crateNum - storage[i].wanted_crates);
             }
-            if (researched('tech-steel_containers') && storage[x].needed_containers < 0) {
-                storage[x].containerDec(-storage[x].needed_containers);
+            if (researched('tech-steel_containers') && storage[i].wanted_containers < storage[i].containerNum) {
+                storage[i].containerDec(storage[i].containerNum - storage[i].wanted_containers);
             }
         }
-        for (x in storage) {
-            if (storage[x].needed_crates > 0) {
-                storage[x].crateInc(storage[x].needed_crates);
+        // Allocating storage
+        for (let i = 0;i < storage.length;i++) {
+            if (storage[i].wanted_crates > storage[i].crateNum) {
+                storage[i].crateInc(storage[i].wanted_crates - storage[i].crateNum);
             }
-            if (researched('tech-steel_containers') && storage[x].needed_containers > 0) {
-                storage[x].containerInc(storage[x].needed_containers);
+            if (researched('tech-steel_containers') && storage[i].wanted_containers > storage[i].containerNum) {
+                storage[i].containerInc(storage[i].wanted_containers - storage[i].containerNum);
             }
         }
     }
