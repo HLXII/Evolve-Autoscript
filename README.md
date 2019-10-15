@@ -15,10 +15,11 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Add click rate setting for Auto Farm
 * Add granularity to Auto Print (Auto Settings / Auto Battle / ???)
 * Add install instructions to README
-* Maybe add sacrifical alter? Never played new mantis yet
+* Add Sacrifical Alter to MiscActions
+* Add Slave Market to MiscActions
 * Add setting to display/hide inline UI
 * Add quick menu under resources (non-specific buttons)
-* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle, Auto Storage)
+* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle)
 * add Auto Ejector inline settings
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy, mercs max money)
 
