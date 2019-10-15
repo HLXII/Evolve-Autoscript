@@ -32,6 +32,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * add Auto Ejector inline settings
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy, mercs max money)
 * Optimize allocate function (Can remove initial prevError calc and choose allocation by differential)
+* Optmize researched function (Can use querySelector or somehow use the vues/def)
 
 ## Large
 * Auto Fortress
