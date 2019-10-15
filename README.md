@@ -36,6 +36,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Optimize UI clicks with multiplier buttons
 * Add Auto Battle campaign run fall timer (If checkWounded is unchecked or if you don't have enough soldiers, the run campaign check runs infinitely. If a successful campaign can't be found, set a wait timer so it doesn't infinitely loop and hog clicks)
 * Update Auto Tax to not suck (Need to figure out a better solution for max money)
+* Add Balorg slave catching setting to Auto Battle (If can get more slaves, override max campaign to ambush)
 
 ## Large
 * Auto Fortress - Manage hell soldiers for both defense and patrols
