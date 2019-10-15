@@ -2147,12 +2147,11 @@ function main() {
         for (let x in resources) {
             if (resources[x].ejectable) {
                 ejectables.push(resources[x]);
-                console.log(x, resources[x].ejectMass);
             }
         }
         // Sort by ejectMass
         ejectables.sort(function(a,b) {
-            return a.ejectMass - b.ejectMass;
+            return b.ejectMass - a.ejectMass;
         });
         console.log("SORTED:", ejectables);
         // Finding sequence of selling trade routes
@@ -2169,7 +2168,7 @@ function main() {
             ejectAllocation.push(ejection);
             totalEjection -= ejection;
         }
-        console.log("EJECTABLE:", ejectables, ejectAllocation, "TEST");
+        console.log("EJECTABLE:", ejectables, ejectAllocation);
         // Allocating
         for (let i = 0;i < ejectables.length;i++) {
             let res = ejectables[i];
@@ -3993,7 +3992,7 @@ function main() {
             let input = e.currentTarget;
             let state = !(input.getAttribute('value') === "true");
             input.setAttribute('value', state);
-            settings[id] = state;
+            setting[id] = state;
             console.log("Setting", id, "to", state);
             updateSettings();
             if (state && args.enabledCallBack !== undefined){
@@ -4002,7 +4001,7 @@ function main() {
                 args.disabledCallBack()
             }
         });
-        if(settings[id]){
+        if(setting[id]){
             setTimeout( function() {
                 console.log("Setting initially to true");
                 checkBox.children('span.check').click();
