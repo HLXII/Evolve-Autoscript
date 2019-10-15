@@ -21,24 +21,25 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Auto Evolution should break on Hard Challenges since Decay and Joyless are now toggles (but Junker isn't). Need to update script to accomodate.
 
 ## Small
-* Update autoCraft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
-* Add click rate setting for Auto Farm
-* Add granularity to Auto Print (Auto Settings / Auto Battle / ???)
-* Add Sacrifical Alter to MiscActions
+* Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
+* Implement Auto Farm click rate setting
+* Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market / Auto <Buildings>)
+* Add Sacrifical Alter to MiscActions (Priority setting will be useless, add special setting for max population gap)
 * Add Slave Market to MiscActions
 * Add setting to display/hide inline UI
-* Add quick menu under resources (non-specific buttons)
+* Add quick menu under resources (Script Version / Links / Reset UI / Building Manual Buttons)
 * Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle)
-* add Auto Ejector inline settings
-* Add special settings column to Priority List (percent buy for ARPA, crate/container buy, mercs max money)
+* Add Auto Ejector inline settings
+* Add special settings column to Priority List (percent buy for ARPA, crate/container buy amount, mercs max money)
 * Optimize allocate function (Can remove initial prevError calc and choose allocation by differential)
-* Optmize researched function (Can use querySelector or somehow use the vues/def)
+* Optimize researched function (Can use querySelector or somehow use the vues/def)
+* Optimize UI clicks with multiplier buttons 
 
 ## Large
-* Auto Fortress
+* Auto Fortress - Manage hell soldiers for both defense and patrols
 * Refactor priority system to use single priority queue
 * Once refactored, add way of viewing priority queue (probably on demand, since loading the DOM will be expensive)
 * Refactor Auto settings that depend on Auto Priority Limits to have Auto Priority mode and Normal Priority Mode (independent of autoPriority Limits) (AutoEmploy, AutoTax, AutoCraft[?], AutoTrade, AutoSupport, AutoSmelter, AutoFactory, AutoDroid, AutoGraphene)
-* Auto Gene
+* Auto Gene - Automatically buy traits with genes
 * Cheat Menu (Demagorddon plz ignore). Will allow editing the global variable of the save. Hopefully for people wanting to restore some lost resources or fixing a save bug.
 * Improve Auto Employ (Depending on Auto Priority for craftsman, manage morale with entertainers, manage farmers with food rate)
