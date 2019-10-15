@@ -1992,6 +1992,7 @@ function main() {
         let actions = document.querySelectorAll('#evolution .action');
         let chosenAction = null;
         let chosenPriority = 0;
+        let transition = false;
         for (let i = 0; i < actions.length; i++) {
             // Checking if purchasable
             let action = actions[i];
@@ -2005,27 +2006,49 @@ function main() {
             if(/\w+\d+/.exec(action.id) !== null) {continue;}
             // Don't take universes
             if (evoUniverses.includes(action.id)) {continue;}
-            // Check for challenge runs
-            if (evoChallengeActions.includes(action.id) && !settings[action.id]) {continue;}
             // Checking for race decision tree
             if(evoRaceActions.includes(action.id) && !evoRaceTrees[settings.evolution].includes(action.id)) {continue;}
             let newPriority = 0;
+            // If it is a challenge Action
             if (evoChallengeActions.includes(action.id)) {
+                // Hard Challenge
                 if (evoHardChallengeActions.includes(action.id)) {
-                    newPriority = 2;
+                    // Junker will start automatically
+                    if (action.id == 'evo-junker') {
+                        newPriority = 2;
+                    }
+                    // Other Hard Challenges will need to be toggled
+                    else {
+                        if (!action.classList.contains('hl') === settings[action.id]) {
+                            newPriority = 10;
+                        }
+                    }
                 }
+                // Normal Challenge
                 else {
-                    if (!action.classList.contains('hl')) {
+                    // Normal Challenges will need to be toggled
+                    if (!action.classList.contains('hl') === settings[action.id]) {
                         newPriority = 10;
                     }
                 }
-            } else if (evoRaceActions.includes(action.id)) {
-                newPriority = 5;
-            } else if (action.id == 'evo-sentience') {
+            }
+            // Race Actions
+            else if (evoRaceActions.includes(action.id)) {
+                newPriority = 6;
+                // Final race action
+                if (action.id == evoRaceActions[evoRaceActions.length-1]) {
+                    newPriority = 5;
+                }
+            }
+            // Sentience
+            else if (action.id == 'evo-sentience') {
                 newPriority = 1;
-            } else {
+            }
+            // Other actions
+            else {
                 newPriority = 20;
             }
+            // Checking if chosen action needs to be replaced
             if (newPriority > chosenPriority) {
                 chosenPriority = newPriority;
                 chosenAction = action;
@@ -2033,6 +2056,10 @@ function main() {
         }
         if (chosenAction !== null) {
             chosenAction.children[0].click();
+            if (chosenPriority <= 5) {
+                loadSettings();
+                resetUI();
+            }
         }
     }
 
@@ -4538,7 +4565,7 @@ function main() {
             let toggleId = evoChallengeActions[i];
             let str = evoChallengeActions[i].split('-')[1];
             let toggleName = str.charAt(0).toUpperCase() + str.slice(1);
-            let toggle = createCheckBoxControl(toggleVal, toggleId, toggleName);
+            let toggle = createCheckBoxControl(toggleVal, toggleId+'_checkbox', toggleName, {path:[settings, toggleId]});
             let toggleDiv = $('<div></div>');
             toggleDiv.append(toggle);
             challengeToggles.append(toggleDiv);
