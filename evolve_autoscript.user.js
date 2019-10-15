@@ -3446,7 +3446,7 @@ function main() {
             pq.sort(function(a,b) {
                 let aCost = priorityScale(a.getResDep(curRes.id), a.priority, a);
                 let bCost = priorityScale(b.getResDep(curRes.id), b.priority, b);
-                return aCost > bCost;
+                return aCost - bCost;
             });
 
             // Finding completion time and limiting resource
@@ -5083,7 +5083,7 @@ function main() {
     }
 
     function nameCompare(a, b) {
-        return b.name < a.name;
+        return a.name.localeCompare(b.name);
     }
     function priorityCompare(a, b) {
         return b.basePriority - a.basePriority;
