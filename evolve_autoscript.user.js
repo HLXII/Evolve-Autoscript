@@ -3722,30 +3722,28 @@ function main() {
         }
         let curFocus = 0;
         let curSell = 0;
-        if (focusList.length > 0) {
-            // Allocating all possible trade routes with given money
-            let curFreeTradeRoutes = totalTradeRoutes;
-            // Keeping fraction of base money for money
-            if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
-            //console.log(wantedRatio.Money,resources.Money.temp_rate);
-            // Begin allocating algorithm
-            while (resources.Money.temp_rate > 0 && curFreeTradeRoutes > 0) {
-                // Checking if can buy trade route
-                if (focusSequence.length > 0 && resources.Money.temp_rate > resources[keys[focusSequence[curFocus]]].tradeBuyCost) {
-                    // Can buy trade route
-                    //console.log("Buying", focusSequence[curFocus], curFocus);
-                    newTradeRoutes[keys[focusSequence[curFocus]]] += 1;
-                    resources.Money.temp_rate -= resources[keys[focusSequence[curFocus]]].tradeBuyCost;
-                    curFreeTradeRoutes -= 1;
-                    curFocus += 1;
-                } else {
-                    // Cannot buy trade route, sell instead
-                    if (curSell == sellSequence.length) {break;}
-                    newTradeRoutes[sellSequence[curSell]] -= 1;
-                    resources.Money.temp_rate += resources[sellSequence[curSell]].tradeSellCost;
-                    curFreeTradeRoutes -= 1;
-                    curSell += 1;
-                }
+        // Allocating all possible trade routes with given money
+        let curFreeTradeRoutes = totalTradeRoutes;
+        // Keeping fraction of base money for money
+        if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
+        //console.log(wantedRatio.Money,resources.Money.temp_rate);
+        // Begin allocating algorithm
+        while (curFreeTradeRoutes > 0) {
+            // Checking if can buy trade route
+            if (focusSequence.length > curFocus && resources.Money.temp_rate > resources[keys[focusSequence[curFocus]]].tradeBuyCost) {
+                // Can buy trade route
+                //console.log("Buying", focusSequence[curFocus], curFocus);
+                newTradeRoutes[keys[focusSequence[curFocus]]] += 1;
+                resources.Money.temp_rate -= resources[keys[focusSequence[curFocus]]].tradeBuyCost;
+                curFreeTradeRoutes -= 1;
+                curFocus += 1;
+            } else {
+                // Cannot buy trade route, sell instead
+                if (curSell == sellSequence.length) {break;}
+                newTradeRoutes[sellSequence[curSell]] -= 1;
+                resources.Money.temp_rate += resources[sellSequence[curSell]].tradeSellCost;
+                curFreeTradeRoutes -= 1;
+                curSell += 1;
             }
         }
         console.log("NEW TRADE ROUTES:", newTradeRoutes);
