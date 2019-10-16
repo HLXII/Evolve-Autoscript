@@ -29,9 +29,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Battle)
 * Add Auto Ejector inline settings
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy amount, mercs max money)
-* Optimize researched function (Can use querySelector or somehow use the vues/def)
 * Optimize UI clicks with multiplier buttons
-* Add Auto Battle campaign run fall timer (If checkWounded is unchecked or if you don't have enough soldiers, the run campaign check runs infinitely. If a successful campaign can't be found, set a wait timer so it doesn't infinitely loop and hog clicks)
 * Update Auto Tax to not suck (Need to figure out a better solution for max money)
 * Add Balorg slave catching setting to Auto Battle (If can get more slaves, override max campaign to ambush)
 

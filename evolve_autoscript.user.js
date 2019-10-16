@@ -1800,6 +1800,12 @@ function main() {
         if (!settings.hasOwnProperty('woundedCheck')) {
             settings.woundedCheck = false;
         }
+        if (!settings.hasOwnProperty('campaignFailCheck')) {
+            settings.campaignFailCheck = false;
+        }
+        if (!settings.hasOwnProperty('campaignFailInterval')) {
+            settings.campaignFailInterval = 5;
+        }
         if (!settings.hasOwnProperty('autoFortress')) {
             settings.autoFortress = false;
         }
@@ -2303,11 +2309,17 @@ function main() {
     let armyStatus = false;
     let armySetupStage = 0;
     let chosenCampaign = false;
+    let failTimer = 0;
     function battle() {
         // Don't autoBattle if garrison not unlocked
         if (!researched('tech-garrison')) {return;}
         // Don't autoBattle if unified
         if (window.game.global.tech['world_control']) {return;}
+        // Don't autoBattle if failed recently
+        if (settings.campaignFailCheck && failTimer > 0) {
+            failTimer -= 1;
+            return;
+        }
         // If army isn't ready, wait until it is
         let avaSoldiers = getAvailableSoldiers();
         let maxSoldiers = getMaxSoldiers();
@@ -2363,6 +2375,10 @@ function main() {
                                 armyStatus = false;
                                 chosenCampaign = false;
                                 armySetupStage = 0;
+                                // Setting fail timer if enabled
+                                if (settings.campaignFailCheck) {
+                                    failTimer = settings.campaignFailInterval * 1000 / 25;
+                                }
                             } else {
                                 //console.log("Cannot win at this campaign", getCurrentCampaign(), " decrementing campaign");
                                 decCampaign();
@@ -3988,7 +4004,12 @@ function main() {
     function createDropDownControl(currentValue, id, name, values, args) {
         args = args || {};
         let option = $(`<div style="display:flex;" id="${id}_dropdown"></div>`);
-        option.append($(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`));
+        let label = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
+        if (args.toolTip !== undefined) {
+            label.addClass(toolTipClass);
+            label.attr('data-label', args.toolTip);
+        }
+        option.append(label);
         let decision = $(`<select style="width:12rem;"></select>`);
         for (let val in values) {
             decision.append($(`<option value="${val}">${values[val]}</option>`));
@@ -4013,6 +4034,10 @@ function main() {
         <span class="check is-dark"></span>
         <span class="control-label">${name}</span>
         </label>`);
+        if (args.toolTip !== undefined) {
+            checkBox.addClass(toolTipClass);
+            checkBox.attr("data-label", args.toolTip);
+        }
         let setting = settings;
         if (args.hasOwnProperty('path')) {
             setting = args.path[0];
@@ -4046,8 +4071,14 @@ function main() {
     }
     function createInputControl(currentValue, id, name, args) {
         args = args || {};
-        let div = $(`<div style="display:flex"></div>`);
-        let input = $(`<input type="text" class="input is-small" id="${id}_input" style="width:10rem;"/>`);
+        let div = $(`<div style="display:flex" id="${id}_input"></div>`);
+        let label = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
+        if (args.toolTip !== undefined) {
+            label.addClass(toolTipClass);
+            label.attr('data-label', args.toolTip);
+        }
+        div.append(label);
+        let input = $(`<input type="text" class="input is-small" style="width:10rem;"/>`);
         div.append(input);
         let setting = settings;
         if (args.hasOwnProperty('path')) {
@@ -4555,10 +4586,7 @@ function main() {
         let autoFarmDesc = 'Auto-clicks the manual farming buttons that exist on the screen. If the buttons are not being auto-clicked, try reloading the UI. Defaults to click at 100/s (10 ms).';
         let [autoFarmTitle, autoFarmContent] = createAutoSettingToggle('autoFarm', 'Auto Farm', autoFarmDesc, true, tab);
 
-        let farmRate = $('<div style="display:flex;"></div>');
-        autoFarmContent.append(farmRate);
         let farmToolTip = 'Determines how fast the manual buttons will be clicked (every # milliseconds)';
-        farmRate.append($(`<div><span class="has-text-warning ${toolTipClass}" style="width:12rem;" data-label="${farmToolTip}">Farm Rate:</span></div>`));
         let convertFunc = function(val) {
             if (isNaN(val)) {return null;}
             val = parseInt(val);
@@ -4572,8 +4600,8 @@ function main() {
                 farmInterval = null;
             }
         }
-        let farmRateInput = createInputControl(settings.farmRate, 'farmRate', 'Farm Rate', {convertFunc:convertFunc,setFunc:setFunc});
-        farmRate.append(farmRateInput);
+        let farmRateInput = createInputControl(settings.farmRate, 'farmRate', 'Farm Rate', {convertFunc:convertFunc,setFunc:setFunc,toolTip:farmToolTip});
+        autoFarmContent.append(farmRateInput);
 
         // Auto Refresh
         let autoRefreshDesc = 'Automatically reloads the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
@@ -4703,6 +4731,59 @@ function main() {
             priorityDiv.append(priorityControl);
         }
     }
+    function loadBattleUI(content) {
+
+        // FirstDiv contains Max Campaign and Check Unwounded
+
+        let firstDiv = $('<div style="display:flex;"></div>');
+        content.append(firstDiv);
+
+        let maxCampaignOptions = {0:'Ambush',1:'Raid',2:'Pillage',3:'Assault',4:'Siege'};
+        let maxCampaignOption = createDropDownControl(settings.maxCampaign, 'maxCampaign', 'Max Campaign', maxCampaignOptions);
+        firstDiv.append(maxCampaignOption);
+
+        firstDiv.append($('<div style="width:6rem;"></div>'));
+
+        let woundedCheckToolTip = 'Enable to stop running campaigns if there are wounded soldiers. Disable to run campaigns as soon as there are enough healthy soldiers to fight. Disabling causes more lag due to the algorithm running continously.';
+        let woundedCheck = createCheckBoxControl(settings.woundedCheck, 'woundedCheck', "Check Wounded", {toolTip:woundedCheckToolTip});
+        firstDiv.append(woundedCheck);
+
+        content.append($('<br></br>'));
+
+        // Minimum Win Rate
+
+        let convertFunc = function(val) {
+            if (isNaN(val)) {return null;}
+            val = parseFloat(val);
+            if (val < 0 || val > 100) {return null;}
+            return val;
+        }
+        let minWinRateInput = createInputControl(settings.minWinRate, 'minWinRate', 'Minimum Win Rate', {convertFunc:convertFunc});
+        content.append(minWinRateInput);
+        content.append($('<br></br>'));
+
+        // SecondDiv contains Campaign Fail Interval and Campaign Fail Check
+
+        let secondDiv = $('<div style="display:flex;"></div>');
+        content.append(secondDiv);
+
+        let campaignFailIntervalInputToolTip = 'Sets the time in seconds to wait after a failed campaign check.';
+        convertFunc = function(val) {
+            if (isNaN(val)) {return null;}
+            val = parseFloat(val);
+            if (val < 0) {return null;}
+            return val;
+        }
+        let campaignFailIntervalInput = createInputControl(settings.campaignFailInterval, 'campaignFailInterval', 'Campaign Fail Interval', {convertFunc:convertFunc,toolTip:campaignFailIntervalInputToolTip});
+        secondDiv.append(campaignFailIntervalInput);
+
+        secondDiv.append($('<div style="width:6rem;"></div>'));
+
+        let campaignFailCheckStr = 'Enable to stop Auto Battle for an time if the campaign algorithm fails. This is to stop infinite loops when the algorithm cannot find a optimal battle.';
+        let campaignFailCheck = createCheckBoxControl(settings.campaignFailCheck, 'campaignFailCheck', "Fail Check", {toolTip:campaignFailCheckStr});
+        secondDiv.append(campaignFailCheck);
+
+    }
     function createAutoSettingJobPage(tab) {
 
         // Auto Tax
@@ -4734,32 +4815,7 @@ function main() {
         // Auto Battle
         let autoBattleDesc = 'Automatically runs battle campaigns. Will choose the highest campaign that allows for the minimum win rate. You can limit the highest campaign as well, as Siege is always less efficient.';
         let [autoBattleTitle, autoBattleContent] = createAutoSettingToggle('autoBattle', 'Auto Battle', autoBattleDesc, true, tab);
-
-        let maxCampaignOptions = {0:'Ambush',1:'Raid',2:'Pillage',3:'Assault',4:'Siege'};
-        let maxCampaignOption = createDropDownControl(settings.maxCampaign, 'maxCampaign', 'Max Campaign', maxCampaignOptions);
-        autoBattleContent.append(maxCampaignOption);
-        autoBattleContent.append($('<br></br>'));
-
-        let minWinRateDiv = $('<div style="display:flex;"></div>');
-        autoBattleContent.append(minWinRateDiv);
-        let minWinRateTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Win Rate:</span>')
-        minWinRateDiv.append(minWinRateTxt);
-        let convertFunc = function(val) {
-            if (isNaN(val)) {return null;}
-            val = parseFloat(val);
-            if (val < 0 || val > 100) {return null;}
-            return val;
-        }
-        let minWinRateInput = createInputControl(settings.minWinRate, 'minWinRate', 'Minimum Win Rate', {convertFunc:convertFunc});
-        minWinRateDiv.append(minWinRateInput);
-        autoBattleContent.append($('<br></br>'));
-
-        let woundedCheckStr = 'Enable "Check Wounded" to wait for no wounded soldiers before battle. Uncheck to start battles as soon as there are enough healthy soldiers to fight. Unchecked causes slightly more lag due to the fact that the algorithm continuously manipulates the garrison.';
-        let woundedCheckDetails = $(`<div><span>${woundedCheckStr}</span></div>`);
-        autoBattleContent.append(woundedCheckDetails);
-        autoBattleContent.append($('<br>'));
-        let woundedCheck = createCheckBoxControl(settings.woundedCheck, 'woundedCheck', "Check Wounded");
-        autoBattleContent.append(woundedCheck);
+        loadBattleUI(autoBattleContent);
 
         // Auto Fortress
         let autoFortressDesc = 'Manages soldier allocation in the fortress. Currently not yet implemented.';
@@ -5046,10 +5102,6 @@ function main() {
         };
         volumeOption.append(volumeDropdown);
 
-        let minMoneyDiv = $('<div style="display:flex;"></div>');
-        autoMarketContent.append(minMoneyDiv);
-        let minMoneyTxt = $('<span class="has-text-warning" style="width:12rem;">Minimum Money:</span>');
-        minMoneyDiv.append(minMoneyTxt);
         let convertFunc = function(val) {
             val = getRealValue(val);
             if (!isNaN(val)) {
@@ -5058,7 +5110,7 @@ function main() {
             return null;
         }
         let minMoneyInput = createInputControl(settings.minimumMoney, 'minimumMoney', 'Minimum Money', {convertFunc:convertFunc});
-        minMoneyDiv.append(minMoneyInput);
+        autoMarketContent.append(minMoneyInput);
 
         // Auto Trade
         let autoTradeDesc = 'Allocates trade routes based on the trade priority (as well as Auto Prioritize).';
