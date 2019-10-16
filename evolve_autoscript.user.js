@@ -1163,12 +1163,12 @@ function main() {
         get researched() {
             let [grant, val] = this.def.grant;
             let old = false;
-            if (window.game.global.tech[grant] === undefined) {
-                old = true;
+            if (window.game.global.tech[grant] !== undefined) {
+                if (window.game.global.tech[grant] >= val) {
+                    old = true;
+                }
             }
-            else if (window.game.global.tech[grant] >= val) {
-                old = true;
-            }
+            return old;
         }
     }
     var researches = {};
@@ -3243,7 +3243,6 @@ function main() {
         }
         let canTurnOn = function(index, curNum) {
             let building = powered[index];
-            let can = true;
             // Checking if this building can be turned on by resources
             for (let j = 0;j < building.consume.length;j++) {
                 let res = building.consume[j].res;
@@ -3251,15 +3250,15 @@ function main() {
                 if (resources[res] !== undefined) {
                     //console.log("Checking",building.id,"RES",res.id,res.temp_rate,cost);
                     if (resources[res].temp_rate < cost) {
-                        can = false;
+                        return false;
                     }
                 } else {
                     if (support[res] < cost) {
-                        can = false;
+                        return false;
                     }
                 }
             }
-            return can;
+            return true;
         };
         let turnOn = function(index, curNum) {
             let building = powered[index];
@@ -3788,18 +3787,21 @@ function main() {
             for (let j = 0;j < priorities.length;j++) {
                 // Ignoring zero priority zero ratio choices
                 if (priorities[j] == 0 || ratios[j] == 0) {continue;}
-                // Checking requirement function
-                if (args.hasOwnProperty('requireFunc') && !args.requireFunc(j, curNum[j])) {continue;}
+
                 // Checking maxes
                 if (args.hasOwnProperty('max') && args.max[j] != -1 && curNum[j] >= args.max[j]) {continue;}
-                // Finding error differential
-                let tempError = (((curNum[j]+1) / total) - ratios[j]) ** 2 - ((curNum[j] / total) - ratios[j]) ** 2;
+
+                // Checking requirement function
+                if (args.hasOwnProperty('requireFunc') && !args.requireFunc(j, curNum[j])) {continue;}
 
                 // Checking mins
                 if (args.hasOwnProperty('min') && curNum[j] < args.min[j]) {
                     choice = j;
                     break;
                 }
+
+                // Finding error differential
+                let tempError = (((curNum[j]+1) / total) - ratios[j]) ** 2 - ((curNum[j] / total) - ratios[j]) ** 2;
 
                 if (error === null || tempError < error) {
                     error = tempError;
@@ -5677,19 +5679,12 @@ function main() {
     }
     // Determines if the research given has already been researched
     function researched(id) {
-        let researched = $('#oldTech > div');
-        for (let i = 0;i < researched.length;i++) {
-            if (id == researched[i].id) {
-                return true;
-            }
-        }
-        return false;
+        return researches[id].researched;
     }
     // Determines if stage is currently in evolution
     function inEvolution() {
-        let evolutionTabLabel = getTabLabel("Evolve");
-        if (evolutionTabLabel === null) {return false;}
-        return evolutionTabLabel.style.display != 'none';
+        return window.game.global.race.species == 'protoplasm';
+
     }
     // Determines if the civics tab has been unlocked
     function civicsOn() {
