@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.2.8
+// @version      1.2.9
 // @description  try to take over the world!
 // @author       HLXII
 // @match        https://pmotschmann.github.io/Evolve/
