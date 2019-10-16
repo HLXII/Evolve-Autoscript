@@ -2046,7 +2046,7 @@ function main() {
             else if (evoRaceActions.includes(action.id)) {
                 newPriority = 6;
                 // Final race action
-                if (action.id == evoRaceActions[evoRaceActions.length-1]) {
+                if (action.id == evoRaceTrees[settings.evolution][evoRaceTrees[settings.evolution].length-1]) {
                     newPriority = 5;
                 }
             }
