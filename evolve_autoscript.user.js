@@ -543,6 +543,8 @@ function main() {
         }
     }
 
+    // Gets the multiplier on the resource
+    // 'Global' returns the global multiplier
     function getMultiplier(res) {
         let multiplier = 1;
         for (let val in window.game.breakdown.p[res]) {
@@ -552,6 +554,14 @@ function main() {
             }
         }
         return multiplier;
+    }
+    // Finds the total resource consumption (returns the negative value)
+    function getConsumed(res) {
+        let consumed = 0;
+        for (let val in window.game.breakdown.p.consume[res]) {
+            consumed += window.game.breakdown.p.consume[res][val];
+        }
+        return consumed;
     }
 
     function priorityScale(value, priority, action) {
@@ -2856,16 +2866,30 @@ function main() {
             }
             return false;
         }
+        // Setting up data variable for storing temp Iron/Steel nums
+        data.Iron.num = 0;
+        data.Steel.num = 0;
         allocFunc = function(index, curNum) {
             switch(prodKeys[index]) {
                 case 'Iron': {
-                    resources.Iron.temp_rate / (1 + data.Iron.percent*(curNum-1)/100);
+
+                    // Removing steel influence
+                    resources.Iron.temp_rate += data.Steel.Iron * data.Steel.num;
+
+                    // Applying percent change
+                    resources.Iron.temp_rate /= (1 + data.Iron.percent*(curNum-1)/100);
                     resources.Iron.temp_rate *= (1 + data.Iron.percent*curNum/100);
+
+                    // Reapplying steel influence
+                    resources.Iron.temp_rate -= data.Steel.Iron * data.Steel.num;
+                    data.Iron.num = curNum;
+
                     break;
                 }
                 case 'Steel': {
                     resources.Iron.temp_rate -= data.Steel.Iron;
                     resources.Coal.temp_rate -= data.Steel.Coal;
+                    data.Steel.num = curNum;
                     break;
                 }
             }

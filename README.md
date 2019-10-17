@@ -18,6 +18,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 # Stuff to do
 
 ## Bugfix
+* Theoretical bug: Calculating smelter rate changes may be inaccurate if there is something that also consumes Iron.
 
 ## Small
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
