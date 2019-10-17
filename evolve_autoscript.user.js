@@ -2631,92 +2631,8 @@ function main() {
         }, 25);
     }
 
-    function getSmelterUIData() {
-        let data = {};
-        // Finding relevent elements
-        let decBtns = $('#specialModal > .fuels > .sub');
-        let incBtns = $('#specialModal > .fuels > .add');
-        let labels = $('#specialModal > .fuels > span > .current');
-        // Determining which fuel types are available
-        if (decBtns.length == 2) {
-            // Only two buttons. Either Ent type race  with Coal/Oil, or haven't unlocked oil yet
-            if (!resources.Oil.unlocked) {
-                // Oil not unlocked, thus two buttons mean Lumber/Coal
-                data.Wood = {};
-                data.Wood.inc = incBtns[0];
-                data.Wood.dec = decBtns[0];
-                let str = labels[0].attributes[0].value;
-                str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
-                data.Wood.num = window.game.global.city.smelter.Wood;
-                data.Wood.fuel = parseFloat(str[1]);
-                data.Wood.name = str[2];
-                data.Coal = {};
-                data.Coal.inc = incBtns[1];
-                data.Coal.dec = decBtns[1];
-                str = labels[1].attributes[0].value;
-                data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-                data.Coal.num = window.game.global.city.smelter.Coal;
-            }
-            else {
-                // Must be Ent type race with Coal/Oil
-                data.Coal = {};
-                data.Coal.inc = incBtns[0];
-                data.Coal.dec = decBtns[0];
-                let str = labels[0].attributes[0].value;
-                data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-                data.Coal.num = window.game.global.city.smelter.Coal;
-                data.Oil = {};
-                data.Oil.inc = incBtns[1];
-                data.Oil.dec = decBtns[1];
-                str = labels[1].attributes[0].value;
-                data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-                data.Oil.num = window.game.global.city.smelter.Oil;
-            }
-        }
-        else {
-            // Three buttons means all fuels unlocked
-            data.Wood = {};
-            data.Wood.inc = incBtns[0];
-            data.Wood.dec = decBtns[0];
-            let str = labels[0].attributes[0].value;
-            str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
-            data.Wood.num = window.game.global.city.smelter.Wood;
-            data.Wood.fuel = parseFloat(str[1]);
-            data.Wood.name = str[2];
-            data.Coal = {};
-            data.Coal.inc = incBtns[1];
-            data.Coal.dec = decBtns[1];
-            str = labels[1].attributes[0].value;
-            data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-            data.Coal.num = window.game.global.city.smelter.Coal;
-            data.Oil = {};
-            data.Oil.inc = incBtns[2];
-            data.Oil.dec = decBtns[2];
-            str = labels[2].attributes[0].value;
-            data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-            data.Oil.num = window.game.global.city.smelter.Oil;
-        }
-        // Determining Iron/Steel
-        data.Iron = {};
-        data.Steel = {};
-        data.Iron.btn = $('#specialModal > .smelting > span > button')[0];
-        data.Steel.btn = $('#specialModal > .smelting > span > button')[1];
-        let ironNum = $('#specialModal > .smelting > span')[0].innerText;
-        let steelNum = $('#specialModal > .smelting > span')[1].innerText;
-        data.Iron.num = parseInt(/Iron Smelting: ([\d]+)/.exec(ironNum)[1]);
-        data.Steel.num = parseInt(/Steel Smelting: ([\d]+)/.exec(steelNum)[1]);
-        let ironVal = $('#specialModal > .smelting > span')[0].attributes[0].value;
-        let steelVal = $('#specialModal > .smelting > span')[1].attributes[0].value;
-        data.Iron.percent = parseInt(/[^\d]+([\d]+)%/.exec(ironVal)[1]);
-        let temp = /[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*/.exec(steelVal);
-        data.Steel.Coal = parseFloat(temp[1]);
-        data.Steel.Iron = parseFloat(temp[2]);;
-        data.Steel.produce = parseFloat(temp[3]);;
-        return data;
-    }
-    function autoSmelter(limits) {
-        // Don't Auto smelt if not unlocked
-        if (!researched('tech-steel')) {return;}
+    let smelterModal = null;
+    function loadSmelterModal() {
         // Checking if modal already open
         if ($('.modal').length != 0) {
             return;
@@ -2724,196 +2640,10 @@ function main() {
         // Ensuring no modal conflicts
         if (modal) {return;}
         modal = true;
-        //console.log("Auto Smelting");
-        // Opening modal
+        // Opening Modal
         $('#city-smelter > .special').click();
-        // Delaying for modal animation
         setTimeout(function() {
-            // Finding relevent elements
-            let data = getSmelterUIData();
-            console.log('Smelter Data:', data);
-
-            let totalSmelters = buildings['city-smelter'].numTotal;
-
-            // Reverting current allocation
-            if (data.hasOwnProperty('Wood')) {
-                switch(data.Wood.name) {
-                    case 'Lumber': {
-                        resources.Lumber.temp_rate += data.Wood.fuel * data.Wood.num;
-                        break;
-                    }
-                    case 'Souls': {
-                        resources.Food.temp_rate += data.Wood.fuel * data.Wood.num;
-                        break;
-                    }
-                    case 'Flesh': {
-                        resources.Furs.temp_rate += data.Wood.fuel * data.Wood.num;
-                        break;
-                    }
-                }
-            }
-            if (data.hasOwnProperty('Coal')) {
-                resources.Coal.temp_rate += data.Coal.fuel * data.Coal.num;
-            }
-            if (data.hasOwnProperty('Oil')) {
-                resources.Oil.temp_rate += data.Oil.fuel * data.Oil.num;
-            }
-            resources.Iron.temp_rate += data.Steel.Iron * data.Steel.num;
-            resources.Coal.temp_rate += data.Steel.Coal * data.Steel.num;
-            resources.Steel.temp_rate -= data.Steel.produce * data.Steel.num;
-            resources.Iron.temp_rate /= (1 + data.Iron.percent * data.Iron.num / 100);
-
-            // Calculating Fuel
-            let fuelKeys = [];
-            let fuelPriorities = [];
-            let fuelTotalPriority = 0;
-            let fuelRatios = [];
-            if (data.hasOwnProperty('Wood')) {
-                fuelKeys.push('Wood');
-                let priority = settings.smelterSettings.Wood;
-                if (limits) {
-                    switch(data.Wood.name) {
-                        case 'Lumber': {
-                            if (limits.Lumber !== null) {
-                                priority /= limits.Lumber.priority;
-                            }
-                            break;
-                        }
-                        case 'Souls': {
-                            if (limits.Food !== null) {
-                                priority /= limits.Food.priority;
-                            }
-                            break;
-                        }
-                        case 'Flesh': {
-                            if (limits.Furs !== null) {
-                                priority /= limits.Furs.priority;
-                            }
-                        }
-                    }
-                }
-                fuelPriorities.push(priority);
-            }
-            if (data.hasOwnProperty('Coal')) {
-                fuelKeys.push('Coal');
-                let priority = settings.smelterSettings.Coal;
-                if (limits && limits.Coal !== null) {
-                    priority /= limits.Coal.priority;
-                }
-                fuelPriorities.push(priority);
-            }
-            if (data.hasOwnProperty('Oil')) {
-                fuelKeys.push('Oil');
-                let priority = settings.smelterSettings.Oil;
-                if (limits && limits.Oil !== null) {
-                    priority /= limits.Oil.priority;
-                }
-                fuelPriorities.push(priority);
-            }
-            for (let i = 0;i < fuelPriorities.length;i++) {fuelTotalPriority += fuelPriorities[i];}
-            for (let i = 0;i < fuelPriorities.length;i++) {fuelRatios.push(fuelPriorities[i] / fuelTotalPriority);}
-            let resourceCheck = function(index, curNum) {
-                switch(fuelKeys[index]) {
-                    case 'Wood': {
-                        switch(data.Wood.name) {
-                            case 'Lumber': return resources.Lumber.temp_rate > data.Wood.fuel;
-                            case 'Souls': return resources.Food.temp_rate > data.Wood.fuel;
-                            case 'Flesh': return resources.Furs.temp_rate > data.Wood.fuel;
-                        }
-                        break;
-                    }
-                    case 'Coal': return resources.Coal.temp_rate > data.Coal.fuel;
-                    case 'Oil': return resources.Oil.temp_rate > data.Oil.fuel;
-                }
-                return false;
-            };
-            let allocFunc = function(index, curNum) {
-                switch(fuelKeys[index]) {
-                    case 'Wood': {
-                        switch(data.Wood.name) {
-                            case 'Lumber': {resources.Lumber.temp_rate -= data.Wood.fuel;break;}
-                            case 'Souls': {resources.Food.temp_rate -= data.Wood.fuel;break;}
-                            case 'Flesh': {resources.Furs.temp_rate -= data.Wood.fuel;break;}
-                        }
-                        break;
-                    }
-                    case 'Coal': {resources.Coal.temp_rate -= data.Coal.fuel;break;}
-                    case 'Oil': {resources.Oil.temp_rate -= data.Oil.fuel;break;}
-                }
-            };
-            let fuelAllocation = allocate(totalSmelters,fuelPriorities,fuelRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
-
-            console.log("SMELTER FUEL:", fuelAllocation);
-
-            // Calculating Production
-            let prodKeys = ['Iron', 'Steel'];
-            let prodPriorities = [];
-            let prodTotalPriority = 0;
-            let prodRatios = [];
-            let ironPriority = settings.smelterSettings.Iron;
-            if (limits && limits.Iron !== null) {
-                ironPriority *= limits.Iron.priority;
-            }
-            prodPriorities.push(ironPriority);
-            let steelPriority = settings.smelterSettings.Steel;
-            if (limits && limits.Steel !== null) {
-                steelPriority *= limits.Steel.priority;
-            }
-            prodPriorities.push(steelPriority);
-            for (let i = 0;i < prodPriorities.length;i++) {prodTotalPriority += prodPriorities[i];}
-            for (let i = 0;i < prodPriorities.length;i++) {prodRatios.push(prodPriorities[i] / prodTotalPriority);}
-            resourceCheck = function(index, curNum) {
-                switch(prodKeys[index]) {
-                    case 'Iron': {
-                        return true;
-                    }
-                    case 'Steel': {
-                        let coalCheck = resources.Coal.temp_rate > data.Steel.Coal;
-                        let ironCheck = resources.Iron.temp_rate > data.Steel.Iron;
-                        return coalCheck && ironCheck;
-                    }
-                }
-                return false;
-            }
-            allocFunc = function(index, curNum) {
-                switch(prodKeys[index]) {
-                    case 'Iron': {
-                        resources.Iron.temp_rate / (1 + data.Iron.percent*(curNum-1)/100);
-                        resources.Iron.temp_rate *= (1 + data.Iron.percent*curNum/100);
-                        break;
-                    }
-                    case 'Steel': {
-                        resources.Iron.temp_rate -= data.Steel.Iron;
-                        resources.Coal.temp_rate -= data.Steel.Coal;
-                        break;
-                    }
-                }
-            }
-
-            let produceAllocation = allocate(fuelAllocation.total,prodPriorities,prodRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
-
-            console.log("SMELTER PRODUCE:", produceAllocation);
-
-            for (let i = 0;i < fuelKeys.length;i++) {
-                if (data[fuelKeys[i]].num > fuelAllocation.alloc[i]) {
-                    for (let j = 0;j < data[fuelKeys[i]].num - fuelAllocation.alloc[i];j++) {
-                        data[fuelKeys[i]].dec.click();
-                    }
-                }
-            }
-            for (let i = 0;i < fuelKeys.length;i++) {
-                if (data[fuelKeys[i]].num < fuelAllocation.alloc[i]) {
-                    for (let j = 0;j < fuelAllocation.alloc[i] - data[fuelKeys[i]].num;j++) {
-                        data[fuelKeys[i]].inc.click();
-                    }
-                }
-            }
-            for (let i = 0;i < totalSmelters;i++) {
-                data.Iron.btn.click();
-            }
-            for (let i = 0;i < produceAllocation.alloc[1];i++) {
-                data.Steel.btn.click();
-            }
+            smelterModal = window.game.vues['specialModal'];
 
             // Closing modal
             let closeBtn = $('.modal-close')[0];
@@ -2921,100 +2651,372 @@ function main() {
             modal = false;
         }, 100);
     }
-
-    function getFactoryUIData() {
+    function getSmelterData() {
         let data = {};
+        // Wood (Lumber/Souls/Flesh)
+        if (!window.game.global.race['kindling_kindred']) {
+            data.Wood = {};
+            let str = smelterModal.buildLabel('wood');
+            str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
+            data.Wood.num = window.game.global.city.smelter.Wood;
+            data.Wood.fuel = parseFloat(str[1]);
+            data.Wood.name = str[2];
+        }
+        // Coal
+        if (window.game.global.resource.Coal.display) {
+            data.Coal = {};
+            let str = smelterModal.buildLabel('coal');
+            data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
+            data.Coal.num = window.game.global.city.smelter.Coal;
+        }
+        // Oil
+        if (window.game.global.resource.Oil.display) {
+            data.Oil = {};
+            let str = smelterModal.buildLabel('oil');
+            data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
+            data.Oil.num = window.game.global.city.smelter.Oil;
+        }
+
+        // Iron
+        data.Iron = {};
+        data.Iron.num = window.game.global.city.smelter.Iron;
+        let ironVal = smelterModal.ironLabel();
+        data.Iron.percent = parseInt(/[^\d]+([\d]+)%/.exec(ironVal)[1]);
+
+        // Steel
+        if (window.game.global.resource.Steel.display && window.game.global.tech.smelting >= 2) {
+            data.Steel = {};
+            data.Steel.num = window.game.global.city.smelter.Steel;
+            let steelVal = smelterModal.steelLabel();
+            let temp = /[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*/.exec(steelVal);
+            data.Steel.Coal = parseFloat(temp[1]);
+            data.Steel.Iron = parseFloat(temp[2]);;
+            data.Steel.produce = parseFloat(temp[3]);;
+        }
+        return data;
+    }
+    function autoSmelter(limits) {
+        // Don't Auto smelt if not unlocked
+        if (!researched('tech-steel')) {return;}
+        // Loading Smelter Vue
+        if (smelterModal === null) {
+            loadSmelterModal();
+            return;
+        }
+
         // Finding relevent elements
-        let decBtns = $('#specialModal > div > .sub');
-        let incBtns = $('#specialModal > div > .add');
-        let labels = $('#specialModal > div > span.current');
-        let datas = $('#specialModal > div > span.is-primary');
-        // Getting Data values
-        if (decBtns.length > 0) {
-            data.Lux = {};
-            data.Lux.dec = decBtns[0];
-            data.Lux.inc = incBtns[0];
-            let str = datas[0].attributes['data-label'].value;
-            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
-            data.Lux.Furs = temp[1];
-            data.Lux.Money = temp[2];
-            data.Lux.num = +labels[0].innerText
-        }
-        if (decBtns.length > 1) {
-            data.Alloy = {};
-            data.Alloy.dec = decBtns[1];
-            data.Alloy.inc = incBtns[1];
-            let str = datas[1].attributes['data-label'].value;
-            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
-            data.Alloy.Copper = temp[1];
-            data.Alloy.Aluminium = temp[2];
-            data.Alloy.num = +labels[1].innerText
-            data.Alloy.produce = 0;
-            try {
-                let total = window.game.breakdown.p.Alloy.Factory;
-                total = +total.substring(0, total.length - 1);
-                total *= getMultiplier('Alloy') * getMultiplier('Global');
-                if (data.Alloy.num > 0) {
-                    data.Alloy.produce = total / data.Alloy.num;
+        let data = getSmelterData();
+        console.log('Smelter Data:', data);
+
+        let totalSmelters = buildings['city-smelter'].numTotal;
+
+        // Reverting current allocation
+        if (data.hasOwnProperty('Wood')) {
+            switch(data.Wood.name) {
+                case 'Lumber': {
+                    resources.Lumber.temp_rate += data.Wood.fuel * data.Wood.num;
+                    break;
                 }
-            } catch(e) {}
+                case 'Souls': {
+                    resources.Food.temp_rate += data.Wood.fuel * data.Wood.num;
+                    break;
+                }
+                case 'Flesh': {
+                    resources.Furs.temp_rate += data.Wood.fuel * data.Wood.num;
+                    break;
+                }
+            }
         }
-        if (decBtns.length > 2) {
+        if (data.hasOwnProperty('Coal')) {
+            resources.Coal.temp_rate += data.Coal.fuel * data.Coal.num;
+        }
+        if (data.hasOwnProperty('Oil')) {
+            resources.Oil.temp_rate += data.Oil.fuel * data.Oil.num;
+        }
+        resources.Iron.temp_rate += data.Steel.Iron * data.Steel.num;
+        resources.Coal.temp_rate += data.Steel.Coal * data.Steel.num;
+        resources.Steel.temp_rate -= data.Steel.produce * data.Steel.num;
+        resources.Iron.temp_rate /= (1 + data.Iron.percent * data.Iron.num / 100);
+
+        // Calculating Fuel
+        let fuelKeys = [];
+        let fuelPriorities = [];
+        let fuelTotalPriority = 0;
+        let fuelRatios = [];
+        if (data.hasOwnProperty('Wood')) {
+            fuelKeys.push('Wood');
+            let priority = settings.smelterSettings.Wood;
+            if (limits) {
+                switch(data.Wood.name) {
+                    case 'Lumber': {
+                        if (limits.Lumber !== null) {
+                            priority /= limits.Lumber.priority;
+                        }
+                        break;
+                    }
+                    case 'Souls': {
+                        if (limits.Food !== null) {
+                            priority /= limits.Food.priority;
+                        }
+                        break;
+                    }
+                    case 'Flesh': {
+                        if (limits.Furs !== null) {
+                            priority /= limits.Furs.priority;
+                        }
+                    }
+                }
+            }
+            fuelPriorities.push(priority);
+        }
+        if (data.hasOwnProperty('Coal')) {
+            fuelKeys.push('Coal');
+            let priority = settings.smelterSettings.Coal;
+            if (limits && limits.Coal !== null) {
+                priority /= limits.Coal.priority;
+            }
+            fuelPriorities.push(priority);
+        }
+        if (data.hasOwnProperty('Oil')) {
+            fuelKeys.push('Oil');
+            let priority = settings.smelterSettings.Oil;
+            if (limits && limits.Oil !== null) {
+                priority /= limits.Oil.priority;
+            }
+            fuelPriorities.push(priority);
+        }
+        for (let i = 0;i < fuelPriorities.length;i++) {fuelTotalPriority += fuelPriorities[i];}
+        for (let i = 0;i < fuelPriorities.length;i++) {fuelRatios.push(fuelPriorities[i] / fuelTotalPriority);}
+        let resourceCheck = function(index, curNum) {
+            switch(fuelKeys[index]) {
+                case 'Wood': {
+                    switch(data.Wood.name) {
+                        case 'Lumber': return resources.Lumber.temp_rate > data.Wood.fuel;
+                        case 'Souls': return resources.Food.temp_rate > data.Wood.fuel;
+                        case 'Flesh': return resources.Furs.temp_rate > data.Wood.fuel;
+                    }
+                    break;
+                }
+                case 'Coal': return resources.Coal.temp_rate > data.Coal.fuel;
+                case 'Oil': return resources.Oil.temp_rate > data.Oil.fuel;
+            }
+            return false;
+        };
+        let allocFunc = function(index, curNum) {
+            switch(fuelKeys[index]) {
+                case 'Wood': {
+                    switch(data.Wood.name) {
+                        case 'Lumber': {resources.Lumber.temp_rate -= data.Wood.fuel;break;}
+                        case 'Souls': {resources.Food.temp_rate -= data.Wood.fuel;break;}
+                        case 'Flesh': {resources.Furs.temp_rate -= data.Wood.fuel;break;}
+                    }
+                    break;
+                }
+                case 'Coal': {resources.Coal.temp_rate -= data.Coal.fuel;break;}
+                case 'Oil': {resources.Oil.temp_rate -= data.Oil.fuel;break;}
+            }
+        };
+        let fuelAllocation = allocate(totalSmelters,fuelPriorities,fuelRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+
+        console.log("SMELTER FUEL:", fuelAllocation);
+
+        // Calculating Production
+        let prodKeys = [];
+        let prodPriorities = [];
+        let prodTotalPriority = 0;
+        let prodRatios = [];
+        if (data.hasOwnProperty('Iron')) {
+            prodKeys.push('Iron');
+            let priority = settings.smelterSettings.Iron;
+            if (limits && limits.Iron !== null) {
+                priority /= limits.Iron.priority;
+            }
+            prodPriorities.push(priority);
+        }
+        if (data.hasOwnProperty('Steel')) {
+            prodKeys.push('Steel');
+            let priority = settings.smelterSettings.Steel;
+            if (limits && limits.Steel !== null) {
+                priority /= limits.Steel.priority;
+            }
+            prodPriorities.push(priority);
+        }
+        for (let i = 0;i < prodPriorities.length;i++) {prodTotalPriority += prodPriorities[i];}
+        for (let i = 0;i < prodPriorities.length;i++) {prodRatios.push(prodPriorities[i] / prodTotalPriority);}
+        resourceCheck = function(index, curNum) {
+            switch(prodKeys[index]) {
+                case 'Iron': {
+                    return true;
+                }
+                case 'Steel': {
+                    let coalCheck = resources.Coal.temp_rate > data.Steel.Coal;
+                    let ironCheck = resources.Iron.temp_rate > data.Steel.Iron;
+                    return coalCheck && ironCheck;
+                }
+            }
+            return false;
+        }
+        allocFunc = function(index, curNum) {
+            switch(prodKeys[index]) {
+                case 'Iron': {
+                    resources.Iron.temp_rate / (1 + data.Iron.percent*(curNum-1)/100);
+                    resources.Iron.temp_rate *= (1 + data.Iron.percent*curNum/100);
+                    break;
+                }
+                case 'Steel': {
+                    resources.Iron.temp_rate -= data.Steel.Iron;
+                    resources.Coal.temp_rate -= data.Steel.Coal;
+                    break;
+                }
+            }
+        }
+
+        let produceAllocation = allocate(fuelAllocation.total,prodPriorities,prodRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+
+        console.log("SMELTER PRODUCE:", produceAllocation);
+
+        // Removing extra fuel
+        for (let i = 0;i < fuelKeys.length;i++) {
+            if (data[fuelKeys[i]].num > fuelAllocation.alloc[i]) {
+                for (let j = 0;j < data[fuelKeys[i]].num - fuelAllocation.alloc[i];j++) {
+                    switch(fuelKeys[i]) {
+                        case 'Wood': {
+                            smelterModal.subWood();
+                            break;
+                        }
+                        case 'Coal': {
+                            smelterModal.subCoal();
+                            break;
+                        }
+                        case 'Oil': {
+                            smelterModal.subOil();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Allocating fuel
+        for (let i = 0;i < fuelKeys.length;i++) {
+            if (data[fuelKeys[i]].num < fuelAllocation.alloc[i]) {
+                for (let j = 0;j < fuelAllocation.alloc[i] - data[fuelKeys[i]].num;j++) {
+                    switch(fuelKeys[i]) {
+                        case 'Wood': {
+                            smelterModal.addWood();
+                            break;
+                        }
+                        case 'Coal': {
+                            smelterModal.addCoal();
+                            break;
+                        }
+                        case 'Oil': {
+                            smelterModal.addOil();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Pushing all allocation to iron
+        for (let i = 0;i < totalSmelters;i++) {
+            smelterModal.ironSmelting()
+        }
+        // Adding steel
+        if (produceAllocation.alloc.length == 2) {
+            for (let i = 0;i < produceAllocation.alloc[1];i++) {
+                smelterModal.steelSmelting()
+            }
+        }
+    }
+
+    let factoryModal = null;
+    function loadFactoryModal() {
+        // Checking if modal already open
+        if ($('.modal').length != 0) {
+            return;
+        }
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+        // Opening Modal
+        $('#city-factory > .special').click();
+        setTimeout(function() {
+            factoryModal = window.game.vues['specialModal'];
+
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
+        }, 100);
+    }
+    function getFactoryData() {
+        let data = {};
+
+        // Luxury Goods
+        data.Lux = {};
+        let str = factoryModal.buildLabel('Lux')
+        let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
+        data.Lux.Furs = temp[1];
+        data.Lux.Money = temp[2];
+
+        // Alloy
+        data.Alloy = {};
+        str = factoryModal.buildLabel('Alloy')
+        temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+        data.Alloy.Copper = temp[1];
+        data.Alloy.Aluminium = temp[2];
+        data.Alloy.produce = 0;
+        if (factoryModal.Alloy) {
+            let total = window.game.breakdown.p.Alloy.Factory;
+            total = +total.substring(0, total.length - 1);
+            total *= getMultiplier('Alloy') * getMultiplier('Global');
+            data.Alloy.produce = total / factoryModal.Alloy;
+        }
+
+        // Polymer
+        if (window.game.global.tech['polymer']) {
             data.Polymer = {};
-            data.Polymer.dec = decBtns[2];
-            data.Polymer.inc = incBtns[2];
-            let str = datas[2].attributes['data-label'].value;
+            let str = factoryModal.buildLabel('Polymer')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
             data.Polymer.Oil = temp[1];
             data.Polymer.Lumber = temp[2];
-            data.Polymer.num = +labels[2].innerText
             data.Polymer.produce = 0;
-            try {
+            if (factoryModal.Polymer) {
                 let total = window.game.breakdown.p.Polymer.Factory;
                 total = +total.substring(0, total.length - 1);
                 total *= getMultiplier('Polymer') * getMultiplier('Global');
-                if (data.Polymer.num > 0) {
-                    data.Polymer.produce = total / data.Polymer.num;
-                }
-            } catch(e) {}
+                data.Polymer.produce = total / factoryModal.Polymer;
+            }
         }
-        if (decBtns.length > 3) {
-            data.Nano_Tube = {};
-            data.Nano_Tube.dec = decBtns[3];
-            data.Nano_Tube.inc = incBtns[3];
-            let str = datas[3].attributes['data-label'].value;
+        // Nano Tube
+        if (window.game.global.tech['nano']) {
+            data.Nano = {};
+            let str = factoryModal.buildLabel('Nano')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
-            data.Nano_Tube.Coal = temp[1];
-            data.Nano_Tube.Neutronium = temp[2];
-            data.Nano_Tube.num = +labels[3].innerText
-            data.Nano_Tube.produce = 0;
-            try {
+            data.Nano.Coal = temp[1];
+            data.Nano.Neutronium = temp[2];
+            data.Nano.produce = 0;
+            if (factoryModal.Nano) {
                 let total = window.game.breakdown.p.Nano_Tube.Factory;
                 total = +total.substring(0, total.length - 1);
                 total *= getMultiplier('Nano_Tube') * getMultiplier('Global');
-                if (data.Nano_Tube.num > 0) {
-                    data.Nano_Tube.produce = total / data.Nano_Tube.num;
-                }
-            } catch(e) {}
+                data.Nano.produce = total / factoryModal.Nano;
+            }
         }
-        if (decBtns.length > 4) {
+        // Stanene
+        if (window.game.global.tech['stanene']) {
             data.Stanene = {};
-            data.Stanene.dec = decBtns[4];
-            data.Stanene.inc = incBtns[4];
-            let str = datas[4].attributes['data-label'].value;
+            let str = factoryModal.buildLabel('Stanene')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
             data.Stanene.Aluminium = temp[1];
             data.Stanene.Nano_Tube = temp[2];
-            data.Stanene.num = +labels[4].innerText
             data.Stanene.produce = 0;
-            try {
+            if (factoryModal.Stanene) {
                 let total = window.game.breakdown.p.Stanene.Factory;
                 total = +total.substring(0, total.length - 1);
                 total *= getMultiplier('Stanene') * getMultiplier('Global');
-                if (data.Stanene.num > 0) {
-                    data.Stanene.produce = total / data.Stanene.num;
-                }
-            } catch(e) {}
+                data.Stanene.produce = total / factoryModal.Stanene;
+            }
         }
         return data;
     }
@@ -3023,187 +3025,173 @@ function main() {
         if (!researched('tech-industrialization')) {return;}
         // Don't Auto factory if you don't have any
         if (buildings['city-factory'].numTotal < 1) {return;}
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
+        // Loading Factory Vue
+        if (factoryModal === null) {
+            loadFactoryModal();
             return;
         }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
-        //console.log("Auto Factory");
-        // Opening modal
-        $('#city-factory > .special').click();
-        // Delaying for modal animation
-        setTimeout(function() {
-            // Finding relevent elements
-            let data = getFactoryUIData();
-            console.log('Factory Data:', data);
+        let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn;
 
-            let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn;
+        let data = getFactoryData();
+        console.log('FACTORY DATA:', data);
 
-            // Reverting current allocation
-            if (data.hasOwnProperty('Lux')) {
-                resources.Furs.temp_rate += data.Lux.Furs * data.Lux.num;
-                resources.Money.temp_rate += data.Lux.Money * data.Lux.num;
-            }
-            if (data.hasOwnProperty('Alloy')) {
-                resources.Copper.temp_rate += data.Alloy.Copper * data.Alloy.num;
-                resources.Aluminium.temp_rate += data.Alloy.Aluminium * data.Alloy.num;
-                resources.Alloy.temp_rate -= data.Alloy.produce * data.Alloy.num;
-            }
-            if (data.hasOwnProperty('Polymer')) {
-                resources.Lumber.temp_rate += data.Polymer.Lumber * data.Polymer.num;
-                resources.Oil.temp_rate += data.Polymer.Oil * data.Polymer.num;
-                resources.Polymer.temp_rate -= data.Polymer.produce * data.Polymer.num;
-            }
-            if (data.hasOwnProperty('Nano_Tube')) {
-                resources.Coal.temp_rate += data.Nano_Tube.Coal * data.Nano_Tube.num;
-                resources.Neutronium.temp_rate += data.Nano_Tube.Neutronium * data.Nano_Tube.num;
-                resources.Nano_Tube.temp_rate -= data.Nano_Tube.produce * data.Nano_Tube.num;
-            }
-            if (data.hasOwnProperty('Stanene')) {
-                resources.Aluminium.temp_rate += data.Stanene.Aluminium * data.Stanene.num;
-                resources.Nano_Tube.temp_rate += data.Stanene.Nano_Tube * data.Stanene.num;
-                resources.Stanene.temp_rate -= data.Stanene.produce * data.Stanene.num;
-            }
+        // Reverting current allocation
+        if (factoryModal.Lux) {
+            resources.Furs.temp_rate += data.Lux.Furs * factoryModal.Lux;
+            resources.Money.temp_rate += data.Lux.Money * factoryModal.Lux;
+        }
+        if (factoryModal.Alloy) {
+            resources.Copper.temp_rate += data.Alloy.Copper * factoryModal.Alloy;
+            resources.Aluminium.temp_rate += data.Alloy.Aluminium * factoryModal.Alloy;
+            resources.Alloy.temp_rate -= data.Alloy.produce * factoryModal.Alloy;
+        }
+        if (factoryModal.Polymer) {
+            resources.Lumber.temp_rate += data.Polymer.Lumber * factoryModal.Polymer;
+            resources.Oil.temp_rate += data.Polymer.Oil * factoryModal.Polymer;
+            resources.Polymer.temp_rate -= data.Polymer.produce * factoryModal.Polymer;
+        }
+        if (factoryModal.Nano) {
+            resources.Coal.temp_rate += data.Nano_Tube.Coal * factoryModal.Nano;
+            resources.Neutronium.temp_rate += data.Nano_Tube.Neutronium * factoryModal.Nano;
+            resources.Nano_Tube.temp_rate -= data.Nano_Tube.produce * factoryModal.Nano;
+        }
+        if (factoryModal.Stanene) {
+            resources.Aluminium.temp_rate += data.Stanene.Aluminium * factoryModal.Stanene;
+            resources.Nano_Tube.temp_rate += data.Stanene.Nano_Tube * factoryModal.Stanene;
+            resources.Stanene.temp_rate -= data.Stanene.produce * factoryModal.Stanene;
+        }
 
-            // Finding Allocation
-            let keys = [];
-            let priorities = [];
-            let totalPriority = 0;
-            let ratios = [];
-            if (data.hasOwnProperty('Lux')) {
-                keys.push('Lux');
-                let priority = settings.factorySettings.Luxury_Goods;
-                if (limits && limits.Money !== null) {
-                    priority *= limits.Money.priority;
-                }
-                priorities.push(priority);
-                totalPriority += priority;
+        // Finding Allocation
+        let keys = [];
+        let priorities = [];
+        let totalPriority = 0;
+        let ratios = [];
+        if (data.hasOwnProperty('Lux')) {
+            keys.push('Lux');
+            let priority = settings.factorySettings.Luxury_Goods;
+            if (limits && limits.Money !== null) {
+                priority *= limits.Money.priority;
             }
-            if (data.hasOwnProperty('Alloy')) {
-                keys.push('Alloy');
-                let priority = settings.factorySettings.Alloy;
-                if (limits && limits.Alloy !== null) {
-                    priority *= limits.Alloy.priority;
-                }
-                priorities.push(priority);
-                totalPriority += priority;
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Alloy')) {
+            keys.push('Alloy');
+            let priority = settings.factorySettings.Alloy;
+            if (limits && limits.Alloy !== null) {
+                priority *= limits.Alloy.priority;
             }
-            if (data.hasOwnProperty('Polymer')) {
-                keys.push('Polymer');
-                let priority = settings.factorySettings.Polymer;
-                if (limits && limits.Polymer !== null) {
-                    priority *= limits.Polymer.priority;
-                }
-                priorities.push(priority);
-                totalPriority += priority;
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Polymer')) {
+            keys.push('Polymer');
+            let priority = settings.factorySettings.Polymer;
+            if (limits && limits.Polymer !== null) {
+                priority *= limits.Polymer.priority;
             }
-            if (data.hasOwnProperty('Nano_Tube')) {
-                keys.push('Nano_Tube');
-                let priority = settings.factorySettings.Nano_Tube;
-                if (limits && limits.Nano_Tube !== null) {
-                    priority *= limits.Nano_Tube.priority;
-                }
-                priorities.push(priority);
-                totalPriority += priority;
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Nano')) {
+            keys.push('Nano');
+            let priority = settings.factorySettings.Nano_Tube;
+            if (limits && limits.Nano_Tube !== null) {
+                priority *= limits.Nano_Tube.priority;
             }
-            if (data.hasOwnProperty('Stanene')) {
-                keys.push('Stanene');
-                let priority = settings.factorySettings.Stanene;
-                if (limits && limits.Stanene !== null) {
-                    priority *= limits.Stanene.priority;
-                }
-                priorities.push(priority);
-                totalPriority += priority;
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Stanene')) {
+            keys.push('Stanene');
+            let priority = settings.factorySettings.Stanene;
+            if (limits && limits.Stanene !== null) {
+                priority *= limits.Stanene.priority;
             }
-            for (let i = 0;i < priorities.length;i++) {
-                ratios[i] = priorities[i] / totalPriority;
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        for (let i = 0;i < priorities.length;i++) {
+            ratios[i] = priorities[i] / totalPriority;
+        }
+        let resourceCheck = function(index, curNum) {
+            switch(keys[index]) {
+                case 'Lux': {
+                    return resources.Furs.temp_rate > data.Lux.Furs;
+                }
+                case 'Alloy': {
+                    let copperCheck = resources.Copper.temp_rate > data.Alloy.Copper;
+                    let aluminiumCheck = resources.Aluminium.temp_rate > data.Alloy.Aluminium;
+                    return copperCheck && aluminiumCheck;
+                }
+                case 'Polymer': {
+                    let lumberCheck = resources.Lumber.temp_rate > data.Polymer.Lumber;
+                    let oilCheck = resources.Oil.temp_rate > data.Polymer.Oil;
+                    return lumberCheck && oilCheck;
+                }
+                case 'Nano': {
+                    let coalCheck = resources.Coal.temp_rate > data.Nano_Tube.Coal;
+                    let neutroniumCheck = resources.Neutronium.temp_rate > data.Nano_Tube.Neutronium;
+                    return coalCheck && neutroniumCheck;
+                }
+                case 'Stanene': {
+                    let aluminiumCheck = resources.Aluminium.temp_rate > data.Stanene.Aluminium;
+                    let nanoTubeCheck = resources.Nano_Tube.temp_rate > data.Stanene.Nano_Tube;
+                    return aluminiumCheck && nanoTubeCheck;
+                }
             }
-            let resourceCheck = function(index, curNum) {
-                switch(keys[index]) {
-                    case 'Lux': {
-                        return resources.Furs.temp_rate > data.Lux.Furs;
-                    }
-                    case 'Alloy': {
-                        let copperCheck = resources.Copper.temp_rate > data.Alloy.Copper;
-                        let aluminiumCheck = resources.Aluminium.temp_rate > data.Alloy.Aluminium;
-                        return copperCheck && aluminiumCheck;
-                    }
-                    case 'Polymer': {
-                        let lumberCheck = resources.Lumber.temp_rate > data.Polymer.Lumber;
-                        let oilCheck = resources.Oil.temp_rate > data.Polymer.Oil;
-                        return lumberCheck && oilCheck;
-                    }
-                    case 'Nano_Tube': {
-                        let coalCheck = resources.Coal.temp_rate > data.Nano_Tube.Coal;
-                        let neutroniumCheck = resources.Neutronium.temp_rate > data.Nano_Tube.Neutronium;
-                        return coalCheck && neutroniumCheck;
-                    }
-                    case 'Stanene': {
-                        let aluminiumCheck = resources.Aluminium.temp_rate > data.Stanene.Aluminium;
-                        let nanoTubeCheck = resources.Nano_Tube.temp_rate > data.Stanene.Nano_Tube;
-                        return aluminiumCheck && nanoTubeCheck;
-                    }
+            return false;
+        };
+        let allocFunc = function(index, curNum) {
+            switch(keys[index]) {
+                case 'Lux': {
+                    resources.Furs.temp_rate -= data.Lux.Furs;
+                    break;
                 }
-                return false;
-            };
-            let allocFunc = function(index, curNum) {
-                switch(keys[index]) {
-                    case 'Lux': {
-                        resources.Furs.temp_rate -= data.Lux.Furs;
-                        break;
-                    }
-                    case 'Alloy': {
-                        resources.Copper.temp_rate -= data.Alloy.Copper;
-                        resources.Aluminium.temp_rate -= data.Alloy.Aluminium;
-                        break;
-                    }
-                    case 'Polymer': {
-                        resources.Lumber.temp_rate -= data.Polymer.Lumber;
-                        resources.Oil.temp_rate -= data.Polymer.Oil;
-                        break;
-                    }
-                    case 'Nano_Tube': {
-                        resources.Coal.temp_rate -= data.Nano_Tube.Coal;
-                        resources.Neutronium.temp_rate -= data.Nano_Tube.Neutronium;
-                        break;
-                    }
-                    case 'Stanene': {
-                        resources.Aluminium.temp_rate -= data.Stanene.Aluminium;
-                        resources.Nano_Tube.temp_rate -= data.Stanene.Nano_Tube;
-                        break;
-                    }
+                case 'Alloy': {
+                    resources.Copper.temp_rate -= data.Alloy.Copper;
+                    resources.Aluminium.temp_rate -= data.Alloy.Aluminium;
+                    break;
                 }
-            };
+                case 'Polymer': {
+                    resources.Lumber.temp_rate -= data.Polymer.Lumber;
+                    resources.Oil.temp_rate -= data.Polymer.Oil;
+                    break;
+                }
+                case 'Nano': {
+                    resources.Coal.temp_rate -= data.Nano_Tube.Coal;
+                    resources.Neutronium.temp_rate -= data.Nano_Tube.Neutronium;
+                    break;
+                }
+                case 'Stanene': {
+                    resources.Aluminium.temp_rate -= data.Stanene.Aluminium;
+                    resources.Nano_Tube.temp_rate -= data.Stanene.Nano_Tube;
+                    break;
+                }
+            }
+        };
 
-            // Creating allocation list
-            let allocation = allocate(totalFactories,priorities,ratios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+        // Creating allocation list
+        let allocation = allocate(totalFactories,priorities,ratios,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
-            console.log(priorities,ratios);
-            console.log(allocation);
+        console.log('FACTORY PRIO:', priorities, 'FACTORY RATIO:', ratios);
+        console.log('FACTORY ALLOC:', allocation);
 
-            // Allocating
-            for (let i = 0;i < keys.length;i++) {
-                if (data[keys[i]].num > allocation.alloc[i]) {
-                    for (let j = 0;j < data[keys[i]].num - allocation.alloc[i];j++) {
-                        data[keys[i]].dec.click();
-                    }
+        // Allocating
+        for (let i = 0;i < keys.length;i++) {
+            if (factoryModal[keys[i]] > allocation.alloc[i]) {
+                for (let j = 0;j < factoryModal[keys[i]] - allocation.alloc[i];j++) {
+                    factoryModal.subItem([keys[i]]);
                 }
             }
-            for (let i = 0;i < keys.length;i++) {
-                if (data[keys[i]].num < allocation.alloc[i]) {
-                    for (let j = 0;j < allocation.alloc[i] - data[keys[i]].num;j++) {
-                        data[keys[i]].inc.click();
-                    }
+        }
+        for (let i = 0;i < keys.length;i++) {
+            if (factoryModal[keys[i]] < allocation.alloc[i]) {
+                for (let j = 0;j < allocation.alloc[i] - factoryModal[keys[i]];j++) {
+                    factoryModal.addItem([keys[i]]);
                 }
             }
-
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
+        }
     }
 
     function autoSupport(priorityData) {
@@ -3615,13 +3603,13 @@ function main() {
         }
 
         // Starting other Auto Settings
-        if (settings.autoSmelter && (count % settings.smelterSettings.interval == 0)) {
+        if (settings.autoSmelter) {
             autoSmelter(limits);
         }
-        else if (settings.autoFactory && (count % settings.factorySettings.interval == 0)) {
+        if (settings.autoFactory) {
             autoFactory(limits);
         }
-        else if (settings.autoSupport) {
+        if (settings.autoSupport) {
             autoSupport(limits);
         }
 

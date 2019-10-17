@@ -41,3 +41,4 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Auto Gene - Automatically buy traits with genes
 * Cheat Menu (Demagorddon plz ignore). Will allow editing the global variable of the save. Hopefully for people wanting to restore some lost resources or fixing a save bug.
 * Improve Auto Employ (Depending on Auto Priority for craftsman, manage morale with entertainers, manage farmers with food rate)
+* Add collapsibility to auto settings tabs
