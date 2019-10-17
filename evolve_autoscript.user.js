@@ -1689,7 +1689,7 @@ function main() {
 
     function loadSmelter() {
         if (!settings.hasOwnProperty('smelterSettings')) {settings.smelterSettings = {};}
-        if (!settings.smelterSettings.hasOwnProperty('interval')) {settings.smelterSettings.interval = 20;}
+        if (!settings.smelterSettings.hasOwnProperty('pqCheck')) {settings.smelterSettings.pqCheck = true;}
         if (!settings.smelterSettings.hasOwnProperty('Wood')) {settings.smelterSettings.Wood = 1;}
         if (!settings.smelterSettings.hasOwnProperty('Coal')) {settings.smelterSettings.Coal = 1;}
         if (!settings.smelterSettings.hasOwnProperty('Oil')) {settings.smelterSettings.Oil = 1;}
@@ -1698,7 +1698,7 @@ function main() {
     }
     function loadFactory() {
         if (!settings.hasOwnProperty('factorySettings')) {settings.factorySettings = {};}
-        if (!settings.factorySettings.hasOwnProperty('interval')) {settings.factorySettings.interval = 23;}
+        if (!settings.factorySettings.hasOwnProperty('pqCheck')) {settings.factorySettings.pqCheck = true;}
         if (!settings.factorySettings.hasOwnProperty('Luxury_Goods')) {settings.factorySettings.Luxury_Goods = 0;}
         if (!settings.factorySettings.hasOwnProperty('Alloy')) {settings.factorySettings.Alloy = 3;}
         if (!settings.factorySettings.hasOwnProperty('Polymer')) {settings.factorySettings.Polymer = 3;}
@@ -3604,10 +3604,18 @@ function main() {
 
         // Starting other Auto Settings
         if (settings.autoSmelter) {
-            autoSmelter(limits);
+            if (settings.smelterSettings.pqCheck) {
+                autoSmelter(limits);
+            } else {
+                autoSmelter();
+            }
         }
         if (settings.autoFactory) {
-            autoFactory(limits);
+            if (settings.factorySettings.pqCheck) {
+                autoFactory(limits);
+            } else {
+                autoFactory();
+            }
         }
         if (settings.autoSupport) {
             autoSupport(limits);
@@ -3889,21 +3897,32 @@ function main() {
         } else {
             // Civilization Automation
             var priorityData = null;
-            if(settings.autoPriority) {
+            if (settings.autoPriority) {
                 priorityData = autoPriority(count);
             }
-            if(settings.autoTrade){autoTrade(priorityData);}
+            else {
+                if (settings.autoSmelter) {
+                    autoSmelter();
+                }
+                if (settings.autoFactory) {
+                    autoFactory();
+                }
+                if (settings.autoSupport) {
+                    autoSupport();
+                }
+            }
+            if (settings.autoTrade){autoTrade(priorityData);}
             if (settings.autoEjector) {autoEjector();}
-            if(settings.autoCraft){
+            if (settings.autoCraft){
                 autoCraft();
             }
-            if(settings.autoEmploy){
+            if (settings.autoEmploy){
                 autoEmploy(priorityData);
             }
-            if(settings.autoTax) {
+            if (settings.autoTax) {
                 autoTax();
             }
-            if(settings.autoMarket){
+            if (settings.autoMarket){
                 autoMarket();
             }
             if (settings.autoStorage) {
@@ -5117,19 +5136,16 @@ function main() {
     function createAutoSettingBuildingPage(tab) {
 
         // Auto Support
-        let autoSupportDesc = 'Powers buildings and allocates support. Currently not very smart and half done. Support power is not implemented yet. Power Priority can be changed in the Priority Tab.';
+        let autoSupportDesc = 'Powers buildings and allocates support. Power Priority can be changed in the Priority Tab.';
         let [autoSupportTitle, autoSupportContent] = createAutoSettingToggle('autoSupport', 'Auto Support', autoSupportDesc, false, tab);
 
         // Auto Smelter
-        let autoSmelterDesc = "Allocates the smelter building. The timing for allocating the smelter is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
+        let autoSmelterDesc = "Allocates the smelter building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoSmelterTitle, autoSmelterContent] = createAutoSettingToggle('autoSmelter', 'Auto Smelter', autoSmelterDesc, true, tab);
         Object.keys(settings.smelterSettings).forEach(function(res) {
-            let resText = null;
-            if (res == 'interval') {
-                resText = $('<h3 class="has-text-warning" style="width:12rem;">Inverval Rate:</h3>');
-            } else {
-                resText = $('<h3 class="has-text-warning" style="width:12rem;">'+res+' Priority:</h3>');
-            }
+            // Ignoring obsolete Interval and pqCheck
+            if (res == 'interval' || res == 'pqCheck') {return;}
+            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
             let resSub = function(mult) {
                 settings.smelterSettings[res] -= mult;
                 if (settings.smelterSettings[res] < 0) {settings.smelterSettings[res] = 0;}
@@ -5144,24 +5160,17 @@ function main() {
             autoSmelterContent.append(newDiv);
         });
 
-        let autoSmelterBtnDetails = 'Manually triggers the Auto Smelter function.';
-        let autoSmelterBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${autoSmelterBtnDetails}"><button class="button is-primary"><span>Manual</span></button></div>`);
-        autoSmelterBtn.on('click', function(e){
-            if (e.which != 1) {return;}
-            count = settings.smelterSettings.interval;
-        });
-        autoSmelterTitle.append(autoSmelterBtn);
+        let smelterPQToolTip = 'Enable to make Auto Smelter depend on the Auto Priority queue.';
+        let smelterPQCheck = createCheckBoxControl(settings.smelterSettings.pqCheck, 'smelterPQCheck', "Auto Priority", {path:[settings, 'smelterSettings', 'pqCheck'],toolTip:smelterPQToolTip});
+        autoSmelterTitle.append(smelterPQCheck);
 
         // Auto Factory
-        let autoFactoryDesc = "Allocates the factory building. The timing for allocating the factory is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted (Currently also depends on Auto Priority, will add non-autoPriority someday).";
+        let autoFactoryDesc = "Allocates the factory building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoFactoryTitle, autoFactoryContent] = createAutoSettingToggle('autoFactory', 'Auto Factory', autoFactoryDesc, true, tab);
         Object.keys(settings.factorySettings).forEach(function(res) {
-            let resText = null;
-            if (res == 'interval') {
-                resText = $('<h3 class="has-text-warning" style="width:12rem;">Inverval Rate:</h3>');
-            } else {
-                resText = $('<h3 class="has-text-warning" style="width:12rem;">'+res+' Priority:</h3>');
-            }
+            // Ignoring obsolete Interval and pqCheck
+            if (res == 'interval' || res == 'pqCheck') {return;}
+            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
             let resSub = function(mult) {
                 settings.factorySettings[res] -= mult;
                 if (settings.factorySettings[res] < 0) {settings.factorySettings[res] = 0;}
@@ -5176,20 +5185,16 @@ function main() {
             autoFactoryContent.append(newDiv);
         });
 
-        let autoFactoryBtnDetails = 'Manually triggers the Auto Factory function.';
-        let autoFactoryBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${autoFactoryBtnDetails}"><button class="button is-primary"><span>Manual</span></button></div>`);
-        autoFactoryBtn.on('click', function(e){
-            if (e.which != 1) {return;}
-            count = settings.factorySettings.interval;
-        });
-        autoFactoryTitle.append(autoFactoryBtn);
+        let factoryPQToolTip = 'Enable to make Auto Factory depend on the Auto Priority queue.';
+        let factoryPQCheck = createCheckBoxControl(settings.factorySettings.pqCheck, 'factoryPQCheck', "Auto Priority", {path:[settings, 'factorySettings', 'pqCheck'],toolTip:factoryPQToolTip});
+        autoFactoryTitle.append(factoryPQCheck);
 
         // Auto Mining Droid
-        let autoDroidDesc = "Allocates mining droids. The timing for allocation is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted. Currently not yet implemented.";
+        let autoDroidDesc = "Allocates mining droids. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoDroidTitle, autoDroidContent] = createAutoSettingToggle('autoDroid', 'Auto Mining Droid', autoDroidDesc, true, tab);
 
         // Auto Graphene Plant
-        let autoGrapheneDesc = "Allocates graphene plants. The timing for allocation is based on the Interval setting (every # seconds). The priorities determine how much each resource is weighted. Currently not yet implemented.";
+        let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoGrapheneTitle, autoGrapheneContent] = createAutoSettingToggle('autoGraphene', 'Auto Graphene Plants', autoGrapheneDesc, true, tab);
 
     }
