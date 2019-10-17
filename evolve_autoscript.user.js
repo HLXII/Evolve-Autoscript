@@ -1488,14 +1488,11 @@ function main() {
         get _priority() {return settings.jobs[this.id].priority;}
         set _priority(priority) {settings.jobs[this.id].priority = priority;}
 
-        get label() {
-            return document.querySelector('#civ-'+this.id+' > .job_label > h3');
+        get hireFunc() {
+            return window.game.vues['civ_+'+this.id].add;
         }
-        get hireBtn() {
-            return document.querySelector('#civ-'+this.id+' > .controls > .add');
-        }
-        get fireBtn() {
-            return document.querySelector('#civ-'+this.id+' > .controls > .sub');
+        get fireFunc() {
+            return window.game.vues['civ_+'+this.id].sub;
         }
 
         get name() {
@@ -1532,10 +1529,10 @@ function main() {
 
         hire(num) {
             if (num === undefined) {num = 1;}
-            if (this.hireBtn !== null) {
+            if (this.hireFunc !== null) {
                 disableMult();
                 for (let i = 0;i < num;i++) {
-                    this.hireBtn.click();
+                    this.hireFunc();
                 }
                 return true;
             } else {
@@ -1544,10 +1541,10 @@ function main() {
         }
         fire(num) {
             if (num === undefined) {num = 1;}
-            if (this.fireBtn !== null) {
+            if (this.fireFunc !== null) {
                 disableMult();
                 for (let i = 0;i < num;i++) {
-                    this.fireBtn.click();
+                    this.fireFunc();
                 }
                 return true;
             } else {
@@ -1555,12 +1552,6 @@ function main() {
             }
         }
 
-        updateUI() {
-            if (!this.unlocked) {return;}
-            let priorityLabel = document.getElementById(this.id+"_priority")
-            priorityLabel.removeChild(priorityLabel.firstChild);
-            priorityLabel.appendChild(document.createTextNode(this.priority));
-        }
     }
     class Unemployed extends Job {
         constructor(id, priority) {
@@ -1575,12 +1566,15 @@ function main() {
             }
         }
 
+        get hireFunc() {
+            return function() {};
+        }
+        get fireFunc() {
+            return function() {};
+        }
+
         get name() {
-            if (this.label !== null) {
-                return this.label.innerText;
-            } else {
-                return this.id;
-            }
+             window.game.global.race['carnivore'] || window.game.global.race['soul_eater'] ? 'Hunter' : 'Unemployed';
         }
 
         get employed() {
@@ -1594,28 +1588,17 @@ function main() {
             return true;
         }
 
-        updateUI() {
-            if (this.name != 'Hunter') {return;}
-            super.updateUI();
-        }
     }
     class Craftsman extends Job {
         constructor(id, priority) {
             super(id, priority);
         }
 
-        get mainDiv() {
-            return document.getElementById('foundry');
+        get hireFunc() {
+            return function() {window.game.vues.foundry.add('Plywood');};
         }
-        get hireBtn() {
-            return document.querySelector('#foundry .job:nth-child(2) > .controls > .add')
-        }
-        get fireBtn() {
-            return document.querySelector('#foundry .job:nth-child(2) > .controls > .sub')
-        }
-
-        get unlocked() {
-            return (civicsOn() && this.mainDiv !== null && this.mainDiv.children.length > 0);
+        get fireFunc() {
+            return function() {window.game.vues.foundry.sub('Plywood');};
         }
 
     }
@@ -1639,29 +1622,19 @@ function main() {
             super(id, priority);
         }
 
-        get mainDiv() {
-            return document.getElementById('craft'+this.id);
+        get hireFunc() {
+            return function() {window.game.vues.foundry.add(this.id);};
         }
-        get label() {
-            return document.querySelector('#craft'+this.id+' > h3');
-        }
-        get hireBtn() {
-            return document.getElementById('craft'+this.id).parentNode.children[1].children[1];
-        }
-        get fireBtn() {
-            return document.getElementById('craft'+this.id).parentNode.children[1].children[0];
+        get fireFunc() {
+            return function() {window.game.vues.foundry.sub(this.id);};
         }
 
         get name() {
-            if (this.label !== null) {
-                return this.label.innerText;
-            } else {
-                return this.id;
-            }
+            return window.game.global.resource[this.id].name;
         }
 
         get unlocked() {
-            return (civicsOn() && this.mainDiv !== null && this.mainDiv.style.display != 'none');
+            return window.game.global.resource[this.id].display;
         }
 
         get employed() {
