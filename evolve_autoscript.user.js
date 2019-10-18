@@ -2927,9 +2927,11 @@ function main() {
         if (window.game.global.tech['polymer']) {
             data.Polymer = {};
             let str = factoryModal.buildLabel('Polymer')
-            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)?[^\d\.]+/.exec(str)
+            console.log(str, temp);
             data.Polymer.Oil = temp[1];
-            data.Polymer.Lumber = temp[2];
+            // Kindred Kindling
+            data.Polymer.Lumber = (temp[2]) ? temp[2] : 0;
             data.Polymer.produce = 0;
             if (factoryModal.Polymer) {
                 let total = window.game.breakdown.p.Polymer.Factory;
@@ -3180,7 +3182,7 @@ function main() {
             }
             powered.push(buildings[x]);
             totalPowered += buildings[x].numTotal;
-            let priority = buildings[x].powerPriority ** 4;
+            let priority = buildings[x].powerPriority ** 5;
             totalPriority += priority;
             priorities.push(priority);
             maxes.push(buildings[x].numTotal);
