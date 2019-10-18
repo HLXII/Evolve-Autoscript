@@ -27,7 +27,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Add Slave Market to MiscActions
 * Add setting to display/hide inline UI
 * Add quick menu under resources (Script Version / Links / Reset UI)
-* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax)
+* Refactor some Auto Settings to use Vues object rather than parsing DOM for buttons, which increases performance (Auto Tax, Auto Craft, Auto Market)
 * Add Auto Ejector inline settings
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy amount, mercs max money)
 * Optimize UI clicks with multiplier buttons

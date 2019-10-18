@@ -176,16 +176,6 @@ function main() {
 
         }
 
-        get mainDiv() {
-            return document.getElementById('res'+this.id);
-        }
-        get cntLabel() {
-            return document.getElementById('cnt'+this.id);
-        }
-        get rateLabel() {
-            return document.getElementById('inc'+this.id);
-        }
-
         get name() {
             return window.game.global.resource[this.id].name;
         }
@@ -240,38 +230,6 @@ function main() {
             }
         }
 
-        get crateIncBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 0) {
-                return storageDiv[0].children[3]
-            } else {
-                return null;
-            }
-        }
-        get crateDecBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 0) {
-                return storageDiv[0].children[1]
-            } else {
-                return null;
-            }
-        }
-        get containerIncBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 1) {
-                return storageDiv[1].children[3]
-            } else {
-                return null;
-            }
-        }
-        get containerDecBtn() {
-            let storageDiv = document.querySelectorAll('#stack-'+this.id+' > .trade')
-            if (storageDiv.length > 1) {
-                return storageDiv[1].children[1]
-            } else {
-                return null;
-            }
-        }
         get crateNum() {
             return window.game.global.resource[this.id].crates;
         }
@@ -417,12 +375,6 @@ function main() {
             }
         }
 
-        get tradeDecBtn() {
-            return document.querySelector('#market-'+this.id+' > .trade > .is-primary > .add');
-        }
-        get tradeIncBtn() {
-            return document.querySelector('#market-'+this.id+' > .trade > .is-primary > .sub');
-        }
         get tradeLabel() {
             return document.querySelector('#market-'+this.id+' > .trade > .current');
         }
