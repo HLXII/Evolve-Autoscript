@@ -1547,10 +1547,10 @@ function main() {
         }
 
         get hireFunc() {
-            return function() {window.game.vues.foundry.add('Plywood');};
+            return function() {window.game.vues.foundry.add('Brick');};
         }
         get fireFunc() {
-            return function() {window.game.vues.foundry.sub('Plywood');};
+            return function() {window.game.vues.foundry.sub('Brick');};
         }
 
     }
@@ -2376,7 +2376,7 @@ function main() {
 
         // Allocating jobs
         let allocation = allocate(population,priorities,ratios,{max:maxes});
-        //console.log(allocation);
+        console.log("JOBS:", sortedJobs, allocation.alloc);
 
         // Firing extra employees
         for (let i = 0;i < allocation.alloc.length;i++) {
@@ -2397,7 +2397,7 @@ function main() {
         //console.log("Divying up Craftsman");
         // Delay to get new craftman number
         setTimeout(function() {
-            let totalCraftsman = 0;
+            let totalCraftsman = window.game.global.civic.craftsman.workers;
             let totalPriority = 0;
             let cjobs = [];
             let priorities = [];
@@ -2407,7 +2407,6 @@ function main() {
                 if (!craftJobs[x].unlocked) {continue;}
                 cjobs.push(craftJobs[x]);
                 totalPriority += craftJobs[x].priority;
-                totalCraftsman += craftJobs[x].employed;
                 priorities.push(craftJobs[x].priority);
             }
             // Calculating wanted ratios
@@ -2416,6 +2415,8 @@ function main() {
             }
             // Optimizing craftsman placement
             let allocation = allocate(totalCraftsman,priorities,ratios);
+
+            console.log("CRAFTJOBS:", cjobs, priorities, ratios, allocation.alloc);
 
             // Firing all unneeded
             for (let i = 0;i < cjobs.length;i++) {
@@ -2429,7 +2430,7 @@ function main() {
                     cjobs[i].hire(allocation.alloc[i] - cjobs[i].employed);
                 }
             }
-        }, 25);
+        }, 50);
     }
 
     function getCurrentMorale() {
@@ -3675,7 +3676,7 @@ function main() {
         // Begin allocating algorithm
         while (curFreeTradeRoutes > 0) {
             // Checking if can buy trade route
-            if (focusSequence.length > curFocus && resources.Money.temp_rate > resources[keys[focusSequence[curFocus]]].tradeBuyCost) {
+            if (focusSequence && focusSequence.length > curFocus && resources.Money.temp_rate > resources[keys[focusSequence[curFocus]]].tradeBuyCost) {
                 // Can buy trade route
                 //console.log("Buying", focusSequence[curFocus], curFocus);
                 newTradeRoutes[keys[focusSequence[curFocus]]] += 1;
