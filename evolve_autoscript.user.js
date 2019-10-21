@@ -1959,7 +1959,7 @@ function main() {
                 // Hard Challenge
                 if (evoHardChallengeActions.includes(action.id)) {
                     // Junker will start automatically
-                    if (action.id == 'evo-junker') {
+                    if (action.id == 'evo-junker' && settings[action.id]) {
                         newPriority = 2;
                     }
                     // Other Hard Challenges will need to be toggled
