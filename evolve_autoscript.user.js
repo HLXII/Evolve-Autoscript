@@ -2728,19 +2728,26 @@ function main() {
                     case 'Lumber': {
                         if (limits.Lumber !== null) {
                             priority /= limits.Lumber.priority;
+                        } else {
+                            priority = 0;
                         }
                         break;
                     }
                     case 'Souls': {
                         if (limits.Food !== null) {
                             priority /= limits.Food.priority;
+                        } else {
+                            priority = 0;
                         }
                         break;
                     }
                     case 'Flesh': {
                         if (limits.Furs !== null) {
                             priority /= limits.Furs.priority;
+                        } else {
+                            priority = 0;
                         }
+                        break;
                     }
                 }
             }
@@ -2749,16 +2756,24 @@ function main() {
         if (data.hasOwnProperty('Coal')) {
             fuelKeys.push('Coal');
             let priority = settings.smelterSettings.Coal;
-            if (limits && limits.Coal !== null) {
-                priority /= limits.Coal.priority;
+            if (limits) {
+                if (limits.Coal !== null) {
+                    priority /= limits.Coal.priority;
+                } else {
+                    priority = 0;
+                }
             }
             fuelPriorities.push(priority);
         }
         if (data.hasOwnProperty('Oil')) {
             fuelKeys.push('Oil');
             let priority = settings.smelterSettings.Oil;
-            if (limits && limits.Oil !== null) {
-                priority /= limits.Oil.priority;
+            if (limits) {
+                if (limits.Oil !== null) {
+                    priority /= limits.Oil.priority;
+                } else {
+                    priority = 0;
+                }
             }
             fuelPriorities.push(priority);
         }
@@ -2805,16 +2820,24 @@ function main() {
         if (data.hasOwnProperty('Iron')) {
             prodKeys.push('Iron');
             let priority = settings.smelterSettings.Iron;
-            if (limits && limits.Iron !== null) {
-                priority /= limits.Iron.priority;
+            if (limits) {
+                if (limits.Iron !== null) {
+                    priority /= limits.Iron.priority;
+                } else {
+                    priority = 0;
+                }
             }
             prodPriorities.push(priority);
         }
         if (data.hasOwnProperty('Steel')) {
             prodKeys.push('Steel');
             let priority = settings.smelterSettings.Steel;
-            if (limits && limits.Steel !== null) {
-                priority /= limits.Steel.priority;
+            if (limits) {
+                if (limits.Steel !== null) {
+                    priority /= limits.Steel.priority;
+                } else {
+                    priority = 0;
+                }
             }
             prodPriorities.push(priority);
         }
@@ -3061,8 +3084,12 @@ function main() {
         if (data.hasOwnProperty('Lux')) {
             keys.push('Lux');
             let priority = settings.factorySettings.Luxury_Goods;
-            if (limits && limits.Money !== null) {
-                priority *= limits.Money.priority;
+            if (limits) {
+                if (limits.Money !== null) {
+                    priority *= limits.Money.priority;
+                } else {
+                    priority = 0;
+                }
             }
             priorities.push(priority);
             totalPriority += priority;
@@ -3070,8 +3097,12 @@ function main() {
         if (data.hasOwnProperty('Alloy')) {
             keys.push('Alloy');
             let priority = settings.factorySettings.Alloy;
-            if (limits && limits.Alloy !== null) {
-                priority *= limits.Alloy.priority;
+            if (limits) {
+                if (limits.Alloy !== null) {
+                    priority *= limits.Alloy.priority;
+                } else {
+                    priority = 0;
+                }
             }
             priorities.push(priority);
             totalPriority += priority;
@@ -3079,8 +3110,12 @@ function main() {
         if (data.hasOwnProperty('Polymer')) {
             keys.push('Polymer');
             let priority = settings.factorySettings.Polymer;
-            if (limits && limits.Polymer !== null) {
-                priority *= limits.Polymer.priority;
+            if (limits) {
+                if (limits.Polymer !== null) {
+                    priority *= limits.Polymer.priority;
+                } else {
+                    priority = 0;
+                }
             }
             priorities.push(priority);
             totalPriority += priority;
@@ -3088,8 +3123,12 @@ function main() {
         if (data.hasOwnProperty('Nano')) {
             keys.push('Nano');
             let priority = settings.factorySettings.Nano_Tube;
-            if (limits && limits.Nano_Tube !== null) {
-                priority *= limits.Nano_Tube.priority;
+            if (limits) {
+                if (limits.Nano_Tube !== null) {
+                    priority *= limits.Nano_Tube.priority;
+                } else {
+                    priority = 0;
+                }
             }
             priorities.push(priority);
             totalPriority += priority;
@@ -3097,8 +3136,12 @@ function main() {
         if (data.hasOwnProperty('Stanene')) {
             keys.push('Stanene');
             let priority = settings.factorySettings.Stanene;
-            if (limits && limits.Stanene !== null) {
-                priority *= limits.Stanene.priority;
+            if (limits) {
+                if (limits.Stanene !== null) {
+                    priority *= limits.Stanene.priority;
+                } else {
+                    priority = 0;
+                }
             }
             priorities.push(priority);
             totalPriority += priority;
