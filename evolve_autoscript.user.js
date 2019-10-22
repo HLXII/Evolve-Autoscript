@@ -2729,7 +2729,7 @@ function main() {
                         if (limits.Lumber !== null) {
                             priority /= limits.Lumber.priority;
                         } else {
-                            priority = 0;
+                            priority = 10**5;
                         }
                         break;
                     }
@@ -2737,7 +2737,7 @@ function main() {
                         if (limits.Food !== null) {
                             priority /= limits.Food.priority;
                         } else {
-                            priority = 0;
+                            priority = 10**5;
                         }
                         break;
                     }
@@ -2745,7 +2745,7 @@ function main() {
                         if (limits.Furs !== null) {
                             priority /= limits.Furs.priority;
                         } else {
-                            priority = 0;
+                            priority = 10**5;
                         }
                         break;
                     }
@@ -2760,7 +2760,7 @@ function main() {
                 if (limits.Coal !== null) {
                     priority /= limits.Coal.priority;
                 } else {
-                    priority = 0;
+                    priority = 10**10;
                 }
             }
             fuelPriorities.push(priority);
@@ -2772,7 +2772,7 @@ function main() {
                 if (limits.Oil !== null) {
                     priority /= limits.Oil.priority;
                 } else {
-                    priority = 0;
+                    priority = 10**20;
                 }
             }
             fuelPriorities.push(priority);

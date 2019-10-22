@@ -23,7 +23,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 ## Small
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger
 * Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market)
-* Add Sacrifical Alter to MiscActions (Priority setting will be useless, add special setting for max population gap)
 * Add Slave Market to MiscActions
 * Add setting to display/hide inline UI
 * Add quick menu under resources (Script Version / Links / Reset UI)
