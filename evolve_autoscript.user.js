@@ -773,10 +773,14 @@ function main() {
                 produce = [{res:"red_support",cost:1}];
                 break;
             case "space-swarm_control":
-                produce = [{res:"swarm_support",cost:def.support}];
+                effectStr = def.effect();
+                test = /[^\d\.]*([\d\.]+)[^\d\.]*/.exec(effectStr);
+                produce = [{res:"swarm_support",cost:+test[1]}];
                 break;
             case "space-swarm_satellite":
-                produce = [{res:"electricity",cost:1}];
+                effectStr = def.effect();
+                test = /\+([\d\.]+)kW.*/.exec(effectStr);
+                produce = [{res:"electricity",cost:+test[1]}];
                 break;
             case "space-gas_mining":
                 effectStr = def.effect();
@@ -2965,7 +2969,6 @@ function main() {
             data.Polymer = {};
             let str = factoryModal.buildLabel('Polymer')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)?[^\d\.]+/.exec(str)
-            console.log(str, temp);
             data.Polymer.Oil = temp[1];
             // Kindred Kindling
             data.Polymer.Lumber = (temp[2]) ? temp[2] : 0;
