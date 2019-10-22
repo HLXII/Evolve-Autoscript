@@ -1422,12 +1422,49 @@ function main() {
             return "Hire Fortress Mercenary";
         }
     }
+    class AlterAction extends MiscAction {
+       constructor(id) {
+            super(id);
+            this.res = {};
+        }
+        get btn() {
+            let btn = $("#city-s_alter > a");
+            return (btn.length) ? btn[0] : null;
+        }
+        get unlocked() {
+            let exists = (window.game.global.city.hasOwnProperty('s_alter') && window.game.global.city.s_alter.count == 1);
+            let populationCheck = false;
+            for (let x in window.game.global.resource) {
+                if (Object.keys(window.game.races).includes(x)) {
+                    populationCheck = window.game.global.resource[x].amount == window.game.global.resource[x].max;
+                    break;
+                }
+            }
+            return exists && populationCheck;
+        }
+
+        get name() {
+            return "Sacrifice";
+        }
+
+        getResDep(resid) {
+            return null;
+        }
+
+        click() {
+            let btn = this.btn;
+            if (btn === null) {return false;}
+            btn.click();
+            return true;
+        }
+    }
     var miscActions = {};
     function loadMiscActions() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         miscActions.Gene = new GeneAction("Gene");
         miscActions.Mercenary = new MercenaryAction("Mercenary");
         miscActions.FortressMercenary = new FortressMercenaryAction("FortressMercenary");
+        miscActions.Sacrifice = new AlterAction("Sacrifice");
     }
 
     class Job {
@@ -3003,9 +3040,9 @@ function main() {
             resources.Polymer.temp_rate -= data.Polymer.produce * factoryModal.Polymer;
         }
         if (factoryModal.Nano) {
-            resources.Coal.temp_rate += data.Nano_Tube.Coal * factoryModal.Nano;
-            resources.Neutronium.temp_rate += data.Nano_Tube.Neutronium * factoryModal.Nano;
-            resources.Nano_Tube.temp_rate -= data.Nano_Tube.produce * factoryModal.Nano;
+            resources.Coal.temp_rate += data.Nano.Coal * factoryModal.Nano;
+            resources.Neutronium.temp_rate += data.Nano.Neutronium * factoryModal.Nano;
+            resources.Nano_Tube.temp_rate -= data.Nano.produce * factoryModal.Nano;
         }
         if (factoryModal.Stanene) {
             resources.Aluminium.temp_rate += data.Stanene.Aluminium * factoryModal.Stanene;
@@ -3082,8 +3119,8 @@ function main() {
                     return lumberCheck && oilCheck;
                 }
                 case 'Nano': {
-                    let coalCheck = resources.Coal.temp_rate > data.Nano_Tube.Coal;
-                    let neutroniumCheck = resources.Neutronium.temp_rate > data.Nano_Tube.Neutronium;
+                    let coalCheck = resources.Coal.temp_rate > data.Nano.Coal;
+                    let neutroniumCheck = resources.Neutronium.temp_rate > data.Nano.Neutronium;
                     return coalCheck && neutroniumCheck;
                 }
                 case 'Stanene': {
@@ -3111,8 +3148,8 @@ function main() {
                     break;
                 }
                 case 'Nano': {
-                    resources.Coal.temp_rate -= data.Nano_Tube.Coal;
-                    resources.Neutronium.temp_rate -= data.Nano_Tube.Neutronium;
+                    resources.Coal.temp_rate -= data.Nano.Coal;
+                    resources.Neutronium.temp_rate -= data.Nano.Neutronium;
                     break;
                 }
                 case 'Stanene': {
@@ -3273,7 +3310,12 @@ function main() {
             // Don't check buildings that can't be bought
             let btn = document.getElementById(buildings[x].id);
             // If button doesn't exist but it's a space dock building, bring it anyways
-            if (btn === null && (x=='spcdock-probes'||x=='spcdock-seeder')) {build.push(buildings[x]);continue;}
+            if (btn === null) {
+                if (x=='spcdock-probes'||x=='spcdock-seeder') {
+                    build.push(buildings[x]);
+                }
+                continue;
+            }
             if (btn.className.indexOf('cnam') >= 0) {continue;}
             build.push(buildings[x]);
         }
@@ -5197,7 +5239,7 @@ function main() {
         if (t === undefined) {
             if (a == "Container" || a == "Crate") {
                 action = storages[a];
-            } else if (a == 'Gene' || a == 'Mercenary' || a == 'FortressMercenary') {
+            } else if (a == 'Gene' || a == 'Mercenary' || a == 'FortressMercenary' || a == 'Sacrifice') {
                 action = miscActions[a];
             } else {
                 action = arpas[a];
