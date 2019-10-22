@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.2.9
+// @version      1.2.10
 // @description  try to take over the world!
 // @author       HLXII
 // @match        https://pmotschmann.github.io/Evolve/
@@ -58,7 +58,7 @@ function main() {
     if(jsonSettings != null){settings = JSON.parse(jsonSettings);}
 
     let url = 'https://github.com/HLXII/Evolve-Autoscript';
-    let version = '1.2.9';
+    let version = '1.2.10';
 
     /***
     *
