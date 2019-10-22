@@ -4978,13 +4978,13 @@ function main() {
             let sellControls = createNumControl(sellVal,resources[id].name+"_sell_ratio",sellDec,sellInc);
             manualSell.append(sellControls);
 
-            let prioritySub = function() {
-                resources[id].decBasePriority();
+            let prioritySub = function(mult) {
+                resources[id].decBasePriority(mult);
                 createMarketSettings();
                 return resources[id].basePriority;
             }
-            let priorityAdd = function() {
-                resources[id].incBasePriority();
+            let priorityAdd = function(mult) {
+                resources[id].incBasePriority(mult);
                 createMarketSettings();
                 return resources[id].basePriority;
             }
