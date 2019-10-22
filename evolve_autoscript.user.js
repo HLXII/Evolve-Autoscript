@@ -57,6 +57,9 @@ function main() {
     var jsonSettings = localStorage.getItem('settings');
     if(jsonSettings != null){settings = JSON.parse(jsonSettings);}
 
+    let url = 'https://github.com/HLXII/Evolve-Autoscript';
+    let version = '1.2.9';
+
     /***
     *
     * Setup resources informations and settings
@@ -4174,6 +4177,9 @@ function main() {
         if ($('#autoSettings').length == 0) {
             createAutoSettings();
         }
+        if ($('#as-watermark').length == 0) {
+            createScriptWatermark();
+        }
     }
 
     function resetUI() {
@@ -5668,6 +5674,11 @@ function main() {
     function createAutoLog() {
         let autolog = $('<div id="autolog" class="msgQueue right resource alt as-autolog"></div>');
         $('#queueColumn').append(autolog);
+    }
+
+    function createScriptWatermark() {
+        let watermark = $(`<div id="as-watermark" style="text-align:center"><span>Evolve AutoScript by HLXII - Version <a href="${url}">${version}</a></span></div>`);
+        $('#resources').append(watermark);
     }
 
     /***
