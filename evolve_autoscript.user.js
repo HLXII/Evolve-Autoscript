@@ -25,7 +25,7 @@ unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
 $(document).ready(function() {
     let injectScript = `
 import { global, vues, breakdown } from './vars.js';
-import { actions, checkTechRequirements } from './actions.js';
+import { actions, checkTechRequirements, f_rate } from './actions.js';
 import { races } from './races.js';
 import {tradeRatio, tradeBuyPrice, tradeSellPrice, craftCost, atomic_mass } from './resources.js';
 window.game =  {
@@ -40,6 +40,7 @@ window.game =  {
     craftCost: craftCost,
     atomic_mass: atomic_mass,
     techUnlocked:checkTechRequirements,
+    f_rate:f_rate,
 };
 window.dispatchEvent(new CustomEvent('customModuleAdded'));
 `;
@@ -3030,6 +3031,8 @@ function main() {
     function getFactoryData() {
         let data = {};
 
+        let factoryLevel = window.game.global.tech['factory'] ? window.game.global.tech['factory'] : 0;
+
         // Luxury Goods
         data.Lux = {};
         let str = factoryModal.buildLabel('Lux')
@@ -3043,13 +3046,19 @@ function main() {
         temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
         data.Alloy.Copper = temp[1];
         data.Alloy.Aluminium = temp[2];
-        data.Alloy.produce = 0;
-        if (factoryModal.Alloy) {
-            let total = window.game.breakdown.p.Alloy.Factory;
-            total = +total.substring(0, total.length - 1);
-            total *= getMultiplier('Alloy') * getMultiplier('Global');
-            data.Alloy.produce = total / factoryModal.Alloy;
+        // Alloy Production
+        let factory_output = window.game.f_rate.Alloy.output[factoryLevel];
+        if (window.game.global.race['toxic']){
+            factory_output *= 1.20;
         }
+        if (window.game.global.tech['alloy']){
+            factory_output *= 1.37;
+        }
+        if (window.game.global.race['metallurgist']){
+            factory_output *= 1 + (window.game.global.race['metallurgist'] * 0.04);
+        }
+        factory_output *= getMultiplier('Alloy') * getMultiplier('Global');
+        data.Alloy.produce = factory_output;
 
         // Polymer
         if (window.game.global.tech['polymer']) {
@@ -3059,13 +3068,16 @@ function main() {
             data.Polymer.Oil = temp[1];
             // Kindred Kindling
             data.Polymer.Lumber = (temp[2]) ? temp[2] : 0;
-            data.Polymer.produce = 0;
-            if (factoryModal.Polymer) {
-                let total = window.game.breakdown.p.Polymer.Factory;
-                total = +total.substring(0, total.length - 1);
-                total *= getMultiplier('Polymer') * getMultiplier('Global');
-                data.Polymer.produce = total / factoryModal.Polymer;
+            // Polymer Production
+            let factory_output = window.game.f_rate.Polymer.output[factoryLevel];
+            if (window.game.global.race['toxic']) {
+                factory_output *= 1.20;
             }
+            if (window.game.global.tech['polymer'] >= 2){
+                factory_output *= 1.42;
+            }
+            factory_output *= getMultiplier('Polymer') * getMultiplier('Global');
+            data.Polymer.produce = factory_output;
         }
         // Nano Tube
         if (window.game.global.tech['nano']) {
@@ -3075,12 +3087,16 @@ function main() {
             data.Nano.Coal = temp[1];
             data.Nano.Neutronium = temp[2];
             data.Nano.produce = 0;
-            if (factoryModal.Nano) {
-                let total = window.game.breakdown.p.Nano_Tube.Factory;
-                total = +total.substring(0, total.length - 1);
-                total *= getMultiplier('Nano_Tube') * getMultiplier('Global');
-                data.Nano.produce = total / factoryModal.Nano;
+            // Nano Tube Production
+            let factory_output = window.game.f_rate.Nano_Tube.output[factoryLevel];
+            if (window.game.global.race['toxic']) {
+                factory_output *= 1.08;
             }
+            if (window.game.global.tech['polymer'] >= 2){
+                factory_output *= 1.42;
+            }
+            factory_output *= getMultiplier('Nano_Tube') * getMultiplier('Global');
+            data.Nano.produce = factory_output;
         }
         // Stanene
         if (window.game.global.tech['stanene']) {
@@ -3089,13 +3105,10 @@ function main() {
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
             data.Stanene.Aluminium = temp[1];
             data.Stanene.Nano_Tube = temp[2];
-            data.Stanene.produce = 0;
-            if (factoryModal.Stanene) {
-                let total = window.game.breakdown.p.Stanene.Factory;
-                total = +total.substring(0, total.length - 1);
-                total *= getMultiplier('Stanene') * getMultiplier('Global');
-                data.Stanene.produce = total / factoryModal.Stanene;
-            }
+            // Stanene Production
+            let factory_output = window.game.f_rate.Stanene.output[factoryLevel];
+            factory_output *= getMultiplier('Stanene') * getMultiplier('Global');
+            data.Stanene.produce = factory_output;
         }
         return data;
     }
@@ -3152,7 +3165,7 @@ function main() {
                 if (limits.Money !== null) {
                     priority *= limits.Money.priority;
                 } else {
-                    priority = 0;
+                    priority /= 10e10;
                 }
             }
             priorities.push(priority);
@@ -3165,7 +3178,7 @@ function main() {
                 if (limits.Alloy !== null) {
                     priority *= limits.Alloy.priority;
                 } else {
-                    priority = 0;
+                    priority /= 10e10;
                 }
             }
             priorities.push(priority);
@@ -3178,7 +3191,7 @@ function main() {
                 if (limits.Polymer !== null) {
                     priority *= limits.Polymer.priority;
                 } else {
-                    priority = 0;
+                    priority /= 10e10;
                 }
             }
             priorities.push(priority);
@@ -3191,7 +3204,7 @@ function main() {
                 if (limits.Nano_Tube !== null) {
                     priority *= limits.Nano_Tube.priority;
                 } else {
-                    priority = 0;
+                    priority = 10e10;
                 }
             }
             priorities.push(priority);
@@ -3204,7 +3217,7 @@ function main() {
                 if (limits.Stanene !== null) {
                     priority *= limits.Stanene.priority;
                 } else {
-                    priority = 0;
+                    priority /= 10e10;
                 }
             }
             priorities.push(priority);
@@ -3245,26 +3258,31 @@ function main() {
             switch(keys[index]) {
                 case 'Lux': {
                     resources.Furs.temp_rate -= data.Lux.Furs;
+                    resources.Money.temp_rate += data.Lux.Money;
                     break;
                 }
                 case 'Alloy': {
                     resources.Copper.temp_rate -= data.Alloy.Copper;
                     resources.Aluminium.temp_rate -= data.Alloy.Aluminium;
+                    resources.Alloy.temp_rate += data.Alloy.produce;
                     break;
                 }
                 case 'Polymer': {
                     resources.Lumber.temp_rate -= data.Polymer.Lumber;
                     resources.Oil.temp_rate -= data.Polymer.Oil;
+                    resources.Polymer.temp_rate += data.Polymer.produce;
                     break;
                 }
                 case 'Nano': {
                     resources.Coal.temp_rate -= data.Nano.Coal;
                     resources.Neutronium.temp_rate -= data.Nano.Neutronium;
+                    resources.Nano_Tube.temp_rate += data.Nano.produce;
                     break;
                 }
                 case 'Stanene': {
                     resources.Aluminium.temp_rate -= data.Stanene.Aluminium;
                     resources.Nano_Tube.temp_rate -= data.Stanene.Nano_Tube;
+                    resources.Stanene.temp_rate += data.Stanene.produce;
                     break;
                 }
             }
