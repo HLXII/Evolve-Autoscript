@@ -821,6 +821,31 @@ function main() {
             case "interstellar-starport":
                 produce = [{res:"alpha_support",cost:5}];
                 break;
+            case "interstellar-habitat":
+                produce = [{res:"alpha_support",cost:1}];
+                break;
+            case "interstellar-fusion":
+                produce = [{res:"electricity",cost:-def.powered()}];
+                break;
+            case "interstellar-xfer_station":
+                produce = [{res:"alpha_support",cost:1}];
+                break;
+            case "interstellar-nexus":
+                produce = [{res:"nebula_support",cost:2}];
+                break;
+            case "interstellar-harvester":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Helium/.exec(effectStr);
+                produce = [{res:"Helium_3",cost:+test[1]}];
+                test = /\+([\d\.]+) Deuterium/.exec(effectStr);
+                produce.push({res:"Deuterium",cost:+test[1]});
+                break;
+            case "interstellar-elerium_prospector":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Elerium/.exec(effectStr);
+                produce = [{res:"Elerium",cost:+test[1]}];
+                break;
+                // TODO MORE INTERSTELLAR
             default:
                 break;
         }
@@ -932,9 +957,44 @@ function main() {
             case "space-iron_ship":
                 consume = [{res:"belt_support",cost:-def.support}];
                 break;
+            case "interstellar-habitat":
+                consume = [{res:"electricity",cost:def.powered()}];
+                break;
             case "interstellar-mining_droid":
             case "interstellar-laboratory":
+            case "interstellar-processing":
+            case "interstellar-exchange":
+            case "interstellar-g_factory":
                 consume = [{res:"alpha_support",cost:-def.support}];
+                break;
+            case "interstellar-fusion":
+                consume = [{res:"alpha_support",cost:-def.support}];
+                effectStr = def.effect();
+                test = /-([\d\.]+) Deuterium/.exec(effectStr);
+                consume.push({res:"Deuterium",cost:test[1]});
+                break;
+            case "interstellar-xfer_station":
+                consume = [{res:"electricity",cost:def.powered()}];
+                effectStr = def.effect();
+                test = /-([\d\.]+) Uranium/.exec(effectStr);
+                consume.push({res:"Uranium",cost:test[1]});
+                break;
+            case "interstellar-nexus":
+                consume = [{res:"electricity",cost:def.powered()}];
+                effectStr = def.effect();
+                test = /-\$([\d\.]+)/.exec(effectStr);
+                consume.push({res:"Money",cost:test[1]});
+                break
+            case "interstellar-harvester":
+            case "interstellar-elerium_prospector":
+                consume = [{res:"nebula_support",cost:-def.support}];
+                break;
+            case "portal-turret":
+            case "portal-war_droid":
+            case "portal-war_drone":
+            case "portal-sensor_drone":
+            case "portal-attractor":
+                consume = [{res:"electricity",cost:def.powered()}];
                 break;
             default:
                 break;
@@ -2522,7 +2582,8 @@ function main() {
         //console.log(morale, maxMorale, moneyRate);
         // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
         if (resources.Money.ratio == 1) {
-            decTax(50);
+            //TODO Figure out a good way of doing this
+            //decTax();
         }
         // Currently above max Morale
         else if (morale >= maxMorale) {
@@ -3281,7 +3342,9 @@ function main() {
             moon_support:0,
             red_support:0,
             swarm_support:0,
-            belt_support:0
+            belt_support:0,
+            alpha_support:0,
+            nebula_support:0
         }
         let canTurnOn = function(index, curNum) {
             let building = powered[index];
