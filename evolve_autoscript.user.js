@@ -5713,7 +5713,7 @@ function main() {
         let autoDroidDesc = "Allocates mining droids. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoDroidTitle, autoDroidContent] = createAutoSettingToggle('autoDroid', 'Auto Mining Droid', autoDroidDesc, true, tab);
         Object.keys(settings.droidSettings).forEach(function(res) {
-            // Ignoring obsolete Interval and pqCheck
+            // Ignoring pqCheck
             if (res == 'pqCheck') {return;}
             let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
             let resSub = function(mult) {
@@ -5737,7 +5737,27 @@ function main() {
         // Auto Graphene Plant
         let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoGrapheneTitle, autoGrapheneContent] = createAutoSettingToggle('autoGraphene', 'Auto Graphene Plants', autoGrapheneDesc, true, tab);
+        Object.keys(settings.grapheneSettings).forEach(function(res) {
+            // Ignoring and pqCheck
+            if (res == 'pqCheck') {return;}
+            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
+            let resSub = function(mult) {
+                settings.grapheneSettings[res] -= mult;
+                if (settings.grapheneSettings[res] < 0) {settings.grapheneSettings[res] = 0;}
+                return settings.grapheneSettings[res];
+            }
+            let resAdd = function(mult) {
+                settings.grapheneSettings[res] += mult;
+                return settings.grapheneSettings[res];
+            }
+            let resControls = createNumControl(settings.grapheneSettings[res], "graphene_"+res+"_priority", resSub, resAdd);
+            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+            autoGrapheneContent.append(newDiv);
+        });
 
+        let graphenePQToolTip = 'Enable to make Auto Graphene depend on the Auto Priority queue.';
+        let graphenePQCheck = createCheckBoxControl(settings.grapheneSettings.pqCheck, 'graphenePQCheck', "Auto Priority", {path:[settings, 'grapheneSettings', 'pqCheck'],toolTip:graphenePQToolTip});
+        autoGrapheneTitle.append(graphenePQCheck);
     }
 
     function createAutoSettingResearchPage(tab) {
