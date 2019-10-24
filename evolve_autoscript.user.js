@@ -2717,7 +2717,7 @@ function main() {
     function getSmelterData() {
         let data = {};
         // Wood (Lumber/Souls/Flesh)
-        if (!window.game.global.race['kindling_kindred']) {
+        if (!window.game.global.race['kindling_kindred'] && !window.game.global.race['evil']) {
             data.Wood = {};
             let str = smelterModal.buildLabel('wood');
             str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
@@ -3506,6 +3506,184 @@ function main() {
         }
     }
 
+    let grapheneModal = null;
+    function loadGrapheneModal() {
+        // Checking if modal already open
+        if ($('.modal').length != 0) {
+            return;
+        }
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+        // Opening Modal
+        $('#interstellar-g_factory > .special').click();
+        setTimeout(function() {
+            grapheneModal = window.game.vues['specialModal'];
+
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
+        }, 100);
+    }
+    function getGrapheneData() {
+        let data = {};
+        // Lumber
+        if (!window.game.global.race['kindling_kindred']) {
+            data.Lumber = {};
+            let str = grapheneModal.buildLabel('wood');
+            data.Lumber.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
+            data.Lumber.num = window.game.global.interstellar.g_factory.Lumber;
+
+        }
+        // Coal
+        if (window.game.global.resource.Coal.display) {
+            data.Coal = {};
+            let str = grapheneModal.buildLabel('coal');
+            data.Coal.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
+            data.Coal.num = window.game.global.interstellar.g_factory.Coal;
+        }
+        // Oil
+        if (window.game.global.resource.Oil.display) {
+            data.Oil = {};
+            let str = grapheneModal.buildLabel('oil');
+            data.Oil.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
+            data.Oil.num = window.game.global.interstellar.g_factory.Oil;
+        }
+        return data;
+    }
+    function autoGraphene(limits) {
+        // Don't Auto Graphene if not unlocked
+        if (!researched('tech-graphene')) {return;}
+        // Loading Graphene Plant Vue
+        if (grapheneModal === null) {
+            loadGrapheneModal();
+            return;
+        }
+
+        // Finding relevent elements
+        let data = getGrapheneData();
+        console.log('GRAPHENE Data:', data);
+
+        let totalFactories = buildings['interstellar-g_factory'].numOn;
+
+        // Reverting current allocation
+        if (data.hasOwnProperty('Lumber')) {
+            resources.Lumber.temp_rate += data.Lumber.fuel * data.Lumber.num;
+        }
+        if (data.hasOwnProperty('Coal')) {
+            resources.Coal.temp_rate += data.Coal.fuel * data.Coal.num;
+        }
+        if (data.hasOwnProperty('Oil')) {
+            resources.Oil.temp_rate += data.Oil.fuel * data.Oil.num;
+        }
+
+        // Calculating Fuel
+        let fuelKeys = [];
+        let fuelPriorities = [];
+        let fuelTotalPriority = 0;
+        let fuelRatios = [];
+        if (data.hasOwnProperty('Lumber')) {
+            fuelKeys.push('Lumber');
+            let priority = settings.grapheneSettings.Lumber;
+            if (limits) {
+                if (limits.Lumber !== null) {
+                    priority /= limits.Lumber.priority;
+                } else {
+                    priority *= 10e10;
+                }
+            }
+            fuelPriorities.push(priority);
+        }
+        if (data.hasOwnProperty('Coal')) {
+            fuelKeys.push('Coal');
+            let priority = settings.grapheneSettings.Coal;
+            if (limits) {
+                if (limits.Coal !== null) {
+                    priority /= limits.Coal.priority;
+                } else {
+                    priority *= 10e10;
+                }
+            }
+            fuelPriorities.push(priority);
+        }
+        if (data.hasOwnProperty('Oil')) {
+            fuelKeys.push('Oil');
+            let priority = settings.grapheneSettings.Oil;
+            if (limits) {
+                if (limits.Oil !== null) {
+                    priority /= limits.Oil.priority;
+                } else {
+                    priority = 10e10;
+                }
+            }
+            fuelPriorities.push(priority);
+        }
+        for (let i = 0;i < fuelPriorities.length;i++) {fuelTotalPriority += fuelPriorities[i];}
+        for (let i = 0;i < fuelPriorities.length;i++) {fuelRatios.push(fuelPriorities[i] / fuelTotalPriority);}
+        let resourceCheck = function(index, curNum) {
+            switch(fuelKeys[index]) {
+                case 'Lumber': return resources.Lumber.temp_rate > data.Lumber.fuel;
+                case 'Coal': return resources.Coal.temp_rate > data.Coal.fuel;
+                case 'Oil': return resources.Oil.temp_rate > data.Oil.fuel;
+            }
+            return false;
+        };
+        let allocFunc = function(index, curNum) {
+            switch(fuelKeys[index]) {
+                case 'Lumber': {resources.Lumber.temp_rate -= data.Lumber.fuel;break;}
+                case 'Coal': {resources.Coal.temp_rate -= data.Coal.fuel;break;}
+                case 'Oil': {resources.Oil.temp_rate -= data.Oil.fuel;break;}
+            }
+        };
+        let fuelAllocation = allocate(totalFactories,fuelPriorities,fuelRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+
+        console.log("GRAPHENE FUEL:", fuelAllocation);
+
+        // Removing extra fuel
+        for (let i = 0;i < fuelKeys.length;i++) {
+            if (data[fuelKeys[i]].num > fuelAllocation.alloc[i]) {
+                for (let j = 0;j < data[fuelKeys[i]].num - fuelAllocation.alloc[i];j++) {
+                    switch(fuelKeys[i]) {
+                        case 'Lumber': {
+                            grapheneModal.subWood();
+                            break;
+                        }
+                        case 'Coal': {
+                            grapheneModal.subCoal();
+                            break;
+                        }
+                        case 'Oil': {
+                            grapheneModal.subOil();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        // Allocating fuel
+        for (let i = 0;i < fuelKeys.length;i++) {
+            if (data[fuelKeys[i]].num < fuelAllocation.alloc[i]) {
+                for (let j = 0;j < fuelAllocation.alloc[i] - data[fuelKeys[i]].num;j++) {
+                    switch(fuelKeys[i]) {
+                        case 'Lumber': {
+                            grapheneModal.addWood();
+                            break;
+                        }
+                        case 'Coal': {
+                            grapheneModal.addCoal();
+                            break;
+                        }
+                        case 'Oil': {
+                            grapheneModal.addOil();
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     function autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
@@ -3943,6 +4121,13 @@ function main() {
                 autoDroid();
             }
         }
+        if (settings.autoGraphene) {
+            if (settings.grapheneSettings.pqCheck) {
+                autoGraphene(limits);
+            } else {
+                autoGraphene();
+            }
+        }
         if (settings.autoSupport) {
             autoSupport(limits);
         }
@@ -4235,6 +4420,9 @@ function main() {
                 }
                 if (settings.autoDroid) {
                     autoDroid();
+                }
+                if (settings.autoGraphene) {
+                    autoGraphene();
                 }
                 if (settings.autoSupport) {
                     autoSupport();
