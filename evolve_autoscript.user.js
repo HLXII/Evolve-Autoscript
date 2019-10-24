@@ -27,7 +27,8 @@ $(document).ready(function() {
 import { global, vues, breakdown } from './vars.js';
 import { actions, checkTechRequirements, f_rate } from './actions.js';
 import { races } from './races.js';
-import {tradeRatio, tradeBuyPrice, tradeSellPrice, craftCost, atomic_mass } from './resources.js';
+import { tradeRatio, tradeBuyPrice, tradeSellPrice, craftCost, atomic_mass } from './resources.js';
+import { zigguratBonus } from './space.js';
 window.game =  {
     global: global,
     vues: vues,
@@ -41,6 +42,7 @@ window.game =  {
     atomic_mass: atomic_mass,
     techUnlocked:checkTechRequirements,
     f_rate:f_rate,
+    zigguratBonus:zigguratBonus,
 };
 window.dispatchEvent(new CustomEvent('customModuleAdded'));
 `;
@@ -728,7 +730,7 @@ function main() {
             case "city-mass_driver":
             case "space-observatory":
             case "space-living_quarters":
-            case "space-vr_center": //TODO I haven't seen this yet so idk
+            case "space-vr_center":
             case "space-red_mine":
             case "space-fabrication":
             case "space-red_factory":
@@ -878,7 +880,7 @@ function main() {
                 consume= [{res:"moon_support",cost:-def.support}];
                 break;
             case "space-living_quarters":
-            case "space-vr_center": //TODO I haven't seen this yet so idk
+            case "space-vr_center":
             case "space-red_mine":
             case "space-fabrication":
             case "space-biodome":
@@ -1745,6 +1747,21 @@ function main() {
         if (!settings.factorySettings.hasOwnProperty('Nano_Tube')) {settings.factorySettings.Nano_Tube = 7;}
         if (!settings.factorySettings.hasOwnProperty('Stanene')) {settings.factorySettings.Stanene = 4;}
     }
+    function loadDroid() {
+        if (!settings.hasOwnProperty('droidSettings')) {settings.droidSettings = {};}
+        if (!settings.droidSettings.hasOwnProperty('pqCheck')) {settings.droidSettings.pqCheck = true;}
+        if (!settings.droidSettings.hasOwnProperty('Adamantite')) {settings.droidSettings.Adamantite = 10;}
+        if (!settings.droidSettings.hasOwnProperty('Uranium')) {settings.droidSettings.Uranium = 0;}
+        if (!settings.droidSettings.hasOwnProperty('Coal')) {settings.droidSettings.Coal = 0;}
+        if (!settings.droidSettings.hasOwnProperty('Aluminium')) {settings.droidSettings.Aluminium = 0;}
+    }
+    function loadGraphene() {
+        if (!settings.hasOwnProperty('grapheneSettings')) {settings.grapheneSettings = {};}
+        if (!settings.grapheneSettings.hasOwnProperty('pqCheck')) {settings.grapheneSettings.pqCheck = true;}
+        if (!settings.grapheneSettings.hasOwnProperty('Wood')) {settings.grapheneSettings.Wood = 0;}
+        if (!settings.grapheneSettings.hasOwnProperty('Coal')) {settings.grapheneSettings.Coal = 10;}
+        if (!settings.grapheneSettings.hasOwnProperty('Oil')) {settings.grapheneSettings.Oil = 5;}
+    }
 
     let printSettings = ['Buildings','Researches','Misc'];
 
@@ -1779,6 +1796,10 @@ function main() {
         loadSmelter();
         // Factory
         loadFactory();
+        // Mining Droid
+        loadDroid();
+        // Graphene Plant
+        loadGraphene();
 
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
@@ -3311,6 +3332,180 @@ function main() {
         }
     }
 
+    let droidModal = null;
+    function loadDroidModal() {
+        // Checking if modal already open
+        if ($('.modal').length != 0) {
+            return;
+        }
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+        // Opening Modal
+        $('#interstellar-mining_droid > .special').click();
+        setTimeout(function() {
+            droidModal = window.game.vues['specialModal'];
+
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
+        }, 100);
+    }
+    function getDroidData() {
+        let data = {};
+
+        // Adamantite
+        data.Adamantite = {};
+        data.Adamantite.produce = 0.075 * window.game.zigguratBonus();
+
+        // Uranium
+        data.Uranium = {};
+        data.Uranium.produce = 0.12 * window.game.zigguratBonus();
+
+        // Coal
+        data.Coal = {};
+        data.Coal.produce = 3.75 * window.game.zigguratBonus();
+
+        // Aluminium
+        data.Aluminium = {};
+        data.Aluminium.produce = 2.75 * window.game.zigguratBonus();
+
+        return data;
+    }
+    function autoDroid(limits) {
+        // Don't Auto Droid if not unlocked
+        if (window.game.global.tech['alpha'] < 2) {return;}
+        // Don't Auto Droid if you don't have any
+        if (buildings['interstellar-mining_droid'].numTotal < 1) {return;}
+        // Loading Droid Vue
+        if (droidModal === null) {
+            loadDroidModal();
+            return;
+        }
+        let totalDroids = buildings['interstellar-mining_droid'].numOn;
+
+        let data = getDroidData();
+        console.log('DROID DATA:', data);
+
+        // Reverting current allocation
+        if (factoryModal.adam) {
+            resources.Adamantite.temp_rate -= data.Adamantite.produce * factoryModal.adam;
+        }
+        if (factoryModal.uran) {
+            resources.Uranium.temp_rate -= data.Uranium.produce * factoryModal.uran;
+        }
+        if (factoryModal.coal) {
+            resources.Coal.temp_rate -= data.Coal.produce * factoryModal.coal;
+        }
+        if (factoryModal.alum) {
+            resources.Aluminium.temp_rate -= data.Aluminium.produce * factoryModal.alum;
+        }
+
+        // Finding Allocation
+        let keys = [];
+        let priorities = [];
+        let totalPriority = 0;
+        let ratios = [];
+        if (data.hasOwnProperty('Adamantite')) {
+            keys.push('adam');
+            let priority = settings.droidSettings.Adamantite;
+            if (limits) {
+                if (limits.Adamantite !== null) {
+                    priority *= limits.Adamantite.priority;
+                } else {
+                    priority /= 10e10;
+                }
+            }
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Uranium')) {
+            keys.push('uran');
+            let priority = settings.droidSettings.Uranium;
+            if (limits) {
+                if (limits.Uranium !== null) {
+                    priority *= limits.Uranium.priority;
+                } else {
+                    priority /= 10e10;
+                }
+            }
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Coal')) {
+            keys.push('coal');
+            let priority = settings.droidSettings.Coal;
+            if (limits) {
+                if (limits.Coal !== null) {
+                    priority *= limits.Coal.priority;
+                } else {
+                    priority /= 10e10;
+                }
+            }
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        if (data.hasOwnProperty('Aluminium')) {
+            keys.push('alum');
+            let priority = settings.droidSettings.Aluminium;
+            if (limits) {
+                if (limits.Aluminium !== null) {
+                    priority *= limits.Aluminium.priority;
+                } else {
+                    priority /= 10e10;
+                }
+            }
+            priorities.push(priority);
+            totalPriority += priority;
+        }
+        for (let i = 0;i < priorities.length;i++) {
+            ratios[i] = priorities[i] / totalPriority;
+        }
+        let allocFunc = function(index, curNum) {
+            switch(keys[index]) {
+                case 'adam': {
+                    resources.Adamantite.temp_rate += data.Adamantite.produce;
+                    break;
+                }
+                case 'uran': {
+                    resources.Uranium.temp_rate += data.Uranium.produce;
+                    break;
+                }
+                case 'coal': {
+                    resources.Coal.temp_rate += data.Coal.produce;
+                    break;
+                }
+                case 'alum': {
+                    resources.Aluminium.temp_rate += data.Aluminium.produce;
+                    break;
+                }
+            }
+        };
+
+        // Creating allocation list
+        let allocation = allocate(totalDroids,priorities,ratios,{allocFunc:allocFunc});
+
+        console.log('DROID PRIO:', priorities, 'DROID RATIO:', ratios);
+        console.log('DROID ALLOC:', allocation);
+
+        // Allocating
+        for (let i = 0;i < keys.length;i++) {
+            if (droidModal[keys[i]] > allocation.alloc[i]) {
+                for (let j = 0;j < droidModal[keys[i]] - allocation.alloc[i];j++) {
+                    droidModal.subItem([keys[i]]);
+                }
+            }
+        }
+        for (let i = 0;i < keys.length;i++) {
+            if (droidModal[keys[i]] < allocation.alloc[i]) {
+                for (let j = 0;j < allocation.alloc[i] - droidModal[keys[i]];j++) {
+                    droidModal.addItem([keys[i]]);
+                }
+            }
+        }
+    }
+
     function autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
@@ -3741,6 +3936,13 @@ function main() {
                 autoFactory();
             }
         }
+        if (settings.autoDroid) {
+            if (settings.droidSettings.pqCheck) {
+                autoDroid(limits);
+            } else {
+                autoDroid();
+            }
+        }
         if (settings.autoSupport) {
             autoSupport(limits);
         }
@@ -4030,6 +4232,9 @@ function main() {
                 }
                 if (settings.autoFactory) {
                     autoFactory();
+                }
+                if (settings.autoDroid) {
+                    autoDroid();
                 }
                 if (settings.autoSupport) {
                     autoSupport();
