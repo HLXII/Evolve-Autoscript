@@ -758,6 +758,10 @@ function main() {
                 break;
             case "space-nav_beacon":
                 produce = [{res:"moon_support",cost:1}];
+                //produce.push({res:"red_support",cost:1});
+                if (researched('tech-subspace_signal')) {
+                    produce.push({res:"red_support",cost:1});
+                }
                 break;
             case "space-moon_base":
                 produce = [{res:"moon_support",cost:2}];
@@ -1193,6 +1197,7 @@ function main() {
         }
 
         get researched() {
+
             let [grant, val] = this.def.grant;
             let old = false;
             if (window.game.global.tech[grant] !== undefined) {
@@ -1783,13 +1788,13 @@ function main() {
         try { loadStorages(); } catch(e) {}
         // Misc Actions
         loadMiscActions();
+        // Research
+        loadResearches();
         // Buildings
         loadBuildings();
         // Jobs
         loadJobs();
         loadCraftJobs();
-        // Research
-        loadResearches();
         // ARPA
         loadArpas();
         // Smelter
