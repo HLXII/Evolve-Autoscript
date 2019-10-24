@@ -5524,6 +5524,27 @@ function main() {
         // Auto Mining Droid
         let autoDroidDesc = "Allocates mining droids. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoDroidTitle, autoDroidContent] = createAutoSettingToggle('autoDroid', 'Auto Mining Droid', autoDroidDesc, true, tab);
+        Object.keys(settings.droidSettings).forEach(function(res) {
+            // Ignoring obsolete Interval and pqCheck
+            if (res == 'pqCheck') {return;}
+            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
+            let resSub = function(mult) {
+                settings.droidSettings[res] -= mult;
+                if (settings.droidSettings[res] < 0) {settings.droidSettings[res] = 0;}
+                return settings.droidSettings[res];
+            }
+            let resAdd = function(mult) {
+                settings.droidSettings[res] += mult;
+                return settings.droidSettings[res];
+            }
+            let resControls = createNumControl(settings.droidSettings[res], "droid_"+res+"_priority", resSub, resAdd);
+            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+            autoDroidContent.append(newDiv);
+        });
+
+        let droidPQToolTip = 'Enable to make Auto Droid depend on the Auto Priority queue.';
+        let droidPQCheck = createCheckBoxControl(settings.droidSettings.pqCheck, 'droidPQCheck', "Auto Priority", {path:[settings, 'droidSettings', 'pqCheck'],toolTip:droidPQToolTip});
+        autoDroidTitle.append(droidPQCheck);
 
         // Auto Graphene Plant
         let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Currently not yet implemented.";
