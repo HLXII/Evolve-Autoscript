@@ -852,7 +852,11 @@ function main() {
                 test = /\+([\d\.]+) Elerium/.exec(effectStr);
                 produce = [{res:"Elerium",cost:+test[1]}];
                 break;
-                // TODO MORE INTERSTELLAR
+            case "interstellar-neutron_miner":
+                effectStr = def.effect();
+                test = /\+([\d\.]+) Neutronium/.exec(effectStr);
+                produce = [{res:"Neutronium",cost:+test[1]}];
+                break;
             default:
                 break;
         }
@@ -995,6 +999,20 @@ function main() {
             case "interstellar-harvester":
             case "interstellar-elerium_prospector":
                 consume = [{res:"nebula_support",cost:-def.support}];
+                break;
+            case "interstellar-cruiser":
+                effectStr = def.effect();
+                test = /-([\d\.]+) Helium/.exec(effectStr);
+                consume.push({res:"Helium_3",cost:test[1]});
+                break;
+            case "interstellar-neutron_miner":
+                consume = [{res:"electricity",cost:def.powered()}];
+                effectStr = def.effect();
+                test = /-([\d\.]+) Helium/.exec(effectStr);
+                consume.push({res:"Helium_3",cost:test[1]});
+                break;
+            case "interstellar-far_reach":
+                consume = [{res:"electricity",cost:def.powered()}];
                 break;
             case "portal-turret":
             case "portal-war_droid":
@@ -2507,7 +2525,8 @@ function main() {
 
         // Allocating jobs
         let allocation = allocate(population,priorities,ratios,{max:maxes});
-        console.log("JOBS:", sortedJobs, allocation.alloc);
+        console.log("JOBS:", sortedJobs, priorities, ratios, allocation.alloc);
+        console.log(allocation.seq);
 
         // Firing extra employees
         for (let i = 0;i < allocation.alloc.length;i++) {
@@ -3230,7 +3249,7 @@ function main() {
                 if (limits.Nano_Tube !== null) {
                     priority *= limits.Nano_Tube.priority;
                 } else {
-                    priority = 10e10;
+                    priority /= 10e10;
                 }
             }
             priorities.push(priority);
@@ -3590,7 +3609,7 @@ function main() {
         let fuelRatios = [];
         if (data.hasOwnProperty('Lumber')) {
             fuelKeys.push('Lumber');
-            let priority = settings.grapheneSettings.Lumber;
+            let priority = settings.grapheneSettings.Wood;
             if (limits) {
                 if (limits.Lumber !== null) {
                     priority /= limits.Lumber.priority;
@@ -3619,7 +3638,7 @@ function main() {
                 if (limits.Oil !== null) {
                     priority /= limits.Oil.priority;
                 } else {
-                    priority = 10e10;
+                    priority *= 10e10;
                 }
             }
             fuelPriorities.push(priority);
@@ -3643,6 +3662,7 @@ function main() {
         };
         let fuelAllocation = allocate(totalFactories,fuelPriorities,fuelRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
+        console.log("GRAPHENE PRIO:", fuelPriorities);
         console.log("GRAPHENE FUEL:", fuelAllocation);
 
         // Removing extra fuel
@@ -4327,7 +4347,8 @@ function main() {
                 }
 
                 // Finding error differential
-                let tempError = (((curNum[j]+1) / total) - ratios[j]) ** 2 - ((curNum[j] / total) - ratios[j]) ** 2;
+                let tempError = (((curNum[j]+1) / total) - ratios[j]) ** 2;
+                if (total != 1) {tempError -= ((curNum[j] / (total-1)) - ratios[j]) ** 2;}
 
                 if (error === null || tempError < error) {
                     error = tempError;
