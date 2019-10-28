@@ -10,9 +10,16 @@
 // @require      https://raw.githubusercontent.com/pieroxy/lz-string/master/libs/lz-string.min.js
 // ==/UserScript==
 (async function() {
-    setTimeout(main,2000);
+    console.log("Loading Auto Script...");
+    await sleep(2000);
+    main();
 })();
-function main() {
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function main() {
     window.evolve = unsafeWindow.evolve;
     console.log(window.evolve);
     'use strict';
@@ -1495,7 +1502,6 @@ function main() {
         }
 
         getResDep(resid) {
-            //let str = window.evolve.vues.civ_garrison.hireLabel();
             let str = $('.hire > span')[0].attributes['data-label'].value;
             let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
             this.res.Money = val[1];
@@ -4457,7 +4463,7 @@ function main() {
     }
 
     let count = 1;
-    function fastAutomate() {
+    async function fastAutomate() {
         console.clear();
         //console.log(LZString.decompressFromUTF16(window.localStorage['evolved']));
         console.log(count);
@@ -4519,7 +4525,6 @@ function main() {
         }
         count += 1;
     }
-    setInterval(fastAutomate, 1000);
 
     /***
     *
@@ -6361,7 +6366,6 @@ function main() {
     // Determines if stage is currently in evolution
     function inEvolution() {
         return window.evolve.global.race.species == 'protoplasm';
-
     }
     // Determines if the civics tab has been unlocked
     function civicsOn() {
@@ -6392,33 +6396,7 @@ function main() {
         }
         return null;
     }
-    // Getting free support
-    function getFreePower(name) {
-        switch(name) {
-            case 'electricity': {
-                let label = document.getElementById('powerMeter');
-                if (label !== null) {
-                    return parseInt(label.innerText);
-                } else {
-                    return 0;
-                }
-            }
-            case 'moon':
-            case 'red':
-            case 'swarm':
-            case 'belt': {
-                let label = document.querySelector('#srspc_'+name+' > span');
-                if (label !== null) {
-                    let data = label.innerText.split('/');
-                    return data[1] - data[0];
-                } else {
-                    return 0;
-                }
-            }
-            default:
-                return 0;
-        }
-    }
+
     // Determines if a perk has been unlocked
     function perkUnlocked(perk) {
         let pat = "";
@@ -6458,9 +6436,11 @@ function main() {
         }
     }
 
-    function wouldBreakMoneyFloor(buyValue){
-        return resources.Money.amount - buyValue < getMinMoney();
+    while(1) {
+        await sleep(1000);
+        await fastAutomate();
     }
+
 }
 
 
