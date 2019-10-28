@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.2.10
+// @version      1.2.10.1
 // @description  try to take over the world!
 // @author       HLXII
 // @match        https://pmotschmann.github.io/Evolve/
@@ -9,59 +9,19 @@
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
 // @require      https://raw.githubusercontent.com/pieroxy/lz-string/master/libs/lz-string.min.js
 // ==/UserScript==
-
-
-/*
- * Script entry point, sets up unsafewindow.game.global
- * Stolen from NotOats
- */
-function userscriptEntryPoint() {
-    console.log(unsafeWindow.game);
-    main();
-}
-
-unsafeWindow.addEventListener('customModuleAdded', userscriptEntryPoint);
-
-$(document).ready(function() {
-    let injectScript = `
-import { global, vues, breakdown } from './vars.js';
-import { actions, checkTechRequirements, f_rate } from './actions.js';
-import { races } from './races.js';
-import { tradeRatio, tradeBuyPrice, tradeSellPrice, craftCost, atomic_mass } from './resources.js';
-import { zigguratBonus } from './space.js';
-window.game =  {
-    global: global,
-    vues: vues,
-    breakdown: breakdown,
-    actions: actions,
-    races: races,
-    tradeRatio: tradeRatio,
-    tradeBuyPrice:tradeBuyPrice,
-    tradeSellPrice:tradeSellPrice,
-    craftCost: craftCost,
-    atomic_mass: atomic_mass,
-    techUnlocked:checkTechRequirements,
-    f_rate:f_rate,
-    zigguratBonus:zigguratBonus,
-};
-window.dispatchEvent(new CustomEvent('customModuleAdded'));
-`;
-
-    $('<script>')
-    .attr('type', 'module')
-    .text(injectScript)
-    .appendTo('head');
-});
-
+(async function() {
+    setTimeout(main,2000);
+})();
 function main() {
-    window.game = unsafeWindow.game;
+    window.evolve = unsafeWindow.evolve;
+    console.log(window.evolve);
     'use strict';
     var settings = {};
     var jsonSettings = localStorage.getItem('settings');
     if(jsonSettings != null){settings = JSON.parse(jsonSettings);}
 
     let url = 'https://github.com/HLXII/Evolve-Autoscript';
-    let version = '1.2.10';
+    let version = '1.2.10.1';
 
     /***
     *
@@ -183,24 +143,24 @@ function main() {
         }
 
         get name() {
-            return window.game.global.resource[this.id].name;
+            return window.evolve.global.resource[this.id].name;
         }
 
         get unlocked() {
-            return window.game.global.resource[this.id].display;
+            return window.evolve.global.resource[this.id].display;
         }
 
         get amount() {
-            return window.game.global.resource[this.id].amount;
+            return window.evolve.global.resource[this.id].amount;
         }
         get storage() {
-            return window.game.global.resource[this.id].max;
+            return window.evolve.global.resource[this.id].max;
         }
         get ratio() {
             return this.amount / this.storage;
         }
         get rate() {
-            return window.game.global.resource[this.id].diff;
+            return window.evolve.global.resource[this.id].diff;
         }
 
         get storePriority() {return settings.resources[this.id].storePriority};
@@ -213,65 +173,83 @@ function main() {
         get eject() {return settings.resources[this.id].eject;};
         set eject(eject) {settings.resources[this.id].eject = eject;};
         get ejectable() {
-            return window.game.atomic_mass.hasOwnProperty(this.id);
+            return window.evolve.atomic_mass.hasOwnProperty(this.id);
         }
         get ejectRate() {
-            return window.game.global.interstellar.mass_ejector[this.id];
+            return window.evolve.global.interstellar.mass_ejector[this.id];
         }
         get ejectMass() {
-            return window.game.atomic_mass[this.id].mass / window.game.atomic_mass[this.id].size;
+            return window.evolve.atomic_mass[this.id].mass / window.evolve.atomic_mass[this.id].size;
         }
         ejectInc(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#eject${this.id} .trade .add`);
+            if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['eject_'+this.id].ejectMore(this.id);
+                btn.click();
             }
+            return true;
         }
         ejectDec(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#eject${this.id} .trade .sub`);
+            if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['eject_'+this.id].ejectLess(this.id);
+                btn.click();
             }
+            return true;
         }
 
         get crateNum() {
-            return window.game.global.resource[this.id].crates;
+            return window.evolve.global.resource[this.id].crates;
         }
         get containerNum() {
-            return window.game.global.resource[this.id].containers;
+            return window.evolve.global.resource[this.id].containers;
         }
         get crateable() {
-            return window.game.global.resource[this.id].stackable;
+            return window.evolve.global.resource[this.id].stackable;
         }
         crateInc(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(1) .add`);
+            if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['stack_'+this.id].addCrate(this.id);
+                btn.click();
             }
+            return true;
         }
         crateDec(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(1) .sub`);
+            if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['stack_'+this.id].subCrate(this.id);
+                btn.click();
             }
+            return true;
         }
         containerInc(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(2) .add`);
+            if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['stack_'+this.id].addCon(this.id);
+                btn.click();
             }
+            return true;
         }
         containerDec(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(2) .sub`);
+            if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['stack_'+this.id].subCon(this.id);
+                btn.click();
             }
+            return false;
         }
 
 
@@ -384,6 +362,12 @@ function main() {
         get tradeLabel() {
             return document.querySelector('#market-'+this.id+' > .trade > .current');
         }
+        get tradeDecSpan() {
+            return document.querySelector(`#market-${this.id} .trade span:nth-child(4)`);
+        }
+        get tradeIncSpan() {
+            return document.querySelector(`#market-${this.id} .trade span:nth-child(2)`);
+        }
         get sellBtn() {
             let sellBtn = document.querySelectorAll('#market-'+this.id+' > .order');
             if (sellBtn !== null && sellBtn.length >= 2) {
@@ -403,41 +387,63 @@ function main() {
 
         tradeDec(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#market-${this.id} .trade .add`);
+            if (btn === null) {return false;}
+            disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['market_'+this.id].autoSell(this.id)
+                btn.click();
             }
+            return true;
         }
         tradeInc(num) {
             num = (num === undefined) ? 1 : num;
+            let btn = document.querySelector(`#market-${this.id} .trade .sub`);
+            if (btn === null) {return false;}
+            disableMult();
             for (let i = 0;i < num;i++) {
-                window.game.vues['market_'+this.id].autoBuy(this.id)
+                btn.click();
             }
+            return true;
         }
 
         get tradeNum() {
-            return window.game.global.resource[this.id].trade;
+            return window.evolve.global.resource[this.id].trade;
         }
         get tradeBuyCost() {
-            return window.game.tradeBuyPrice(this.id);
+            if (this.tradeDecSpan !== null) {
+                let dataStr = this.tradeDecSpan.attributes['data-label'].value;
+                var reg = /.*([\d\.]+).*\$([\d\.]+)/.exec(dataStr);
+                return parseFloat(reg[2]);
+            } else {
+                console.log("Error:", this.id, "Trade Buy Cost");
+                return -1;
+            }
         }
         get tradeSellCost() {
-            return window.game.tradeSellPrice(this.id);
+            if (this.tradeIncSpan !== null) {
+                let dataStr = this.tradeIncSpan.attributes['data-label'].value;
+                var reg = /.*([\d\.]+).*\$([\d\.]+)/.exec(dataStr);
+                return parseFloat(reg[2]);
+            } else {
+                console.log("Error:", this.id, "Trade Sell Cost");
+                return -1;
+            }
         }
         get tradeAmount() {
-            return window.game.tradeRatio[this.id];
+            return window.evolve.tradeRatio[this.id];
         }
     }
     var resources = [];
     function loadResources() {
         if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
-        Object.keys(window.game.global.resource).forEach(function(res) {
+        Object.keys(window.evolve.global.resource).forEach(function(res) {
             // Craftable Resources
-            if (window.game.craftCost[res] !== undefined) {
+            if (window.evolve.craftCost[res] !== undefined) {
                 //console.log("Craftable Resource:", res);
                 resources[res] = new CraftableResource(res);
             }
             // Tradeable Resources
-            else if (window.game.global.resource[res].trade !== undefined) {
+            else if (window.evolve.global.resource[res].trade !== undefined) {
                 //console.log("Tradeable Resource:", res);
                 resources[res] = new TradeableResource(res);
             }
@@ -452,7 +458,7 @@ function main() {
         constructor(id) {
             super(id);
             this.color = 'has-text-danger';
-            this.sources = window.game.craftCost[id];
+            this.sources = window.evolve.craftCost[id];
             if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
             if (!settings.resources[this.id].hasOwnProperty('enabled')) {settings.resources[this.id].enabled = false;}
         }
@@ -505,8 +511,8 @@ function main() {
     // 'Global' returns the global multiplier
     function getMultiplier(res) {
         let multiplier = 1;
-        for (let val in window.game.breakdown.p[res]) {
-            let data = window.game.breakdown.p[res][val];
+        for (let val in window.evolve.breakdown.p[res]) {
+            let data = window.evolve.breakdown.p[res][val];
             if (data[data.length-1] == '%') {
                 multiplier *= 1 + (+data.substring(0, data.length - 1)/100)
             }
@@ -516,8 +522,8 @@ function main() {
     // Finds the total resource consumption (returns the negative value)
     function getConsumed(res) {
         let consumed = 0;
-        for (let val in window.game.breakdown.p.consume[res]) {
-            consumed += window.game.breakdown.p.consume[res][val];
+        for (let val in window.evolve.breakdown.p.consume[res]) {
+            consumed += window.evolve.breakdown.p.consume[res][val];
         }
         return consumed;
     }
@@ -572,14 +578,17 @@ function main() {
         }
         get name() {
             let title = this.def.title;
-            if (typeof title != 'string') {
+            if (title === undefined) {
+                return this.id;
+            }
+            else if (typeof title != 'string') {
                 return title();
             }
             return title;
         }
 
         get def() {
-            let details = window.game.actions;
+            let details = window.evolve.actions;
             for (let i = 0;i < this.loc.length;i++) {
                 details = details[this.loc[i]];
             }
@@ -589,10 +598,10 @@ function main() {
         get data() {
             let type = this.loc[0];
             let action = this.loc[this.loc.length-1];
-            if (window.game.global[type] === undefined || window.game.global[type][action] == undefined) {
+            if (window.evolve.global[type] === undefined || window.evolve.global[type][action] == undefined) {
                 return null;
             }
-            return window.game.global[type][action];
+            return window.evolve.global[type][action];
         }
 
         getResDep(resid) {
@@ -643,7 +652,7 @@ function main() {
         }
 
         get unlocked() {
-            return window.game.vues[this.id] !== undefined;
+            return this.btn !== null;
         }
 
         get numTotal() {
@@ -697,10 +706,10 @@ function main() {
         var isMet = true;
         if (c_action['power_reqs']){
             Object.keys(c_action.power_reqs).forEach(function (req){
-                if (!window.game.global.tech.hasOwnProperty(req)) {
+                if (!window.evolve.global.tech.hasOwnProperty(req)) {
                     isMet = false;
                 }
-                else if (window.game.global.tech[req] < c_action.power_reqs[req]){
+                else if (window.evolve.global.tech[req] < c_action.power_reqs[req]){
                     isMet = false;
                 }
             });
@@ -713,6 +722,7 @@ function main() {
         let produce = [];
         let consume = [];
         let effectStr = "";
+        console.log(id, def);
         let test = null;
         // Finding Production
         switch(id) {
@@ -1108,7 +1118,7 @@ function main() {
 
         get data() {
             let [type, action] = this.id.split('-');
-            return window.game.global['starDock'][action];
+            return window.evolve.global['starDock'][action];
         }
 
         click() {
@@ -1142,31 +1152,31 @@ function main() {
     function loadBuildings() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         // City
-        for (let action in window.game.actions.city) {
+        for (let action in window.evolve.actions.city) {
             // Remove manual buttons
             if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter') {continue;}
-            let id = window.game.actions.city[action].id;
-            if (window.game.actions.city[action].powered || window.game.actions.city[action].support) {
-                //console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
+            let id = window.evolve.actions.city[action].id;
+            if (window.evolve.actions.city[action].powered || window.evolve.actions.city[action].support) {
+                //console.log(action,"POWER", window.evolve.actions.city[action].powered, "SUPPORT", window.evolve.actions.city[action].support);
                 buildings[id] = new PoweredBuilding(id, ['city', action]);
                 continue;
             }
             // Windmill doesn't have powered/support prop, but still produces electricity
             if (action == 'windmill') {
-                //console.log(action,"POWER", window.game.actions.city[action].powered, "SUPPORT", window.game.actions.city[action].support);
+                //console.log(action,"POWER", window.evolve.actions.city[action].powered, "SUPPORT", window.evolve.actions.city[action].support);
                 buildings[id] = new PoweredBuilding(id, ['city', action]);
                 continue;
             }
             buildings[id] = new Building(id, ['city', action]);
         }
         // Space
-        for (let location in window.game.actions.space) {
-            for (let action in window.game.actions.space[location]) {
+        for (let location in window.evolve.actions.space) {
+            for (let action in window.evolve.actions.space[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
-                let id = window.game.actions.space[location][action].id;
-                if (window.game.actions.space[location][action].powered || window.game.actions.space[location][action].support) {
-                    //console.log(action,"POWER", window.game.actions.space[location][action].powered, "SUPPORT", window.game.actions.space[location][action].support);
+                let id = window.evolve.actions.space[location][action].id;
+                if (window.evolve.actions.space[location][action].powered || window.evolve.actions.space[location][action].support) {
+                    //console.log(action,"POWER", window.evolve.actions.space[location][action].powered, "SUPPORT", window.evolve.actions.space[location][action].support);
                     buildings[id] = new PoweredBuilding(id, ['space', location, action]);
                     continue;
                 }
@@ -1174,19 +1184,19 @@ function main() {
             }
         }
         // Star Dock
-        for (let action in window.game.actions.starDock) {
+        for (let action in window.evolve.actions.starDock) {
             // Remove reset actions
             if (action == 'prep_ship' || action == 'launch_ship') {continue;}
-            let id = window.game.actions.starDock[action].id;
+            let id = window.evolve.actions.starDock[action].id;
             buildings[id] = new SpaceDockBuilding(id, ['starDock', action]);
         }
         // Interstellar
-        for (let location in window.game.actions.interstellar) {
-            for (let action in window.game.actions.interstellar[location]) {
+        for (let location in window.evolve.actions.interstellar) {
+            for (let action in window.evolve.actions.interstellar[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
-                let id = window.game.actions.interstellar[location][action].id;
-                if (window.game.actions.interstellar[location][action].powered || window.game.actions.interstellar[location][action].support) {
+                let id = window.evolve.actions.interstellar[location][action].id;
+                if (window.evolve.actions.interstellar[location][action].powered || window.evolve.actions.interstellar[location][action].support) {
                     buildings[id] = new PoweredBuilding(id, ['interstellar', location, action]);
                     continue;
                 }
@@ -1194,12 +1204,12 @@ function main() {
             }
         }
         // Portal
-        for (let location in window.game.actions.portal) {
-            for (let action in window.game.actions.portal[location]) {
+        for (let location in window.evolve.actions.portal) {
+            for (let action in window.evolve.actions.portal[location]) {
                 // Remove info
                 if (action == 'info') {continue;}
-                let id = window.game.actions.portal[location][action].id;
-                if (window.game.actions.portal[location][action].powered || window.game.actions.portal[location][action].support) {
+                let id = window.evolve.actions.portal[location][action].id;
+                if (window.evolve.actions.portal[location][action].powered || window.evolve.actions.portal[location][action].support) {
                     buildings[id] = new PoweredBuilding(id, ['portal', location, action]);
                     continue;
                 }
@@ -1218,8 +1228,8 @@ function main() {
 
             let [grant, val] = this.def.grant;
             let old = false;
-            if (window.game.global.tech[grant] !== undefined) {
-                if (window.game.global.tech[grant] >= val) {
+            if (window.evolve.global.tech[grant] !== undefined) {
+                if (window.evolve.global.tech[grant] >= val) {
                     old = true;
                 }
             }
@@ -1230,10 +1240,10 @@ function main() {
     function loadResearches() {
         if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
         // Tech
-        for (let action in window.game.actions.tech) {
+        for (let action in window.evolve.actions.tech) {
             // Remove reset tech
             if (action == 'exotic_infusion' || action == 'infusion_check' || action == 'infusion_confirm') {continue;}
-            let id = window.game.actions.tech[action].id;
+            let id = window.evolve.actions.tech[action].id;
             researches[id] = new Research(id, ['tech', action]);
         }
     }
@@ -1266,16 +1276,16 @@ function main() {
         }
 
         get unlocked() {
-            if (!window.game.global.arpa.hasOwnProperty(this.id)) {return false;}
+            if (!window.evolve.global.arpa.hasOwnProperty(this.id)) {return false;}
             if (this.id === 'launch_facility') {
-                return window.game.global.arpa[this.id].rank !== 1;
+                return window.evolve.global.arpa[this.id].rank !== 1;
             }
             return true;
         }
 
         get numTotal() {
-            if (window.game.global.arpa[this.id] !== undefined) {
-                return window.game.global.arpa[this.id].rank
+            if (window.evolve.global.arpa[this.id] !== undefined) {
+                return window.evolve.global.arpa[this.id].rank
             }
             return 0;
         }
@@ -1475,7 +1485,7 @@ function main() {
         }
 
         get unlocked() {
-            return window.game.global.civic.garrison.mercs;
+            return window.evolve.global.civic.garrison.mercs;
         }
 
         get name() {
@@ -1483,8 +1493,8 @@ function main() {
         }
 
         getResDep(resid) {
-            let str = window.game.vues.civ_garrison.hireLabel();
-            //let str = $('.hire > span')[0].attributes['data-label'].value;
+            //let str = window.evolve.vues.civ_garrison.hireLabel();
+            let str = $('.hire > span')[0].attributes['data-label'].value;
             let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
             this.res.Money = val[1];
             if (this.res === null) {
@@ -1525,11 +1535,11 @@ function main() {
             return (btn.length) ? btn[0] : null;
         }
         get unlocked() {
-            let exists = (window.game.global.city.hasOwnProperty('s_alter') && window.game.global.city.s_alter.count == 1);
+            let exists = (window.evolve.global.city.hasOwnProperty('s_alter') && window.evolve.global.city.s_alter.count == 1);
             let populationCheck = false;
-            for (let x in window.game.global.resource) {
-                if (Object.keys(window.game.races).includes(x)) {
-                    populationCheck = window.game.global.resource[x].amount == window.game.global.resource[x].max;
+            for (let x in window.evolve.global.resource) {
+                if (Object.keys(window.evolve.races).includes(x)) {
+                    populationCheck = window.evolve.global.resource[x].amount == window.evolve.global.resource[x].max;
                     break;
                 }
             }
@@ -1570,22 +1580,22 @@ function main() {
         get _priority() {return settings.jobs[this.id].priority;}
         set _priority(priority) {settings.jobs[this.id].priority = priority;}
 
-        get hireFunc() {
-            return window.game.vues['civ_+'+this.id].add;
+        get hireBtn() {
+            return document.querySelector('#civ-'+this.id+' > .controls > .add');
         }
-        get fireFunc() {
-            return window.game.vues['civ_+'+this.id].sub;
+        get fireBtn() {
+            return document.querySelector('#civ-'+this.id+' > .controls > .sub');
         }
 
         get name() {
-            return window.game.global.civic[this.id].name;
+            return window.evolve.global.civic[this.id].name;
         }
 
         get employed() {
-            return window.game.global.civic[this.id].workers;
+            return window.evolve.global.civic[this.id].workers;
         }
         get maxEmployed() {
-            return window.game.global.civic[this.id].max;
+            return window.evolve.global.civic[this.id].max;
         }
 
         get priority() {
@@ -1606,32 +1616,28 @@ function main() {
         }
 
         get unlocked() {
-            return window.game.global.civic[this.id].display;
+            return window.evolve.global.civic[this.id].display;
         }
 
         hire(num) {
             if (num === undefined) {num = 1;}
-            if (this.hireFunc !== null) {
-                disableMult();
-                for (let i = 0;i < num;i++) {
-                    this.hireFunc();
-                }
-                return true;
-            } else {
-                return false;
+            let btn = this.hireBtn;
+            if (btn === null) {return false;}
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                btn.click();
             }
+            return true;
         }
         fire(num) {
             if (num === undefined) {num = 1;}
-            if (this.fireFunc !== null) {
-                disableMult();
-                for (let i = 0;i < num;i++) {
-                    this.fireFunc();
-                }
-                return true;
-            } else {
-                return false;
+            let btn = this.fireBtn;
+            if (btn === null) {return false;}
+            disableMult();
+            for (let i = 0;i < num;i++) {
+                btn.click();
             }
+            return true;
         }
 
     }
@@ -1656,11 +1662,11 @@ function main() {
         }
 
         get name() {
-             window.game.global.race['carnivore'] || window.game.global.race['soul_eater'] ? 'Hunter' : 'Unemployed';
+             window.evolve.global.race['carnivore'] || window.evolve.global.race['soul_eater'] ? 'Hunter' : 'Unemployed';
         }
 
         get employed() {
-            return window.game.global.civic[this.id];
+            return window.evolve.global.civic[this.id];
         }
         get maxEmployed() {
             return -1;
@@ -1676,11 +1682,11 @@ function main() {
             super(id, priority);
         }
 
-        get hireFunc() {
-            return function() {window.game.vues.foundry.add('Brick');};
+        get hireBtn() {
+            return document.querySelector('#foundry .job:nth-child(2) > .controls > .add')
         }
-        get fireFunc() {
-            return function() {window.game.vues.foundry.sub('Brick');};
+        get fireBtn() {
+            return document.querySelector('#foundry .job:nth-child(2) > .controls > .sub')
         }
 
     }
@@ -1688,8 +1694,8 @@ function main() {
     function loadJobs() {
         if (!settings.hasOwnProperty('jobs')) {settings.jobs = {};}
         jobs.free = new Unemployed('free', 0);
-        for (var x in window.game.global.civic) {
-            if (window.game.global.civic[x].hasOwnProperty('job')) {
+        for (var x in window.evolve.global.civic) {
+            if (window.evolve.global.civic[x].hasOwnProperty('job')) {
                 if (x == 'craftsman') {
                     jobs[x] = new Craftsman(x, 0);
                 }
@@ -1704,23 +1710,23 @@ function main() {
             super(id, priority);
         }
 
-        get hireFunc() {
-            return function() {window.game.vues.foundry.add(this.id);};
+        get hireBtn() {
+            return document.getElementById('craft'+this.id).parentNode.children[1].children[1];
         }
-        get fireFunc() {
-            return function() {window.game.vues.foundry.sub(this.id);};
+        get fireBtn() {
+            return document.getElementById('craft'+this.id).parentNode.children[1].children[0];
         }
 
         get name() {
-            return window.game.global.resource[this.id].name;
+            return window.evolve.global.resource[this.id].name;
         }
 
         get unlocked() {
-            return window.game.global.resource[this.id].display;
+            return window.evolve.global.resource[this.id].display;
         }
 
         get employed() {
-            return window.game.global.city.foundry[this.id];
+            return window.evolve.global.city.foundry[this.id];
         }
         get maxEmployed() {
             return -1;
@@ -1729,9 +1735,9 @@ function main() {
     var craftJobs = {};
     function loadCraftJobs() {
         if (!settings.hasOwnProperty('jobs')) {settings.jobs = {};}
-        Object.keys(window.game.global.resource).forEach(function(res) {
+        Object.keys(window.evolve.global.resource).forEach(function(res) {
             // Craftable Resources
-            if (window.game.craftCost[res] !== undefined) {
+            if (window.evolve.craftCost[res] !== undefined) {
                 craftJobs[res] = new CraftJob(res, 5);
             }
         });
@@ -2029,18 +2035,18 @@ function main() {
         switch(settings.prestige) {
             case 'mad': {
                 // Checking if MAD unlocked
-                if (!window.game.vues.mad.display) {return;}
+                if (!window.evolve.vues.mad.display) {return;}
                 // Checking if already clicked
                 if (prestigeCheck) {return;}
-                window.game.vues.mad.launch();
+                window.evolve.vues.mad.launch();
                 prestigeCheck = true;
                 break;
             }
             case 'bioseed': {
                 // Checking if seeder is available
-                if (!window.game.global.starDock.hasOwnProperty('seeder')) {return;}
+                if (!window.evolve.global.starDock.hasOwnProperty('seeder')) {return;}
                 // Checking if seeding is complete
-                let seedCount = window.game.global.starDock.seeder.count;
+                let seedCount = window.evolve.global.starDock.seeder.count;
                 if (seedCount !== 100) {return;}
                 // Checking if already clicked
                 if (prestigeCheck) {return;}
@@ -2170,8 +2176,8 @@ function main() {
         // Don't do autoStorage if haven't unlocked storage
         if (!researched('tech-containerization')) {return;}
         // Finding values
-        let totalCrates = window.game.global.resource.Crates.amount;
-        let totalContainers = window.game.global.resource.Containers.amount;
+        let totalCrates = window.evolve.global.resource.Crates.amount;
+        let totalContainers = window.evolve.global.resource.Containers.amount;
         // Creating crateable object
         let storage = [];
         let totalPriority = 0;
@@ -2257,10 +2263,10 @@ function main() {
 
     function autoEjector() {
         // Don't do autoEjector if haven't unlocked mass ejectors
-        if (!window.game.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
-        if (window.game.global.interstellar.mass_ejector.count == 0) {return;}
+        if (!window.evolve.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
+        if (window.evolve.global.interstellar.mass_ejector.count == 0) {return;}
         // Don't do autoEjector if none are turned on
-        let totalEjection = window.game.global.interstellar.mass_ejector.on * 1000;
+        let totalEjection = window.evolve.global.interstellar.mass_ejector.on * 1000;
         if (totalEjection == 0) {return;}
 
         // Getting ejectable resources
@@ -2290,6 +2296,7 @@ function main() {
             totalEjection -= ejection;
         }
         console.log("EJECTABLE:", ejectables, ejectAllocation);
+        /*
         // Allocating
         for (let i = 0;i < ejectables.length;i++) {
             let res = ejectables[i];
@@ -2305,17 +2312,26 @@ function main() {
                 res.ejectInc(ejectAllocation[i] - res.ejectRate);
             }
         }
+        */
+        for (let i = 0;i < ejectables.length;i++) {
+            let res = ejectables[i];
+            window.evolve.global.interstellar.mass_ejector[res.id] = 0;
+        }
+        for (let i = 0;i < ejectables.length;i++) {
+            let res = ejectables[i];
+            window.evolve.global.interstellar.mass_ejector[res.id] = ejectAllocation[i];
+        }
     }
 
     function getWounded() {
-        return window.game.global.civic.garrison.wounded;
+        return window.evolve.global.civic.garrison.wounded;
     }
     function getTotalSoldiers() {
-        return window.game.global.civic.garrison.max;
+        return window.evolve.global.civic.garrison.max;
     }
     function getFortressSoldiers() {
-        if (window.game.global.portal.hasOwnProperty('fortress')) {
-            return window.game.global.portal.fortress.assigned;
+        if (window.evolve.global.portal.hasOwnProperty('fortress')) {
+            return window.evolve.global.portal.fortress.assigned;
         }
         return 0;
     }
@@ -2323,13 +2339,13 @@ function main() {
         return getTotalSoldiers() - getFortressSoldiers();
     }
     function getAvailableSoldiers() {
-        if (window.game.global.portal.hasOwnProperty('fortress')) {
-            return window.game.global.civic.garrison.workers - window.game.global.portal.fortress.assigned;
+        if (window.evolve.global.portal.hasOwnProperty('fortress')) {
+            return window.evolve.global.civic.garrison.workers - window.evolve.global.portal.fortress.assigned;
         }
-        return window.game.global.civic.garrison.workers;
+        return window.evolve.global.civic.garrison.workers;
     }
     function getCurrentSoldiers() {
-        return window.game.global.civic.garrison.raid;
+        return window.evolve.global.civic.garrison.raid;
     }
     function armyRating() {
         let armyRating = document.querySelector('#garrison > .header > span >  span:nth-child(2)');
@@ -2355,7 +2371,7 @@ function main() {
         }
     }
     function getCurrentCampaign() {
-        return window.game.global.civic.garrison.tactic;
+        return window.evolve.global.civic.garrison.tactic;
     }
     function addSoldiers(num) {
         num = num ? num : 1;
@@ -2398,7 +2414,7 @@ function main() {
         // Don't autoBattle if garrison not unlocked
         if (!researched('tech-garrison')) {return;}
         // Don't autoBattle if unified
-        if (window.game.global.tech['world_control']) {return;}
+        if (window.evolve.global.tech['world_control']) {return;}
         // Don't autoBattle if failed recently
         if (settings.campaignFailCheck && failTimer > 0) {
             failTimer -= 1;
@@ -2547,7 +2563,7 @@ function main() {
         //console.log("Divying up Craftsman");
         // Delay to get new craftman number
         setTimeout(function() {
-            let totalCraftsman = window.game.global.civic.craftsman.workers;
+            let totalCraftsman = window.evolve.global.civic.craftsman.workers;
             let totalPriority = 0;
             let cjobs = [];
             let priorities = [];
@@ -2585,9 +2601,9 @@ function main() {
 
     function getCurrentMorale() {
         let totalMorale = 100;
-        for (var x in window.game.global.city.morale) {
+        for (var x in window.evolve.global.city.morale) {
             if (x == 'current') {continue;}
-            totalMorale += window.game.global.city.morale[x];
+            totalMorale += window.evolve.global.city.morale[x];
         }
         return totalMorale;
     }
@@ -2596,10 +2612,10 @@ function main() {
         maxMorale += buildings['city-amphitheatre'].numTotal;
         maxMorale += buildings['city-casino'].numTotal;
         maxMorale += buildings['space-vr_center'].numOn * 2;
-        if (researched('tech-superstars')) {maxMorale += window.game.global.civic.entertainer.workers;}
+        if (researched('tech-superstars')) {maxMorale += window.evolve.global.civic.entertainer.workers;}
         maxMorale += arpas['monument'].numTotal * 2;
-        if (window.game.global.civic.taxes.tax_rate < 20){
-            maxMorale += 10 - Math.floor(window.game.global.civic.taxes.tax_rate / 2);
+        if (window.evolve.global.civic.taxes.tax_rate < 20){
+            maxMorale += 10 - Math.floor(window.evolve.global.civic.taxes.tax_rate / 2);
         }
         return maxMorale;
     }
@@ -2730,7 +2746,7 @@ function main() {
         // Opening Modal
         $('#city-smelter > .special').click();
         setTimeout(function() {
-            smelterModal = window.game.vues['specialModal'];
+            smelterModal = window.evolve.vues['specialModal'];
 
             // Closing modal
             let closeBtn = $('.modal-close')[0];
@@ -2741,39 +2757,39 @@ function main() {
     function getSmelterData() {
         let data = {};
         // Wood (Lumber/Souls/Flesh)
-        if (!window.game.global.race['kindling_kindred'] && !window.game.global.race['evil']) {
+        if (!window.evolve.global.race['kindling_kindred'] && !window.evolve.global.race['evil']) {
             data.Wood = {};
             let str = smelterModal.buildLabel('wood');
             str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
-            data.Wood.num = window.game.global.city.smelter.Wood;
+            data.Wood.num = window.evolve.global.city.smelter.Wood;
             data.Wood.fuel = parseFloat(str[1]);
             data.Wood.name = str[2];
         }
         // Coal
-        if (window.game.global.resource.Coal.display) {
+        if (window.evolve.global.resource.Coal.display) {
             data.Coal = {};
             let str = smelterModal.buildLabel('coal');
             data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-            data.Coal.num = window.game.global.city.smelter.Coal;
+            data.Coal.num = window.evolve.global.city.smelter.Coal;
         }
         // Oil
-        if (window.game.global.resource.Oil.display) {
+        if (window.evolve.global.resource.Oil.display) {
             data.Oil = {};
             let str = smelterModal.buildLabel('oil');
             data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-            data.Oil.num = window.game.global.city.smelter.Oil;
+            data.Oil.num = window.evolve.global.city.smelter.Oil;
         }
 
         // Iron
         data.Iron = {};
-        data.Iron.num = window.game.global.city.smelter.Iron;
+        data.Iron.num = window.evolve.global.city.smelter.Iron;
         let ironVal = smelterModal.ironLabel();
         data.Iron.percent = parseInt(/[^\d]+([\d]+)%/.exec(ironVal)[1]);
 
         // Steel
-        if (window.game.global.resource.Steel.display && window.game.global.tech.smelting >= 2) {
+        if (window.evolve.global.resource.Steel.display && window.evolve.global.tech.smelting >= 2) {
             data.Steel = {};
-            data.Steel.num = window.game.global.city.smelter.Steel;
+            data.Steel.num = window.evolve.global.city.smelter.Steel;
             let steelVal = smelterModal.steelLabel();
             let temp = /[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*/.exec(steelVal);
             data.Steel.Coal = parseFloat(temp[1]);
@@ -3065,7 +3081,7 @@ function main() {
         // Opening Modal
         $('#city-factory > .special').click();
         setTimeout(function() {
-            factoryModal = window.game.vues['specialModal'];
+            factoryModal = window.evolve.vues['specialModal'];
 
             // Closing modal
             let closeBtn = $('.modal-close')[0];
@@ -3076,7 +3092,7 @@ function main() {
     function getFactoryData() {
         let data = {};
 
-        let factoryLevel = window.game.global.tech['factory'] ? window.game.global.tech['factory'] : 0;
+        let factoryLevel = window.evolve.global.tech['factory'] ? window.evolve.global.tech['factory'] : 0;
 
         // Luxury Goods
         data.Lux = {};
@@ -3092,21 +3108,21 @@ function main() {
         data.Alloy.Copper = temp[1];
         data.Alloy.Aluminium = temp[2];
         // Alloy Production
-        let factory_output = window.game.f_rate.Alloy.output[factoryLevel];
-        if (window.game.global.race['toxic']){
+        let factory_output = window.evolve.f_rate.Alloy.output[factoryLevel];
+        if (window.evolve.global.race['toxic']){
             factory_output *= 1.20;
         }
-        if (window.game.global.tech['alloy']){
+        if (window.evolve.global.tech['alloy']){
             factory_output *= 1.37;
         }
-        if (window.game.global.race['metallurgist']){
-            factory_output *= 1 + (window.game.global.race['metallurgist'] * 0.04);
+        if (window.evolve.global.race['metallurgist']){
+            factory_output *= 1 + (window.evolve.global.race['metallurgist'] * 0.04);
         }
         factory_output *= getMultiplier('Alloy') * getMultiplier('Global');
         data.Alloy.produce = factory_output;
 
         // Polymer
-        if (window.game.global.tech['polymer']) {
+        if (window.evolve.global.tech['polymer']) {
             data.Polymer = {};
             let str = factoryModal.buildLabel('Polymer')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)?[^\d\.]+/.exec(str)
@@ -3114,18 +3130,18 @@ function main() {
             // Kindred Kindling
             data.Polymer.Lumber = (temp[2]) ? temp[2] : 0;
             // Polymer Production
-            let factory_output = window.game.f_rate.Polymer.output[factoryLevel];
-            if (window.game.global.race['toxic']) {
+            let factory_output = window.evolve.f_rate.Polymer.output[factoryLevel];
+            if (window.evolve.global.race['toxic']) {
                 factory_output *= 1.20;
             }
-            if (window.game.global.tech['polymer'] >= 2){
+            if (window.evolve.global.tech['polymer'] >= 2){
                 factory_output *= 1.42;
             }
             factory_output *= getMultiplier('Polymer') * getMultiplier('Global');
             data.Polymer.produce = factory_output;
         }
         // Nano Tube
-        if (window.game.global.tech['nano']) {
+        if (window.evolve.global.tech['nano']) {
             data.Nano = {};
             let str = factoryModal.buildLabel('Nano')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
@@ -3133,25 +3149,25 @@ function main() {
             data.Nano.Neutronium = temp[2];
             data.Nano.produce = 0;
             // Nano Tube Production
-            let factory_output = window.game.f_rate.Nano_Tube.output[factoryLevel];
-            if (window.game.global.race['toxic']) {
+            let factory_output = window.evolve.f_rate.Nano_Tube.output[factoryLevel];
+            if (window.evolve.global.race['toxic']) {
                 factory_output *= 1.08;
             }
-            if (window.game.global.tech['polymer'] >= 2){
+            if (window.evolve.global.tech['polymer'] >= 2){
                 factory_output *= 1.42;
             }
             factory_output *= getMultiplier('Nano_Tube') * getMultiplier('Global');
             data.Nano.produce = factory_output;
         }
         // Stanene
-        if (window.game.global.tech['stanene']) {
+        if (window.evolve.global.tech['stanene']) {
             data.Stanene = {};
             let str = factoryModal.buildLabel('Stanene')
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
             data.Stanene.Aluminium = temp[1];
             data.Stanene.Nano_Tube = temp[2];
             // Stanene Production
-            let factory_output = window.game.f_rate.Stanene.output[factoryLevel];
+            let factory_output = window.evolve.f_rate.Stanene.output[factoryLevel];
             factory_output *= getMultiplier('Stanene') * getMultiplier('Global');
             data.Stanene.produce = factory_output;
         }
@@ -3368,7 +3384,7 @@ function main() {
         // Opening Modal
         $('#interstellar-mining_droid > .special').click();
         setTimeout(function() {
-            droidModal = window.game.vues['specialModal'];
+            droidModal = window.evolve.vues['specialModal'];
 
             // Closing modal
             let closeBtn = $('.modal-close')[0];
@@ -3381,25 +3397,25 @@ function main() {
 
         // Adamantite
         data.Adamantite = {};
-        data.Adamantite.produce = 0.075 * window.game.zigguratBonus();
+        data.Adamantite.produce = 0.075 * window.evolve.zigguratBonus();
 
         // Uranium
         data.Uranium = {};
-        data.Uranium.produce = 0.12 * window.game.zigguratBonus();
+        data.Uranium.produce = 0.12 * window.evolve.zigguratBonus();
 
         // Coal
         data.Coal = {};
-        data.Coal.produce = 3.75 * window.game.zigguratBonus();
+        data.Coal.produce = 3.75 * window.evolve.zigguratBonus();
 
         // Aluminium
         data.Aluminium = {};
-        data.Aluminium.produce = 2.75 * window.game.zigguratBonus();
+        data.Aluminium.produce = 2.75 * window.evolve.zigguratBonus();
 
         return data;
     }
     function autoDroid(limits) {
         // Don't Auto Droid if not unlocked
-        if (window.game.global.tech['alpha'] < 2) {return;}
+        if (window.evolve.global.tech['alpha'] < 2) {return;}
         // Don't Auto Droid if you don't have any
         if (buildings['interstellar-mining_droid'].numTotal < 1) {return;}
         // Loading Droid Vue
@@ -3542,7 +3558,7 @@ function main() {
         // Opening Modal
         $('#interstellar-g_factory > .special').click();
         setTimeout(function() {
-            grapheneModal = window.game.vues['specialModal'];
+            grapheneModal = window.evolve.vues['specialModal'];
 
             // Closing modal
             let closeBtn = $('.modal-close')[0];
@@ -3553,26 +3569,26 @@ function main() {
     function getGrapheneData() {
         let data = {};
         // Lumber
-        if (!window.game.global.race['kindling_kindred']) {
+        if (!window.evolve.global.race['kindling_kindred']) {
             data.Lumber = {};
             let str = grapheneModal.buildLabel('wood');
             data.Lumber.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
-            data.Lumber.num = window.game.global.interstellar.g_factory.Lumber;
+            data.Lumber.num = window.evolve.global.interstellar.g_factory.Lumber;
 
         }
         // Coal
-        if (window.game.global.resource.Coal.display) {
+        if (window.evolve.global.resource.Coal.display) {
             data.Coal = {};
             let str = grapheneModal.buildLabel('coal');
             data.Coal.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
-            data.Coal.num = window.game.global.interstellar.g_factory.Coal;
+            data.Coal.num = window.evolve.global.interstellar.g_factory.Coal;
         }
         // Oil
-        if (window.game.global.resource.Oil.display) {
+        if (window.evolve.global.resource.Oil.display) {
             data.Oil = {};
             let str = grapheneModal.buildLabel('oil');
             data.Oil.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
-            data.Oil.num = window.game.global.interstellar.g_factory.Oil;
+            data.Oil.num = window.evolve.global.interstellar.g_factory.Oil;
         }
         return data;
     }
@@ -3970,12 +3986,12 @@ function main() {
         }
 
         // Removing mass ejection (if exists) for accurate rate
-        if (window.game.global.interstellar.hasOwnProperty('mass_ejector')) {
-            if (window.game.global.interstellar.mass_ejector.on > 0) {
+        if (window.evolve.global.interstellar.hasOwnProperty('mass_ejector')) {
+            if (window.evolve.global.interstellar.mass_ejector.on > 0) {
                 for (let x in resources) {
                     let resource = resources[x];
                     if (!resource.ejectable) {continue;}
-                    resource.temp_rate += window.game.global.interstellar.mass_ejector[x];
+                    resource.temp_rate += window.evolve.global.interstellar.mass_ejector[x];
                 }
             }
         }
@@ -4278,7 +4294,30 @@ function main() {
                 curSell += 1;
             }
         }
+        console.log("OLD TRADE ROUTES:", curTradeRoutes);
         console.log("NEW TRADE ROUTES:", newTradeRoutes);
+        /*
+        for (let x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            window.evolve.global.resource[x].trade = 0;
+        }
+        for (let x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            window.evolve.global.resource[x].trade = newTradeRoutes[x];
+        }
+        for (let x in resources) {
+            if (!(resources[x] instanceof TradeableResource)) {continue;}
+            if (newTradeRoutes[x] > 0) {
+                resources[x].tradeDec();
+                resources[x].tradeInc();
+            }
+            else {
+                resources[x].tradeInc();
+                resources[x].tradeDec();
+            }
+        }
+        */
+        
         for (let x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             // Removing routes that don't need routes
@@ -4318,6 +4357,7 @@ function main() {
                 resources[x].tradeInc(routeChange);
             }
         }
+        
     }
 
     function allocate(totalNum,priorities,ratios,args) {
@@ -4943,8 +4983,8 @@ function main() {
     }
     function createEjectorSettings() {
         // Don't render if haven't unlocked mass ejectors
-        if (!window.game.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
-        if (window.game.global.interstellar.mass_ejector.count == 0) {return;}
+        if (!window.evolve.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
+        if (window.evolve.global.interstellar.mass_ejector.count == 0) {return;}
         removeEjectorSettings();
 
     }
@@ -5185,9 +5225,9 @@ function main() {
         let [autoEvolutionTitle, autoEvolutionContent] = createAutoSettingToggle('autoEvolution', 'Auto Evolution', autoEvolutionDesc, true, tab);
 
         let raceValues = {};
-        for (let race in window.game.races) {
+        for (let race in window.evolve.races) {
             if (race == 'protoplasm' || race == 'junker') {continue;}
-            raceValues[race] = window.game.races[race].name;
+            raceValues[race] = window.evolve.races[race].name;
         }
         let raceOption = createDropDownControl(settings.evolution, 'evolution', 'Evolution Decision', raceValues);
         autoEvolutionContent.append(raceOption);
@@ -6318,7 +6358,7 @@ function main() {
     }
     // Determines if stage is currently in evolution
     function inEvolution() {
-        return window.game.global.race.species == 'protoplasm';
+        return window.evolve.global.race.species == 'protoplasm';
 
     }
     // Determines if the civics tab has been unlocked
@@ -6420,4 +6460,5 @@ function main() {
         return resources.Money.amount - buyValue < getMinMoney();
     }
 }
+
 
