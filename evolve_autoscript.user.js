@@ -605,11 +605,13 @@ function main() {
         }
 
         getResDep(resid) {
-            let cost = this.def.cost[resid];
-            if (cost !== undefined) {
-                return cost();
-            }
-            return null;
+            if (this.btn === null) {return null;}
+            let data = this.btn.querySelector('.button');
+            if (data === null) {return null;}
+            data = data.attributes[`data-${resid.toLowerCase()}`];
+            if (data === undefined) {return null;}
+            data = +data.value;
+            return data;
         }
 
         click() {
