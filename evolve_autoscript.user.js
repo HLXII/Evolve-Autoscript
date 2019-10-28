@@ -2043,11 +2043,19 @@ async function main() {
         switch(settings.prestige) {
             case 'mad': {
                 // Checking if MAD unlocked
-                if (!window.evolve.vues.mad.display) {return;}
+                let mad = document.getElementById('mad');
+                if (mad === null || mad.style.display == 'none') {return;}
                 // Checking if already clicked
                 if (prestigeCheck) {return;}
-                window.evolve.vues.mad.launch();
-                prestigeCheck = true;
+                // Checking if armed
+                if (mad.classList.contains('armed')) {
+                    // Launch
+                    mad.querySelector('.button:not(.arm)').click();
+                    prestigeCheck = true;
+                }
+                else {
+                    mad.querySelector('.button.arm').click();
+                }
                 break;
             }
             case 'bioseed': {
