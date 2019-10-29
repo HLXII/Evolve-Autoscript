@@ -20,6 +20,10 @@ function sleep(ms) {
 }
 
 async function main() {
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
     window.evolve = unsafeWindow.evolve;
     console.log(window.evolve);
     'use strict';
@@ -220,7 +224,7 @@ async function main() {
         }
         crateInc(num) {
             num = (num === undefined) ? 1 : num;
-            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(1) .add`);
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(2) .add`);
             if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
@@ -230,7 +234,7 @@ async function main() {
         }
         crateDec(num) {
             num = (num === undefined) ? 1 : num;
-            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(1) .sub`);
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(2) .sub`);
             if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
@@ -240,7 +244,7 @@ async function main() {
         }
         containerInc(num) {
             num = (num === undefined) ? 1 : num;
-            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(2) .add`);
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(3) .add`);
             if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
@@ -250,7 +254,7 @@ async function main() {
         }
         containerDec(num) {
             num = (num === undefined) ? 1 : num;
-            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(2) .sub`);
+            let btn = document.querySelector(`#stack-${this.id} .trade:nth-child(3) .sub`);
             if (btn === null) {return false;}
             disableMult();
             for (let i = 0;i < num;i++) {
@@ -594,6 +598,23 @@ async function main() {
             return title;
         }
 
+        async effect(btn) {
+            return new Promise(resolve => {
+                // Opening popper window
+                btn.dispatchEvent(new Event('mouseover'));
+                setTimeout(function() {
+                    // Reading effect
+                    let data = document.querySelector(`#pop${btn.id}.popper > div:nth-child(3)`);
+                    let effect = data.innerHTML;
+                    //Closing popper window
+                    setTimeout(function() {
+                        btn.dispatchEvent(new Event('mouseout'));
+                        resolve(effect);
+                    }, 25);
+                }, 25);
+            });
+        }
+
         get def() {
             let details = window.evolve.actions;
             for (let i = 0;i < this.loc.length;i++) {
@@ -726,11 +747,10 @@ async function main() {
 
         return isMet;
     }
-    function getPowerData(id, def) {
+    async function getPowerData(id, def) {
         //console.log("Getting Power Data for", id);
         let produce = [];
         let consume = [];
-        let effectStr = "";
         console.log(id, def);
         let test = null;
         // Finding Production
@@ -1049,12 +1069,14 @@ async function main() {
         constructor(id, loc) {
             super(id, loc);
             if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = 0;}
+            /*
             try {
             [this.consume,this.produce] = getPowerData(id, this.def);
             //console.log(this.consume, this.produce);
             } catch(e) {
                 console.log("Error loading power for ",this.id);
             }
+            */
         }
 
         get powerPriority() {return settings.actions[this.id].powerPriority;}
@@ -1076,6 +1098,48 @@ async function main() {
                 return 0;
             }
             return this.data.on;
+        }
+
+        async getCP() {
+            let consume = [];
+            let produce = [];
+            let effectFunc = this.effect;
+            let effect = await effectFunc(this.btn);
+            console.log(`Getting consume/produce for ${this.id}: ${effect}`);
+            // Money
+            let money = /([+-]?)\$([\d\.]+)/.exec(effect);
+            //console.log(this.id, money);
+            if (money !== null) {
+                if (money[2] == '-') {
+                    consume.push({res:'Money',cost:+money[3]});
+                }
+                else {
+                    produce.push({res:'Money',cost:+money[3]});
+                }
+            }
+            // Electricity
+            let electricity = /([+-])?([\d\.]+)kW/.exec(effect);
+            //console.log(this.id, electricity);
+            if (electricity !== null) {
+                if (electricity[2] == '-') {
+                    consume.push({res:'electricity',cost:+electricity[3]});
+                }
+                else {
+                    produce.push({res:'electricity',cost:+electricity[3]});
+                }
+            }
+            // Moon Support
+            let moon_support = /([+-])?([\d\.]+) Moon/.exec(effect);
+            console.log(this.id, moon_support);
+            if (moon_support !== null) {
+                if (moon_support[2] == '-') {
+                    consume.push({res:'moon_support',cost:+moon_support[3]});
+                }
+                else {
+                    produce.push({res:'moon_support',cost:+moon_support[3]});
+                }
+            }
+            return [consume,produce];
         }
 
         incPower(num) {
@@ -2043,19 +2107,11 @@ async function main() {
         switch(settings.prestige) {
             case 'mad': {
                 // Checking if MAD unlocked
-                let mad = document.getElementById('mad');
-                if (mad === null || mad.style.display == 'none') {return;}
+                if (!window.evolve.vues.mad.display) {return;}
                 // Checking if already clicked
                 if (prestigeCheck) {return;}
-                // Checking if armed
-                if (mad.classList.contains('armed')) {
-                    // Launch
-                    mad.querySelector('.button:not(.arm)').click();
-                    prestigeCheck = true;
-                }
-                else {
-                    mad.querySelector('.button.arm').click();
-                }
+                window.evolve.vues.mad.launch();
+                prestigeCheck = true;
                 break;
             }
             case 'bioseed': {
@@ -2312,7 +2368,7 @@ async function main() {
             totalEjection -= ejection;
         }
         console.log("EJECTABLE:", ejectables, ejectAllocation);
-        /*
+
         // Allocating
         for (let i = 0;i < ejectables.length;i++) {
             let res = ejectables[i];
@@ -2328,7 +2384,7 @@ async function main() {
                 res.ejectInc(ejectAllocation[i] - res.ejectRate);
             }
         }
-        */
+        /*
         for (let i = 0;i < ejectables.length;i++) {
             let res = ejectables[i];
             window.evolve.global.interstellar.mass_ejector[res.id] = 0;
@@ -2337,6 +2393,7 @@ async function main() {
             let res = ejectables[i];
             window.evolve.global.interstellar.mass_ejector[res.id] = ejectAllocation[i];
         }
+        */
     }
 
     function getWounded() {
@@ -2814,7 +2871,7 @@ async function main() {
         }
         return data;
     }
-    function autoSmelter(limits) {
+    async function autoSmelter(limits) {
         // Don't Auto smelt if not unlocked
         if (!researched('tech-steel')) {return;}
         // Loading Smelter Vue
@@ -3189,7 +3246,7 @@ async function main() {
         }
         return data;
     }
-    function autoFactory(limits) {
+    async function autoFactory(limits) {
         // Don't Auto factory if not unlocked
         if (!researched('tech-industrialization')) {return;}
         // Don't Auto factory if you don't have any
@@ -3429,7 +3486,7 @@ async function main() {
 
         return data;
     }
-    function autoDroid(limits) {
+    async function autoDroid(limits) {
         // Don't Auto Droid if not unlocked
         if (window.evolve.global.tech['alpha'] < 2) {return;}
         // Don't Auto Droid if you don't have any
@@ -3608,7 +3665,7 @@ async function main() {
         }
         return data;
     }
-    function autoGraphene(limits) {
+    async function autoGraphene(limits) {
         // Don't Auto Graphene if not unlocked
         if (!researched('tech-graphene')) {return;}
         // Loading Graphene Plant Vue
@@ -3741,7 +3798,7 @@ async function main() {
         }
     }
 
-    function autoSupport(priorityData) {
+    async function autoSupport(priorityData) {
         // Don't start autoSupport if haven't unlocked power
         if (!researched('tech-electricity')) {return;}
         let powered = [];
@@ -3752,12 +3809,20 @@ async function main() {
         let maxes = [];
         // Loading all buildings
         for (let x in buildings) {
+            console.log(x, buildings[x].unlocked, buildings[x].powerUnlocked, buildings[x] instanceof PoweredBuilding);
             // Ignore not unlocked buildings
             if (!buildings[x].unlocked) {continue;}
+            // Ignore non powered buildings
+            if (!(buildings[x] instanceof PoweredBuilding)) {continue;}
             // Ignore not power unlocked buildings
             if (!buildings[x].powerUnlocked) {continue;}
             // Ignore non-powered buildings
             if (!(buildings[x] instanceof PoweredBuilding)) {continue;}
+
+            // Loading production/consumption
+            console.log(x);
+            [buildings[x].consume, buildings[x].produce] = await buildings[x].getCP();
+
             // Reverting consumption/production
             for (let i = 0;i < buildings[x].consume.length;i++) {
                 if (resources[buildings[x].consume[i].res] !== undefined) {
@@ -3843,6 +3908,7 @@ async function main() {
         console.log("REMAIN:", support);
 
         // Allocating
+        /*
         for (let i = 0;i < powered.length;i++) {
             let building = powered[i];
             if (building.numOn < allocation.alloc[i]) {
@@ -3852,6 +3918,7 @@ async function main() {
                 building.decPower(building.numOn - allocation.alloc[i]);
             }
         }
+        */
 
     }
 
@@ -3975,7 +4042,7 @@ async function main() {
         }
         return res;
     }
-    function autoPriority(count) {
+    async function autoPriority(count) {
         // Finding available actions
         let actions = getAvailableActions();
         //console.log(actions);
@@ -4157,37 +4224,39 @@ async function main() {
         }
 
         // Starting other Auto Settings
+        /*
         if (settings.autoSmelter) {
             if (settings.smelterSettings.pqCheck) {
-                autoSmelter(limits);
+                await autoSmelter(limits);
             } else {
-                autoSmelter();
+                await autoSmelter();
             }
         }
         if (settings.autoFactory) {
             if (settings.factorySettings.pqCheck) {
-                autoFactory(limits);
+                await autoFactory(limits);
             } else {
-                autoFactory();
+                await autoFactory();
             }
         }
         if (settings.autoDroid) {
             if (settings.droidSettings.pqCheck) {
-                autoDroid(limits);
+                await autoDroid(limits);
             } else {
-                autoDroid();
+                await autoDroid();
             }
         }
         if (settings.autoGraphene) {
             if (settings.grapheneSettings.pqCheck) {
-                autoGraphene(limits);
+                await autoGraphene(limits);
             } else {
-                autoGraphene();
+                await autoGraphene();
             }
         }
         if (settings.autoSupport) {
-            autoSupport(limits);
+            await autoSupport(limits);
         }
+        */
 
         // Determining rate priorities
         console.log("LIM:", limits);
@@ -4333,7 +4402,7 @@ async function main() {
             }
         }
         */
-        
+
         for (let x in resources) {
             if (!(resources[x] instanceof TradeableResource)) {continue;}
             // Removing routes that don't need routes
@@ -4373,7 +4442,7 @@ async function main() {
                 resources[x].tradeInc(routeChange);
             }
         }
-        
+
     }
 
     function allocate(totalNum,priorities,ratios,args) {
@@ -4491,24 +4560,26 @@ async function main() {
             // Civilization Automation
             var priorityData = null;
             if (settings.autoPriority) {
-                priorityData = autoPriority(count);
+                priorityData = await autoPriority(count);
             }
             else {
+                /*
                 if (settings.autoSmelter) {
-                    autoSmelter();
+                    await autoSmelter();
                 }
                 if (settings.autoFactory) {
-                    autoFactory();
+                    await autoFactory();
                 }
                 if (settings.autoDroid) {
-                    autoDroid();
+                    await autoDroid();
                 }
                 if (settings.autoGraphene) {
-                    autoGraphene();
+                    await autoGraphene();
                 }
                 if (settings.autoSupport) {
-                    autoSupport();
+                    await autoSupport();
                 }
+                */
             }
             if (settings.autoTrade){autoTrade(priorityData);}
             if (settings.autoEjector) {autoEjector();}
