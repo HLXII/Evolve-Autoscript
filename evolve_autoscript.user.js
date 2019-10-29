@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Evolve_HLXII
 // @namespace    http://tampermonkey.net/
-// @version      1.2.11
+// @version      1.2.12
 // @description  try to take over the world!
 // @author       HLXII
 // @match        https://pmotschmann.github.io/Evolve/
@@ -32,7 +32,7 @@ async function main() {
     if(jsonSettings != null){settings = JSON.parse(jsonSettings);}
 
     let url = 'https://github.com/HLXII/Evolve-Autoscript';
-    let version = '1.2.11';
+    let version = '1.2.12';
 
     /***
     *
@@ -1875,24 +1875,25 @@ async function main() {
     function loadSettings() {
         console.log("Loading Settings");
         // Evolution
-        loadEvolution();
+        try { loadEvolution(); } catch(e) {console.log('Error: Load Evolution');}
         // Farm
-        loadFarm();
+        try { loadFarm(); } catch(e) {console.log('Error: Load Farm');}
         // Resources
-        loadResources();
+        try { loadResources(); } catch(e) {console.log('Error: Load Resources');}
         // Storages
-        try { loadStorages(); } catch(e) {}
+        try { loadStorages(); } catch(e) {console.log('Error: Load Storage');}
         // Misc Actions
-        loadMiscActions();
+        try { loadMiscActions(); } catch(e) {console.log('Error: Load Misc Actions');}
         // Research
-        loadResearches();
+        try { loadResearches(); } catch(e) {console.log('Error: Load Researches');}
         // Buildings
-        loadBuildings();
+        try { loadBuildings(); } catch(e) {console.log('Error: Load Buildings');}
         // Jobs
-        loadJobs();
-        loadCraftJobs();
+        try { loadJobs(); } catch(e) {console.log('Error: Load Jobs');}
+        try { loadCraftJobs(); } catch(e) {console.log('Error: Load Craft Jobs');}
         // ARPA
-        loadArpas();
+        try { loadArpas(); } catch(e) {console.log('Error: Load ARPAs');}
+
         // Smelter
         loadSmelter();
         // Factory
@@ -2107,11 +2108,19 @@ async function main() {
         switch(settings.prestige) {
             case 'mad': {
                 // Checking if MAD unlocked
-                if (!window.evolve.vues.mad.display) {return;}
+                let mad = document.getElementById('mad');
+                if (mad === null || mad.style.display == 'none') {return;}
                 // Checking if already clicked
                 if (prestigeCheck) {return;}
-                window.evolve.vues.mad.launch();
-                prestigeCheck = true;
+                // Checking if armed
+                if (mad.classList.contains('armed')) {
+                    // Launch
+                    mad.querySelector('.button:not(.arm)').click();
+                    prestigeCheck = true;
+                }
+                else {
+                    mad.querySelector('.button.arm').click();
+                }
                 break;
             }
             case 'bioseed': {
@@ -5207,16 +5216,18 @@ async function main() {
         createAutoSettingGeneralPage(generalTab);
         let evolutionTab = createAutoSettingPage("Evolution", ul, section);
         createAutoSettingEvolutionPage(evolutionTab);
-        let jobTab = createAutoSettingPage("Jobs/Army", ul, section);
-        createAutoSettingJobPage(jobTab);
-        let resourceTab = createAutoSettingPage("Resources", ul, section);
-        createAutoSettingResourcePage(resourceTab);
-        let buildingTab = createAutoSettingPage("Buildings", ul, section);
-        createAutoSettingBuildingPage(buildingTab);
-        let researchTab = createAutoSettingPage("Research", ul, section);
-        createAutoSettingResearchPage(researchTab);
-        let priorityTab = createAutoSettingPage("Priority", ul, section);
-        createAutoSettingPriorityPage(priorityTab);
+        if (!inEvolution()) {
+            let jobTab = createAutoSettingPage("Jobs/Army", ul, section);
+            createAutoSettingJobPage(jobTab);
+            let resourceTab = createAutoSettingPage("Resources", ul, section);
+            createAutoSettingResourcePage(resourceTab);
+            let buildingTab = createAutoSettingPage("Buildings", ul, section);
+            createAutoSettingBuildingPage(buildingTab);
+            let researchTab = createAutoSettingPage("Research", ul, section);
+            createAutoSettingResearchPage(researchTab);
+            let priorityTab = createAutoSettingPage("Priority", ul, section);
+            createAutoSettingPriorityPage(priorityTab);
+        }
     }
     function createAutoSettingToggle(id, name, description, hasContent, tab, enabledCallBack, disabledCallBack) {
         let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
