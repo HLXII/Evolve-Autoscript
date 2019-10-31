@@ -41,6 +41,9 @@ async function main() {
     ***/
 
     window.hlxii = {};
+
+    // From actions.js
+    // Determines the factory output
     window.hlxii.f_rate = {
         Lux: {
             demand: [0.14,0.21,0.28,0.35],
@@ -68,6 +71,17 @@ async function main() {
             output: [0.6,0.9,1.2,1.5],
         }
     };
+
+    // From space.js
+    // Determines the mining droid output bonus
+    window.hlxii.zigguratBonus = function(){
+        let bonus = 1;
+        if (window.evolve.global.space['ziggurat'] && window.evolve.global.space['ziggurat'].count > 0){
+            let study = window.evolve.global.tech['ancient_study'] ? 0.006 : 0.004;
+            bonus += (window.evolve.global.space.ziggurat.count * window.evolve.global.civic.colonist.workers * study);
+        }
+        return bonus;
+    }
 
     /***
     *
@@ -3485,44 +3499,36 @@ async function main() {
         modal = false;
     }
 
-    let droidModal = null;
-    function loadDroidModal() {
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            return;
-        }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
-        // Opening Modal
-        $('#interstellar-mining_droid > .special').click();
-        setTimeout(function() {
-            droidModal = window.evolve.vues['specialModal'];
-
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
-    }
     function getDroidData() {
         let data = {};
 
         // Adamantite
         data.Adamantite = {};
-        data.Adamantite.produce = 0.075 * window.evolve.zigguratBonus();
+        data.Adamantite.produce = 0.075 * window.hlxii.zigguratBonus();
+        data.Adamantite.num = window.evolve.global.interstellar.mining_droid.adam;
+        data.Adamantite.decBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(2)');
+        data.Adamantite.incBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(4)');
 
         // Uranium
         data.Uranium = {};
-        data.Uranium.produce = 0.12 * window.evolve.zigguratBonus();
+        data.Uranium.produce = 0.12 * window.hlxii.zigguratBonus();
+        data.Uranium.num = window.evolve.global.interstellar.mining_droid.uran;
+        data.Uranium.decBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(2)');
+        data.Uranium.incBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(4)');
 
         // Coal
         data.Coal = {};
-        data.Coal.produce = 3.75 * window.evolve.zigguratBonus();
+        data.Coal.produce = 3.75 * window.hlxii.zigguratBonus();
+        data.Coal.num = window.evolve.global.interstellar.mining_droid.coal;
+        data.Coal.decBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(2)');
+        data.Coal.incBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(4)');
 
         // Aluminium
         data.Aluminium = {};
-        data.Aluminium.produce = 2.75 * window.evolve.zigguratBonus();
+        data.Aluminium.produce = 2.75 * window.hlxii.zigguratBonus();
+        data.Aluminium.num = window.evolve.global.interstellar.mining_droid.alum;
+        data.Aluminium.decBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(2)');
+        data.Aluminium.incBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(4)');
 
         return data;
     }
@@ -3531,29 +3537,23 @@ async function main() {
         if (window.evolve.global.tech['alpha'] < 2) {return;}
         // Don't Auto Droid if you don't have any
         if (buildings['interstellar-mining_droid'].numTotal < 1) {return;}
-        // Loading Droid Vue
-        if (droidModal === null) {
-            loadDroidModal();
-            return;
-        }
+        // Opening Modal
+        if ($('.modal').length != 0) {return;}
+        if (modal) {return;}
+        modal = true;
+        $('#interstellar-mining_droid > .special').click()
+        await sleep(50);
+
         let totalDroids = buildings['interstellar-mining_droid'].numOn;
 
         let data = getDroidData();
         console.log('DROID DATA:', data);
 
         // Reverting current allocation
-        if (factoryModal.adam) {
-            resources.Adamantite.temp_rate -= data.Adamantite.produce * factoryModal.adam;
-        }
-        if (factoryModal.uran) {
-            resources.Uranium.temp_rate -= data.Uranium.produce * factoryModal.uran;
-        }
-        if (factoryModal.coal) {
-            resources.Coal.temp_rate -= data.Coal.produce * factoryModal.coal;
-        }
-        if (factoryModal.alum) {
-            resources.Aluminium.temp_rate -= data.Aluminium.produce * factoryModal.alum;
-        }
+        resources.Adamantite.temp_rate -= data.Adamantite.produce * data.Adamantite.num;
+        resources.Uranium.temp_rate -= data.Uranium.produce * data.Uranium.num;
+        resources.Coal.temp_rate -= data.Coal.produce * data.Coal.num;
+        resources.Aluminium.temp_rate -= data.Aluminium.produce * data.Aluminium.num;
 
         // Finding Allocation
         let keys = [];
@@ -3561,7 +3561,7 @@ async function main() {
         let totalPriority = 0;
         let ratios = [];
         if (data.hasOwnProperty('Adamantite')) {
-            keys.push('adam');
+            keys.push('Adamantite');
             let priority = settings.droidSettings.Adamantite;
             if (limits) {
                 if (limits.Adamantite !== null) {
@@ -3574,7 +3574,7 @@ async function main() {
             totalPriority += priority;
         }
         if (data.hasOwnProperty('Uranium')) {
-            keys.push('uran');
+            keys.push('Uranium');
             let priority = settings.droidSettings.Uranium;
             if (limits) {
                 if (limits.Uranium !== null) {
@@ -3587,7 +3587,7 @@ async function main() {
             totalPriority += priority;
         }
         if (data.hasOwnProperty('Coal')) {
-            keys.push('coal');
+            keys.push('Coal');
             let priority = settings.droidSettings.Coal;
             if (limits) {
                 if (limits.Coal !== null) {
@@ -3600,7 +3600,7 @@ async function main() {
             totalPriority += priority;
         }
         if (data.hasOwnProperty('Aluminium')) {
-            keys.push('alum');
+            keys.push('Aluminium');
             let priority = settings.droidSettings.Aluminium;
             if (limits) {
                 if (limits.Aluminium !== null) {
@@ -3617,19 +3617,19 @@ async function main() {
         }
         let allocFunc = function(index, curNum) {
             switch(keys[index]) {
-                case 'adam': {
+                case 'Adamantite': {
                     resources.Adamantite.temp_rate += data.Adamantite.produce;
                     break;
                 }
-                case 'uran': {
+                case 'Uranium': {
                     resources.Uranium.temp_rate += data.Uranium.produce;
                     break;
                 }
-                case 'coal': {
+                case 'Coal': {
                     resources.Coal.temp_rate += data.Coal.produce;
                     break;
                 }
-                case 'alum': {
+                case 'Aluminium': {
                     resources.Aluminium.temp_rate += data.Aluminium.produce;
                     break;
                 }
@@ -3644,19 +3644,27 @@ async function main() {
 
         // Allocating
         for (let i = 0;i < keys.length;i++) {
-            if (droidModal[keys[i]] > allocation.alloc[i]) {
-                for (let j = 0;j < droidModal[keys[i]] - allocation.alloc[i];j++) {
-                    droidModal.subItem([keys[i]]);
+            if (data[keys[i]].num > allocation.alloc[i]) {
+                for (let j = 0;j < data[keys[i]].num - allocation.alloc[i];j++) {
+                    data[keys[i]].decBtn.click();
                 }
             }
         }
         for (let i = 0;i < keys.length;i++) {
-            if (droidModal[keys[i]] < allocation.alloc[i]) {
-                for (let j = 0;j < allocation.alloc[i] - droidModal[keys[i]];j++) {
-                    droidModal.addItem([keys[i]]);
+            if (data[keys[i]].num < allocation.alloc[i]) {
+                for (let j = 0;j < allocation.alloc[i] - data[keys[i]].num;j++) {
+                    data[keys[i]].incBtn.click();
                 }
             }
         }
+
+        // Setting data to null for garbage collector maybe
+        data = null;
+
+        // Closing Modal
+        $('.modal > button').click()
+        await sleep(250);
+        modal = false;
     }
 
     let grapheneModal = null;
