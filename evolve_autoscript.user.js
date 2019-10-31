@@ -1911,6 +1911,10 @@ async function main() {
         if (!settings.grapheneSettings.hasOwnProperty('Coal')) {settings.grapheneSettings.Coal = 10;}
         if (!settings.grapheneSettings.hasOwnProperty('Oil')) {settings.grapheneSettings.Oil = 5;}
     }
+    function loadSupport() {
+        if (!settings.hasOwnProperty('supportSettings')) {settings.supportSettings = {};}
+        if (!settings.supportSettings.hasOwnProperty('Interval')) {settings.supportSettings.Interval = 23;}
+    }
 
     let printSettings = ['Buildings','Researches','Misc'];
 
@@ -3951,7 +3955,6 @@ async function main() {
         console.log("REMAIN:", support);
 
         // Allocating
-        
         for (let i = 0;i < powered.length;i++) {
             let building = powered[i];
             /*
@@ -3975,8 +3978,6 @@ async function main() {
                 building.decPower(building.numOn - allocation.alloc[i]);
             }
         }
-        
-
     }
 
     function prioCompare(a, b) {
@@ -4309,7 +4310,7 @@ async function main() {
                 await autoGraphene();
             }
         }
-        if (settings.autoSupport) {
+        if (settings.autoSupport && count % settings.supportSettings.Interval == 0) {
             await autoSupport(limits);
         }
 
@@ -4618,23 +4619,21 @@ async function main() {
                 priorityData = await autoPriority(count);
             }
             else {
-                if (settings.autoSmelter && count % settings.smelterSettings == 0) {
+                if (settings.autoSmelter && count % settings.smelterSettings.Interval == 0) {
                     await autoSmelter();
                 }
-                if (settings.autoFactory && count % settings.factorySettings == 0) {
+                if (settings.autoFactory && count % settings.factorySettings.Interval == 0) {
                     await autoFactory();
                 }
-                if (settings.autoDroid && count % settings.droidSettings == 0) {
+                if (settings.autoDroid && count % settings.droidSettings.Interval == 0) {
                     await autoDroid();
                 }
-                if (settings.autoGraphene && count % settings.grapheneSettings == 0) {
+                if (settings.autoGraphene && count % settings.grapheneSettings.Interval == 0) {
                     await autoGraphene();
                 }
-                /*
-                if (settings.autoSupport) {
+                if (settings.autoSupport && count % settings.supportSettings.Interval == 0) {
                     await autoSupport();
                 }
-                */
             }
             if (settings.autoTrade){autoTrade(priorityData);}
             if (settings.autoEjector) {autoEjector();}
@@ -5862,6 +5861,147 @@ async function main() {
         loadEjectorUI(autoEjectorContent);
     }
 
+    function createSmelterSetting(id, name, toolTip) {
+        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
+        if (toolTip) {
+            resText.addClass(toolTipClass);
+            resText.attr("data-label", toolTip);
+        }
+        let resSub = function(mult) {
+            settings.smelterSettings[id] -= mult;
+            if (settings.smelterSettings[id] < 0) {settings.smelterSettings[id] = 0;}
+            return settings.smelterSettings[id];
+        }
+        let resAdd = function(mult) {
+            settings.smelterSettings[id] += mult;
+            return settings.smelterSettings[id];
+        }
+        let resControls = createNumControl(settings.smelterSettings[id], "smelter_"+id, resSub, resAdd);
+        let div = $('<div style="display:flex"></div>').append(resText).append(resControls);
+        return div;
+    }
+    function loadSmelterUI(content) {
+        let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
+        let intervalControl = createSmelterSetting('Interval', 'Interval', intervalToolTip);
+        content.append(intervalControl);
+        content.append($('<br>'));
+
+        let woodControl = createSmelterSetting('Wood', 'Wood Priority');
+        let coalControl = createSmelterSetting('Coal', 'Coal Priority');
+        let oilControl = createSmelterSetting('Oil', 'Oil Priority');
+        content.append(woodControl);
+        content.append(coalControl);
+        content.append(oilControl);
+        content.append($('<br>'));
+
+        let ironControl = createSmelterSetting('Iron', 'Iron Priority');
+        let steelControl = createSmelterSetting('Steel', 'Steel Priority');
+        content.append(ironControl);
+        content.append(steelControl);
+    }
+    function createFactorySetting(id, name, toolTip) {
+        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
+        if (toolTip) {
+            resText.addClass(toolTipClass);
+            resText.attr("data-label", toolTip);
+        }
+        let resSub = function(mult) {
+            settings.factorySettings[id] -= mult;
+            if (settings.factorySettings[id] < 0) {settings.factorySettings[id] = 0;}
+            return settings.factorySettings[id];
+        }
+        let resAdd = function(mult) {
+            settings.factorySettings[id] += mult;
+            return settings.factorySettings[id];
+        }
+        let resControls = createNumControl(settings.factorySettings[id], "factory_"+id, resSub, resAdd);
+        let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+        return newDiv;
+    }
+    function loadFactoryUI(content) {
+        let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
+        let intervalControl = createFactorySetting('Interval', 'Interval', intervalToolTip);
+        content.append(intervalControl);
+        content.append($('<br>'));
+
+        let luxControl = createFactorySetting('Luxury_Goods', 'Luxury Goods Priority');
+        let alloyControl = createFactorySetting('Alloy', 'Alloy Priority');
+        let polymerControl = createFactorySetting('Polymer', 'Polymer Priority');
+        let nanoControl = createFactorySetting('Nano_Tube', 'Nano Tube Priority');
+        let staneneControl = createFactorySetting('Stanene', 'Stanene Priority');
+        content.append(luxControl);
+        content.append(alloyControl);
+        content.append(polymerControl);
+        content.append(nanoControl);
+        content.append(staneneControl);
+    }
+    function createDroidSetting(id, name, toolTip) {
+        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
+        if (toolTip) {
+            resText.addClass(toolTipClass);
+            resText.attr("data-label", toolTip);
+        }
+        let resSub = function(mult) {
+            settings.droidSettings[id] -= mult;
+            if (settings.droidSettings[id] < 0) {settings.droidSettings[id] = 0;}
+            return settings.droidSettings[id];
+        }
+        let resAdd = function(mult) {
+            settings.droidSettings[id] += mult;
+            return settings.droidSettings[id];
+        }
+        let resControls = createNumControl(settings.droidSettings[id], "droid_"+id, resSub, resAdd);
+        let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+        return newDiv;
+    }
+    function loadDroidUI(content) {
+        let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
+        let intervalControl = createFactorySetting('Interval', 'Interval', intervalToolTip);
+        content.append(intervalControl);
+        content.append($('<br>'));
+
+        let adamControl = createDroidSetting('Adamantite', 'Adamantite Priority');
+        let uranControl = createDroidSetting('Uranium', 'Uranium Priority');
+        let coalControl = createDroidSetting('Coal', 'Coal Priority');
+        let alumControl = createDroidSetting('Aluminium', 'Aluminium Priority');
+        content.append(adamControl);
+        content.append(uranControl);
+        content.append(coalControl);
+        content.append(alumControl);
+    }
+    function createGrapheneSetting(id, name, toolTip) {
+        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
+        if (toolTip) {
+            resText.addClass(toolTipClass);
+            resText.attr("data-label", toolTip);
+        }
+        let resSub = function(mult) {
+            settings.grapheneSettings[id] -= mult;
+            if (settings.grapheneSettings[id] < 0) {settings.grapheneSettings[id] = 0;}
+            return settings.grapheneSettings[id];
+        }
+        let resAdd = function(mult) {
+            settings.grapheneSettings[id] += mult;
+            return settings.grapheneSettings[id];
+        }
+        let resControls = createNumControl(settings.grapheneSettings[id], "graphene_"+id, resSub, resAdd);
+        let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
+        return newDiv;
+    }
+    function loadGrapheneUI(content) {
+        let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
+        let intervalControl = createGrapheneSetting('Interval', 'Interval', intervalToolTip);
+        content.append(intervalControl);
+        content.append($('<br>'));
+
+        let woodControl = createGrapheneSetting('Wood', 'Wood Priority');
+        let coalControl = createGrapheneSetting('Coal', 'Coal Priority');
+        let oilControl = createGrapheneSetting('Oil', 'Oil Priority');
+        content.append(woodControl);
+        content.append(coalControl);
+        content.append(oilControl);
+        content.append($('<br>'));
+    }
     function createAutoSettingBuildingPage(tab) {
 
         // Auto Support
@@ -5871,23 +6011,7 @@ async function main() {
         // Auto Smelter
         let autoSmelterDesc = "Allocates the smelter building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoSmelterTitle, autoSmelterContent] = createAutoSettingToggle('autoSmelter', 'Auto Smelter', autoSmelterDesc, true, tab);
-        Object.keys(settings.smelterSettings).forEach(function(res) {
-            // Ignoring pqCheck
-            if (res == 'pqCheck') {return;}
-            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
-            let resSub = function(mult) {
-                settings.smelterSettings[res] -= mult;
-                if (settings.smelterSettings[res] < 0) {settings.smelterSettings[res] = 0;}
-                return settings.smelterSettings[res];
-            }
-            let resAdd = function(mult) {
-                settings.smelterSettings[res] += mult;
-                return settings.smelterSettings[res];
-            }
-            let resControls = createNumControl(settings.smelterSettings[res], "smelter_"+res+"_priority", resSub, resAdd);
-            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            autoSmelterContent.append(newDiv);
-        });
+        loadSmelterUI(autoSmelterContent);
 
         let smelterPQToolTip = 'Enable to make Auto Smelter depend on the Auto Priority queue.';
         let smelterPQCheck = createCheckBoxControl(settings.smelterSettings.pqCheck, 'smelterPQCheck', "Auto Priority", {path:[settings, 'smelterSettings', 'pqCheck'],toolTip:smelterPQToolTip});
@@ -5896,23 +6020,7 @@ async function main() {
         // Auto Factory
         let autoFactoryDesc = "Allocates the factory building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoFactoryTitle, autoFactoryContent] = createAutoSettingToggle('autoFactory', 'Auto Factory', autoFactoryDesc, true, tab);
-        Object.keys(settings.factorySettings).forEach(function(res) {
-            // Ignoring pqCheck
-            if (res == 'pqCheck') {return;}
-            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
-            let resSub = function(mult) {
-                settings.factorySettings[res] -= mult;
-                if (settings.factorySettings[res] < 0) {settings.factorySettings[res] = 0;}
-                return settings.factorySettings[res];
-            }
-            let resAdd = function(mult) {
-                settings.factorySettings[res] += mult;
-                return settings.factorySettings[res];
-            }
-            let resControls = createNumControl(settings.factorySettings[res], "factory_"+res+"_priority", resSub, resAdd);
-            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            autoFactoryContent.append(newDiv);
-        });
+        loadFactoryUI(autoFactoryContent);
 
         let factoryPQToolTip = 'Enable to make Auto Factory depend on the Auto Priority queue.';
         let factoryPQCheck = createCheckBoxControl(settings.factorySettings.pqCheck, 'factoryPQCheck', "Auto Priority", {path:[settings, 'factorySettings', 'pqCheck'],toolTip:factoryPQToolTip});
@@ -5921,23 +6029,7 @@ async function main() {
         // Auto Mining Droid
         let autoDroidDesc = "Allocates mining droids. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoDroidTitle, autoDroidContent] = createAutoSettingToggle('autoDroid', 'Auto Mining Droid', autoDroidDesc, true, tab);
-        Object.keys(settings.droidSettings).forEach(function(res) {
-            // Ignoring pqCheck
-            if (res == 'pqCheck') {return;}
-            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
-            let resSub = function(mult) {
-                settings.droidSettings[res] -= mult;
-                if (settings.droidSettings[res] < 0) {settings.droidSettings[res] = 0;}
-                return settings.droidSettings[res];
-            }
-            let resAdd = function(mult) {
-                settings.droidSettings[res] += mult;
-                return settings.droidSettings[res];
-            }
-            let resControls = createNumControl(settings.droidSettings[res], "droid_"+res+"_priority", resSub, resAdd);
-            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            autoDroidContent.append(newDiv);
-        });
+        loadDroidUI(autoDroidContent);
 
         let droidPQToolTip = 'Enable to make Auto Droid depend on the Auto Priority queue.';
         let droidPQCheck = createCheckBoxControl(settings.droidSettings.pqCheck, 'droidPQCheck', "Auto Priority", {path:[settings, 'droidSettings', 'pqCheck'],toolTip:droidPQToolTip});
@@ -5946,23 +6038,7 @@ async function main() {
         // Auto Graphene Plant
         let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoGrapheneTitle, autoGrapheneContent] = createAutoSettingToggle('autoGraphene', 'Auto Graphene Plants', autoGrapheneDesc, true, tab);
-        Object.keys(settings.grapheneSettings).forEach(function(res) {
-            // Ignoring pqCheck
-            if (res == 'pqCheck') {return;}
-            let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
-            let resSub = function(mult) {
-                settings.grapheneSettings[res] -= mult;
-                if (settings.grapheneSettings[res] < 0) {settings.grapheneSettings[res] = 0;}
-                return settings.grapheneSettings[res];
-            }
-            let resAdd = function(mult) {
-                settings.grapheneSettings[res] += mult;
-                return settings.grapheneSettings[res];
-            }
-            let resControls = createNumControl(settings.grapheneSettings[res], "graphene_"+res+"_priority", resSub, resAdd);
-            let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-            autoGrapheneContent.append(newDiv);
-        });
+        loadGrapheneUI(autoGrapheneContent);
 
         let graphenePQToolTip = 'Enable to make Auto Graphene depend on the Auto Priority queue.';
         let graphenePQCheck = createCheckBoxControl(settings.grapheneSettings.pqCheck, 'graphenePQCheck', "Auto Priority", {path:[settings, 'grapheneSettings', 'pqCheck'],toolTip:graphenePQToolTip});
