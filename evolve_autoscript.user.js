@@ -36,6 +36,41 @@ async function main() {
 
     /***
     *
+    * Copied code from game source. When game updates make sure to check if any of this changes
+    *
+    ***/
+
+    window.hlxii = {};
+    window.hlxii.f_rate = {
+        Lux: {
+            demand: [0.14,0.21,0.28,0.35],
+            fur: [2,3,4,5]
+        },
+        Alloy: {
+            copper: [0.75,1.12,1.49,1.86],
+            aluminium: [1,1.5,2,2.5],
+            output: [0.075,0.112,0.149,0.186]
+        },
+        Polymer: {
+            oil_kk: [0.22,0.33,0.44,0.55],
+            oil: [0.18,0.27,0.36,0.45],
+            lumber: [15,22,29,36],
+            output: [0.125,0.187,0.249,0.311],
+        },
+        Nano_Tube: {
+            coal: [8,12,16,20],
+            neutronium: [0.05,0.075,0.1,0.125],
+            output: [0.2,0.3,0.4,0.5],
+        },
+        Stanene: {
+            aluminium: [30,45,60,75],
+            nano: [0.02,0.03,0.04,0.05],
+            output: [0.6,0.9,1.2,1.5],
+        }
+    };
+
+    /***
+    *
     * Setup resources informations and settings
     *
     ***/
@@ -747,321 +782,355 @@ async function main() {
 
         return isMet;
     }
-    async function getPowerData(id, def) {
-        //console.log("Getting Power Data for", id);
-        let produce = [];
+    let poweredBuildingList = {
+        'city-apartment': ['electricity'],
+        'city-mill': [],
+        'city-windmill': ['electricity'],
+        'city-sawmill': ['electricity'],
+        'city-rock_quarry': ['electricity'],
+        'city-cement_plant': ['electricity'],
+        'city-factory': ['electricity'],
+        'city-metal_refinery': ['electricity'],
+        'city-mine': ['electricity'],
+        'city-coal_mine': ['electricity'],
+        'city-tourist_center': ['Food'],
+        'city-casino': ['electricity', 'Money'],
+        'city-wardenclyffe': ['electricity'],
+        'city-biolab': ['electricity'],
+        'city-coal_power': ['electricity', 'Coal'],
+        'city-oil_power': ['electricity', 'Oil'],
+        'city-fission_power': ['electricity', 'Uranium'],
+        'city-mass_driver': ['electricity'],
+
+        'space-nav_beacon': ['electricity', 'moon_support', 'red_support'],
+        'space-moon_base': ['moon_support', 'Oil', 'electricity'],
+        'space-iridium_mine': ['moon_support', 'Iridium'],
+        'space-helium_mine': ['moon_support', 'Helium_3'],
+        'space-observatory': ['moon_support'],
+        'space-spaceport': ['red_support', 'Helium_3', 'electricity', 'Food'],
+        'space-red_tower': ['red_support', 'electricity'],
+        'space-living_quarters': ['red_support'],
+        'space-vr_center': ['red_support'],
+        'space-red_mine': ['red_support'],
+        'space-fabrication': ['red_support'],
+        'space-red_factory': ['electricity', 'Helium_3'],
+        'space-biodome': ['red_support'],
+        'space-exotic_lab': ['red_support'],
+        'space-space_barracks': ['Oil', 'Food'],
+        'space-geothermal': ['electricity', 'Helium_3'],
+        'space-swarm_control': ['swarm_support'],
+        'space-swarm_satellite': ['swarm_support', 'electricity'],
+        'space-gas_mining': ['Helium_3', 'electricity'],
+        'space-outpost': ['Neutronium', 'Oil', 'electricity'],
+        'space-oil_extractor': ['Oil', 'electricity'],
+        'space-space_station': ['belt_support', 'Helium_3', 'Food', 'electricity'],
+        'space-elerium_ship': ['belt_support', 'Elerium'],
+        'space-iridium_ship': ['belt_support', 'Iridium'],
+        'space-iron_ship': ['belt_support', 'Iron'],
+        'space-elerium_contain': ['electricity'],
+        'space-e_reactor': ['electricity', 'Elerium'],
+        'space-world_controller': ['electricity'],
+
+        'interstellar-starport': ['alpha_support', 'Helium_3', 'electricity', 'Food'],
+        'interstellar-habitat': ['alpha_support', 'electricity'],
+        'interstellar-mining_droid': ['alpha_support'],
+        'interstellar-processing': ['alpha_support'],
+        'interstellar-fusion': ['alpha_support', 'electricity', 'Deuterium'],
+        'interstellar-laboratory': ['alpha_support'],
+        'interstellar-exchange': ['alpha_support'],
+        'interstellar-g_factory': ['alpha_support'],
+        'interstellar-xfer_station': ['alpha_support', 'Uranium', 'electricity'],
+        'interstellar-cruiser': ['Helium_3'],
+        'interstellar-nexus': ['nebula_support', 'electricity', 'Money'],
+        'interstellar-harvester': ['nebula_support', 'Helium_3', 'Deuterium'],
+        'interstellar-elerium_prospector': ['nebula_support', 'Elerium'],
+        'interstellar-neutron_miner': ['Neutronium', 'Helium_3', 'electricity'],
+        'interstellar-far_reach': ['electricity'],
+        'interstellar-stellar_engine': ['electricity'],
+        'interstellar-mass_ejector': ['electricity'],
+
+        'portal-turret': ['electricity'],
+        'portal-war_droid': ['electricity'],
+        'portal-war_drone': ['electricity'],
+        'portal-sensor_drone': ['electricity'],
+        'portal-attractor': ['electricity'],
+    }
+    function getBaseCP(baseCPList, effect) {
         let consume = [];
-        console.log(id, def);
-        let test = null;
-        // Finding Production
-        switch(id) {
-            case "city-apartment":
-            case "city-sawmill":
-            case "city-rock_quarry":
-            case "city-cement_plant":
-            case "city-factory":
-            case "city-metal_refinery":
-            case "city-mine":
-            case "city-coal_mine":
-            case "city-tourist_center":
-            case "city-wardenclyffe":
-            case "city-biolab":
-            case "city-mass_driver":
-            case "space-observatory":
-            case "space-living_quarters":
-            case "space-vr_center":
-            case "space-red_mine":
-            case "space-fabrication":
-            case "space-red_factory":
-            case "space-biodome":
-            case "space-exotic_lab":
-            case "space-space_barracks":
-            case "space-elerium_contain":
-            case "space-world_controller":
-                break;
-            case "city-windmill":
-                produce = [{res:"electricity",cost:1}];
-                break;
-            case "city-casino":
-                effectStr = def.effect();
-                test = /generates\s\$([\d\.]+)/.exec(effectStr);
-                if (test) {produce = [{res:"Money",cost:+test[1]}];}
-                break;
-            case "city-mill":
-            case "city-coal_power":
-            case "city-oil_power":
-            case "city-fission_power":
-            case "space-geothermal":
-            case "space-e_reactor":
-                produce = [{res:"electricity",cost:-def.powered()}];
-                break;
-            case "space-nav_beacon":
-                produce = [{res:"moon_support",cost:1}];
-                //produce.push({res:"red_support",cost:1});
-                if (researched('tech-subspace_signal')) {
-                    produce.push({res:"red_support",cost:1});
+        let produce = [];
+        //console.log(`Getting base consume/produce:${baseCPList} ${effect}`);
+        for (let i = 0;i < baseCPList.length;i++) {
+            switch(baseCPList[i]) {
+                case 'Money': {
+                    let money = /generates \$([\d\.]+)/.exec(effect);
+                    if (money) {
+                        produce.push({res:'Money',cost:+money[1]});
+                        break;
+                    }
+                    money = /([+-]?)\$([\d\.]+)\/s/.exec(effect);
+                    if (money !== null) {
+                        //console.log(money[1], money[2]);
+                        if (money[1] == '-') {
+                            consume.push({res:'Money',cost:+money[2]});
+                        }
+                        else {
+                            produce.push({res:'Money',cost:+money[2]});
+                        }
+                    }
+                    break;
                 }
-                break;
-            case "space-moon_base":
-                produce = [{res:"moon_support",cost:2}];
-                break;
-            case "space-iridium_mine":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Iridium/.exec(effectStr);
-                produce = [{res:"Iridium",cost:+test[1]}];
-                break;
-            case "space-helium_mine":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Helium/.exec(effectStr);
-                produce = [{res:"Helium_3",cost:+test[1]}];
-                break;
-            case "space-spaceport":
-                produce = [{res:"red_support",cost:3}];
-                break;
-            case "space-red_tower":
-                produce = [{res:"red_support",cost:1}];
-                break;
-            case "space-swarm_control":
-                effectStr = def.effect();
-                test = /[^\d\.]*([\d\.]+)[^\d\.]*/.exec(effectStr);
-                produce = [{res:"swarm_support",cost:+test[1]}];
-                break;
-            case "space-swarm_satellite":
-                effectStr = def.effect();
-                test = /\+([\d\.]+)kW.*/.exec(effectStr);
-                produce = [{res:"electricity",cost:+test[1]}];
-                break;
-            case "space-gas_mining":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Helium/.exec(effectStr);
-                produce = [{res:"Helium_3",cost:+test[1]}];
-                break;
-            case "space-outpost":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Neutronium/.exec(effectStr);
-                produce = [{res:"Neutronium",cost:+test[1]}];
-                break;
-            case "space-oil_extractor":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Oil/.exec(effectStr);
-                produce = [{res:"Oil",cost:+test[1]}];
-                break;
-            case "space-space_station":
-                produce = [{res:"belt_support",cost:3}];
-                break;
-            case "space-elerium_ship":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Elerium/.exec(effectStr);
-                produce = [{res:"Elerium",cost:+test[1]}];
-                break;
-            case "space-iridium_ship":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Iridium/.exec(effectStr);
-                produce = [{res:"Iridium",cost:+test[1]}];
-                break;
-            case "space-iron_ship":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Iron/.exec(effectStr);
-                produce = [{res:"Iron",cost:+test[1]}];
-                break;
-            case "interstellar-starport":
-                produce = [{res:"alpha_support",cost:5}];
-                break;
-            case "interstellar-habitat":
-                produce = [{res:"alpha_support",cost:1}];
-                break;
-            case "interstellar-fusion":
-                produce = [{res:"electricity",cost:-def.powered()}];
-                break;
-            case "interstellar-xfer_station":
-                produce = [{res:"alpha_support",cost:1}];
-                break;
-            case "interstellar-nexus":
-                produce = [{res:"nebula_support",cost:2}];
-                break;
-            case "interstellar-harvester":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Helium/.exec(effectStr);
-                produce = [{res:"Helium_3",cost:+test[1]}];
-                test = /\+([\d\.]+) Deuterium/.exec(effectStr);
-                produce.push({res:"Deuterium",cost:+test[1]});
-                break;
-            case "interstellar-elerium_prospector":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Elerium/.exec(effectStr);
-                produce = [{res:"Elerium",cost:+test[1]}];
-                break;
-            case "interstellar-neutron_miner":
-                effectStr = def.effect();
-                test = /\+([\d\.]+) Neutronium/.exec(effectStr);
-                produce = [{res:"Neutronium",cost:+test[1]}];
-                break;
-            default:
-                break;
-        }
-        // Finding Consumption
-        switch(id) {
-            case "city-apartment":
-            case "city-sawmill":
-            case "city-rock_quarry":
-            case "city-cement_plant":
-            case "city-factory":
-            case "city-metal_refinery":
-            case "city-mine":
-            case "city-coal_mine":
-            case "city-casino":
-            case "city-wardenclyffe":
-            case "city-biolab":
-            case "city-mass_driver":
-            case "space-nav_beacon":
-            case "space-red_tower":
-            case "space-gas_mining":
-            case "space-oil_extractor":
-            case "space-elerium_contain":
-            case "space-world_controller":
-                consume = [{res:"electricity",cost:def.powered()}];
-                break;
-            case "space-iridium_mine":
-            case "space-helium_mine":
-            case "space-observatory":
-                consume= [{res:"moon_support",cost:-def.support}];
-                break;
-            case "space-living_quarters":
-            case "space-vr_center":
-            case "space-red_mine":
-            case "space-fabrication":
-            case "space-biodome":
-            case "space-exotic_lab":
-                consume = [{res:"red_support",cost:-def.support}];
-                break;
-            case "space-red_factory":
-                consume = [{res:"electricity",cost:def.powered()}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume.push({res:"Helium_3",cost:+test[1]});
-                break;
-            case "space-space_barracks":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Oil/.exec(effectStr);
-                consume = [{res:"Oil",cost:+test[1]}];
-                test = /-([\d\.]+) (Food|Souls)/.exec(effectStr);
-                consume.push({res:"Food",cost:+test[1]});
-                break;
-            case "city-mill":
-                consume = [{res:"Food",cost:0.1}];
-                break;
-            case "city-tourist_center":
-                effectStr = def.effect();
-                test = /-([\d\.]+) (Food|Souls)/.exec(effectStr);
-                consume = [{res:"Food",cost:+test[1]}];
-                break;
-            case "city-coal_power":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Coal/.exec(effectStr);
-                consume = [{res:"Coal",cost:+test[1]}];
-                break;
-            case "city-oil_power":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Oil/.exec(effectStr);
-                consume = [{res:"Oil",cost:+test[1]}];
-                break;
-            case "city-fission_power":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Uranium/.exec(effectStr);
-                consume = [{res:"Uranium",cost:+test[1]}];
-                break;
-            case "space-geothermal":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume = [{res:"Helium_3",cost:+test[1]}];
-                break;
-            case "space-e_reactor":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Elerium/.exec(effectStr);
-                consume = [{res:"Elerium",cost:+test[1]}];
-                break;
-            case "space-moon_base":
-            case "space-outpost":
-                consume = [{res:"electricity",cost:def.powered()}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Oil/.exec(effectStr);
-                consume.push({res:"Oil",cost:test[1]});
-                break
-            case "space-spaceport":
-            case "space-space_station":
-            case "interstellar-starport":
-                consume = [{res:"electricity",cost:def.powered()}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume.push({res:"Helium_3",cost:test[1]});
-                test = /-([\d\.]+) (Food|Souls)/.exec(effectStr);
-                consume.push({res:"Food",cost:test[1]});
-                break
-            case "space-swarm_control":
-                break;
-            case "space-swarm_satellite":
-                consume = [{res:"swarm_support",cost:1}];
-                break;
-            case "space-elerium_ship":
-            case "space-iridium_ship":
-            case "space-iron_ship":
-                consume = [{res:"belt_support",cost:-def.support}];
-                break;
-            case "interstellar-habitat":
-                consume = [{res:"electricity",cost:def.powered()}];
-                break;
-            case "interstellar-mining_droid":
-            case "interstellar-laboratory":
-            case "interstellar-processing":
-            case "interstellar-exchange":
-            case "interstellar-g_factory":
-                consume = [{res:"alpha_support",cost:-def.support}];
-                break;
-            case "interstellar-fusion":
-                consume = [{res:"alpha_support",cost:-def.support}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Deuterium/.exec(effectStr);
-                consume.push({res:"Deuterium",cost:test[1]});
-                break;
-            case "interstellar-xfer_station":
-                consume = [{res:"electricity",cost:def.powered()}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Uranium/.exec(effectStr);
-                consume.push({res:"Uranium",cost:test[1]});
-                break;
-            case "interstellar-nexus":
-                consume = [{res:"electricity",cost:def.powered()}];
-                effectStr = def.effect();
-                test = /-\$([\d\.]+)/.exec(effectStr);
-                consume.push({res:"Money",cost:test[1]});
-                break
-            case "interstellar-harvester":
-            case "interstellar-elerium_prospector":
-                consume = [{res:"nebula_support",cost:-def.support}];
-                break;
-            case "interstellar-cruiser":
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume.push({res:"Helium_3",cost:test[1]});
-                break;
-            case "interstellar-neutron_miner":
-                consume = [{res:"electricity",cost:def.powered()}];
-                effectStr = def.effect();
-                test = /-([\d\.]+) Helium/.exec(effectStr);
-                consume.push({res:"Helium_3",cost:test[1]});
-                break;
-            case "interstellar-far_reach":
-                consume = [{res:"electricity",cost:def.powered()}];
-                break;
-            case "portal-turret":
-            case "portal-war_droid":
-            case "portal-war_drone":
-            case "portal-sensor_drone":
-            case "portal-attractor":
-                consume = [{res:"electricity",cost:def.powered()}];
-                break;
-            default:
-                break;
+                case 'Food': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let food = reg.exec(effect);
+                    if (food) {
+                        //console.log(food[1], food[2]);
+                        if (food[1] == '-') {
+                            consume.push({res:'Food',cost:+food[2]});
+                        }
+                        else {
+                            produce.push({res:'Food',cost:+food[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Iron': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Iron = reg.exec(effect);
+                    if (Iron) {
+                        //console.log(Iron[1], Iron[2]);
+                        if (Iron[1] == '-') {
+                            consume.push({res:'Iron',cost:+Iron[2]});
+                        }
+                        else {
+                            produce.push({res:'Iron',cost:+Iron[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Coal': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Coal = reg.exec(effect);
+                    if (Coal) {
+                        //console.log(Coal[1], Coal[2]);
+                        if (Coal[1] == '-') {
+                            consume.push({res:'Coal',cost:+Coal[2]});
+                        }
+                        else {
+                            produce.push({res:'Coal',cost:+Coal[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Oil': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Oil = reg.exec(effect);
+                    if (Oil) {
+                        //console.log(Oil[1], Oil[2]);
+                        if (Oil[1] == '-') {
+                            consume.push({res:'Oil',cost:+Oil[2]});
+                        }
+                        else {
+                            produce.push({res:'Oil',cost:+Oil[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Uranium': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Uranium = reg.exec(effect);
+                    if (Uranium) {
+                        //console.log(Uranium[1], Uranium[2]);
+                        if (Uranium[1] == '-') {
+                            consume.push({res:'Uranium',cost:+Uranium[2]});
+                        }
+                        else {
+                            produce.push({res:'Uranium',cost:+Uranium[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Iridium': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Iridium = reg.exec(effect);
+                    if (Iridium) {
+                        //console.log(Iridium[1], Iridium[2]);
+                        if (Iridium[1] == '-') {
+                            consume.push({res:'Iridium',cost:+Iridium[2]});
+                        }
+                        else {
+                            produce.push({res:'Iridium',cost:+Iridium[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Helium_3': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Helium_3 = reg.exec(effect);
+                    if (Helium_3) {
+                        //console.log(Helium_3[1], Helium_3[2]);
+                        if (Helium_3[1] == '-') {
+                            consume.push({res:'Helium_3',cost:+Helium_3[2]});
+                        }
+                        else {
+                            produce.push({res:'Helium_3',cost:+Helium_3[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Deuterium': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Deuterium = reg.exec(effect);
+                    if (Deuterium) {
+                        //console.log(Deuterium[1], Deuterium[2]);
+                        if (Deuterium[1] == '-') {
+                            consume.push({res:'Deuterium',cost:+Deuterium[2]});
+                        }
+                        else {
+                            produce.push({res:'Deuterium',cost:+Deuterium[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Neutronium': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Neutronium = reg.exec(effect);
+                    if (Neutronium) {
+                        //console.log(Neutronium[1], Neutronium[2]);
+                        if (Neutronium[1] == '-') {
+                            consume.push({res:'Neutronium',cost:+Neutronium[2]});
+                        }
+                        else {
+                            produce.push({res:'Neutronium',cost:+Neutronium[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'Elerium': {
+                    let name = window.evolve.global.resource[baseCPList[i]].name;
+                    let reg = new RegExp(`([+-]?)([\\d\\.]+) ` + name);
+                    let Elerium = reg.exec(effect);
+                    if (Elerium) {
+                        //console.log(Elerium[1], Elerium[2]);
+                        if (Elerium[1] == '-') {
+                            consume.push({res:'Elerium',cost:+Elerium[2]});
+                        }
+                        else {
+                            produce.push({res:'Elerium',cost:+Elerium[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'electricity': {
+                    let electricity = /(Uses|uses|Consumes|consumes) ([\d\.]+)kW/.exec(effect);
+                    if (electricity) {
+                        //console.log('-', electricity[2]);
+                        consume.push({res:'electricity',cost:+electricity[2]});
+                        break;
+                    }
+                    electricity = /([+-]?)([\d\.]+)kW/.exec(effect);
+                    if (electricity) {
+                        //console.log(electricity[1], electricity[2]);
+                        if (electricity[1] == '-') {
+                            consume.push({res:'electricity',cost:+electricity[2]});
+                        }
+                        else {
+                            produce.push({res:'electricity',cost:+electricity[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'moon_support': {
+                    let moon_support = /([+-]?)([\d\.]+) Moon/.exec(effect);
+                    if (moon_support !== null) {
+                        //console.log(moon_support[1], moon_support[2]);
+                        if (moon_support[1] == '-') {
+                            consume.push({res:'moon_support',cost:+moon_support[2]});
+                        }
+                        else {
+                            produce.push({res:'moon_support',cost:+moon_support[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'red_support': {
+                    let race = window.evolve.global.race.species;
+                    let red = window.evolve.races[race].solar.red;
+                    let reg = new RegExp(`([+-])?([\\d\\.]+) ` + red);
+                    let red_support = reg.exec(effect);
+                    if (red_support !== null) {
+                        //console.log(red_support[1], red_support[2]);
+                        if (red_support[1] == '-') {
+                            consume.push({res:'red_support',cost:+red_support[2]});
+                        }
+                        else {
+                            produce.push({res:'red_support',cost:+red_support[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'swarm_support': {
+                    let swarm_support = /([+-]?)([\d\.]+) Swarm/.exec(effect);
+                    if (swarm_support !== null) {
+                        //console.log(swarm_support[1], swarm_support[2]);
+                        if (swarm_support[1] == '-') {
+                            consume.push({res:'swarm_support',cost:+swarm_support[2]});
+                        }
+                        else {
+                            produce.push({res:'swarm_support',cost:+swarm_support[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'belt_support': {
+                    let belt_support = /\+([\d\.]+) Max Space Miner/.exec(effect);
+                    if (belt_support) {
+                        //console.log('+', belt_support[1]);
+                        produce.push({res:'belt_support',cost:+belt_support[1]});
+                        break;
+                    }
+                    belt_support = /Requires ([\d\.]+) Space Miner/.exec(effect);
+                    if (belt_support) {
+                        //console.log('-', belt_support[1]);
+                        consume.push({res:'belt_support',cost:+belt_support[1]});
+                    }
+                    break;
+                }
+                case 'alpha_support': {
+                    let alpha_support = /([+-]?)([\d\.]+) Alpha/.exec(effect);
+                    if (alpha_support) {
+                        //console.log(alpha_support[1], alpha_support[2]);
+                        if (alpha_support[1] == '-') {
+                            consume.push({res:'alpha_support',cost:+alpha_support[2]});
+                        }
+                        else {
+                            produce.push({res:'alpha_support',cost:+alpha_support[2]});
+                        }
+                    }
+                    break;
+                }
+                case 'nebula_support': {
+                    let nebula_support = /([+-]?)([\d\.]+) (Nebula|Helix Nebula)/.exec(effect);
+                    if (nebula_support) {
+                        //console.log(nebula_support[1], nebula_support[2]);
+                        if (nebula_support[1] == '-') {
+                            consume.push({res:'nebula_support',cost:+nebula_support[2]});
+                        }
+                        else {
+                            produce.push({res:'nebula_support',cost:+nebula_support[2]});
+                        }
+                    }
+                    break;
+                }
+            }
         }
         return [consume,produce];
     }
@@ -1094,10 +1163,10 @@ async function main() {
         }
 
         get numOn() {
-            if (this.data === null) {
-                return 0;
+            if (this.data && this.data.on) {
+                return this.data.on;
             }
-            return this.data.on;
+            return 0;
         }
 
         async getCP() {
@@ -1105,40 +1174,21 @@ async function main() {
             let produce = [];
             let effectFunc = this.effect;
             let effect = await effectFunc(this.btn);
-            console.log(`Getting consume/produce for ${this.id}: ${effect}`);
-            // Money
-            let money = /([+-]?)\$([\d\.]+)/.exec(effect);
-            //console.log(this.id, money);
-            if (money !== null) {
-                if (money[2] == '-') {
-                    consume.push({res:'Money',cost:+money[3]});
+            [consume,produce] = getBaseCP(poweredBuildingList[this.id],effect);
+
+            // Special since we can't read this info easily from the effect
+            switch(this.id) {
+                case 'city-mill': {
+                    consume.push({res:'Food',cost:10});
+                    produce.push({res:'electricity',cost:1});
+                    break;
                 }
-                else {
-                    produce.push({res:'Money',cost:+money[3]});
-                }
-            }
-            // Electricity
-            let electricity = /([+-])?([\d\.]+)kW/.exec(effect);
-            //console.log(this.id, electricity);
-            if (electricity !== null) {
-                if (electricity[2] == '-') {
-                    consume.push({res:'electricity',cost:+electricity[3]});
-                }
-                else {
-                    produce.push({res:'electricity',cost:+electricity[3]});
+                case 'city-tourist_center': {
+                    // TODO calculate money gain
+                    break;
                 }
             }
-            // Moon Support
-            let moon_support = /([+-])?([\d\.]+) Moon/.exec(effect);
-            console.log(this.id, moon_support);
-            if (moon_support !== null) {
-                if (moon_support[2] == '-') {
-                    consume.push({res:'moon_support',cost:+moon_support[3]});
-                }
-                else {
-                    produce.push({res:'moon_support',cost:+moon_support[3]});
-                }
-            }
+
             return [consume,produce];
         }
 
@@ -1229,13 +1279,7 @@ async function main() {
             // Remove manual buttons
             if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter') {continue;}
             let id = window.evolve.actions.city[action].id;
-            if (window.evolve.actions.city[action].powered || window.evolve.actions.city[action].support) {
-                //console.log(action,"POWER", window.evolve.actions.city[action].powered, "SUPPORT", window.evolve.actions.city[action].support);
-                buildings[id] = new PoweredBuilding(id, ['city', action]);
-                continue;
-            }
-            // Windmill doesn't have powered/support prop, but still produces electricity
-            if (action == 'windmill') {
+            if (id in poweredBuildingList) {
                 //console.log(action,"POWER", window.evolve.actions.city[action].powered, "SUPPORT", window.evolve.actions.city[action].support);
                 buildings[id] = new PoweredBuilding(id, ['city', action]);
                 continue;
@@ -1248,7 +1292,7 @@ async function main() {
                 // Remove info
                 if (action == 'info') {continue;}
                 let id = window.evolve.actions.space[location][action].id;
-                if (window.evolve.actions.space[location][action].powered || window.evolve.actions.space[location][action].support) {
+                if (id in poweredBuildingList) {
                     //console.log(action,"POWER", window.evolve.actions.space[location][action].powered, "SUPPORT", window.evolve.actions.space[location][action].support);
                     buildings[id] = new PoweredBuilding(id, ['space', location, action]);
                     continue;
@@ -1269,7 +1313,7 @@ async function main() {
                 // Remove info
                 if (action == 'info') {continue;}
                 let id = window.evolve.actions.interstellar[location][action].id;
-                if (window.evolve.actions.interstellar[location][action].powered || window.evolve.actions.interstellar[location][action].support) {
+                if (id in poweredBuildingList) {
                     buildings[id] = new PoweredBuilding(id, ['interstellar', location, action]);
                     continue;
                 }
@@ -1282,7 +1326,7 @@ async function main() {
                 // Remove info
                 if (action == 'info') {continue;}
                 let id = window.evolve.actions.portal[location][action].id;
-                if (window.evolve.actions.portal[location][action].powered || window.evolve.actions.portal[location][action].support) {
+                if (id in poweredBuildingList) {
                     buildings[id] = new PoweredBuilding(id, ['portal', location, action]);
                     continue;
                 }
@@ -1832,6 +1876,7 @@ async function main() {
 
     function loadSmelter() {
         if (!settings.hasOwnProperty('smelterSettings')) {settings.smelterSettings = {};}
+        if (!settings.smelterSettings.hasOwnProperty('Interval')) {settings.smelterSettings.Interval = 10;}
         if (!settings.smelterSettings.hasOwnProperty('pqCheck')) {settings.smelterSettings.pqCheck = true;}
         if (!settings.smelterSettings.hasOwnProperty('Wood')) {settings.smelterSettings.Wood = 1;}
         if (!settings.smelterSettings.hasOwnProperty('Coal')) {settings.smelterSettings.Coal = 1;}
@@ -1841,6 +1886,7 @@ async function main() {
     }
     function loadFactory() {
         if (!settings.hasOwnProperty('factorySettings')) {settings.factorySettings = {};}
+        if (!settings.factorySettings.hasOwnProperty('Interval')) {settings.factorySettings.Interval = 11;}
         if (!settings.factorySettings.hasOwnProperty('pqCheck')) {settings.factorySettings.pqCheck = true;}
         if (!settings.factorySettings.hasOwnProperty('Luxury_Goods')) {settings.factorySettings.Luxury_Goods = 0;}
         if (!settings.factorySettings.hasOwnProperty('Alloy')) {settings.factorySettings.Alloy = 3;}
@@ -1850,6 +1896,7 @@ async function main() {
     }
     function loadDroid() {
         if (!settings.hasOwnProperty('droidSettings')) {settings.droidSettings = {};}
+        if (!settings.droidSettings.hasOwnProperty('Interval')) {settings.droidSettings.Interval = 13;}
         if (!settings.droidSettings.hasOwnProperty('pqCheck')) {settings.droidSettings.pqCheck = true;}
         if (!settings.droidSettings.hasOwnProperty('Adamantite')) {settings.droidSettings.Adamantite = 10;}
         if (!settings.droidSettings.hasOwnProperty('Uranium')) {settings.droidSettings.Uranium = 0;}
@@ -1858,6 +1905,7 @@ async function main() {
     }
     function loadGraphene() {
         if (!settings.hasOwnProperty('grapheneSettings')) {settings.grapheneSettings = {};}
+        if (!settings.grapheneSettings.hasOwnProperty('Interval')) {settings.grapheneSettings.Interval = 17;}
         if (!settings.grapheneSettings.hasOwnProperty('pqCheck')) {settings.grapheneSettings.pqCheck = true;}
         if (!settings.grapheneSettings.hasOwnProperty('Wood')) {settings.grapheneSettings.Wood = 0;}
         if (!settings.grapheneSettings.hasOwnProperty('Coal')) {settings.grapheneSettings.Coal = 10;}
@@ -2816,32 +2864,15 @@ async function main() {
         }, 25);
     }
 
-    let smelterModal = null;
-    function loadSmelterModal() {
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            return;
-        }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
-        // Opening Modal
-        $('#city-smelter > .special').click();
-        setTimeout(function() {
-            smelterModal = window.evolve.vues['specialModal'];
-
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
-    }
     function getSmelterData() {
+        let spans = $('.fuels > span');
         let data = {};
         // Wood (Lumber/Souls/Flesh)
-        if (!window.evolve.global.race['kindling_kindred'] && !window.evolve.global.race['evil']) {
+        if (!window.evolve.global.race['kindling_kindred'] || window.evolve.global.race['evil']) {
             data.Wood = {};
-            let str = smelterModal.buildLabel('wood');
+            data.Wood.decBtn = spans[0];
+            data.Wood.incBtn = spans[2];
+            let str = spans[1].attributes['data-label'].value
             str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
             data.Wood.num = window.evolve.global.city.smelter.Wood;
             data.Wood.fuel = parseFloat(str[1]);
@@ -2850,14 +2881,18 @@ async function main() {
         // Coal
         if (window.evolve.global.resource.Coal.display) {
             data.Coal = {};
-            let str = smelterModal.buildLabel('coal');
+            data.Coal.decBtn = (data.Wood) ? spans[3] : spans[0];
+            data.Coal.incBtn = (data.Wood) ? spans[5] : spans[2];
+            let str = (data.Wood) ? spans[4].attributes['data-label'].value : spans[1].attributes['data-label'].value;
             data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
             data.Coal.num = window.evolve.global.city.smelter.Coal;
         }
         // Oil
         if (window.evolve.global.resource.Oil.display) {
             data.Oil = {};
-            let str = smelterModal.buildLabel('oil');
+            data.Oil.decBtn = (data.Wood) ? spans[6] : spans[3];
+            data.Oil.incBtn = (data.Wood) ? spans[8] : spans[5];
+            let str = (data.Wood) ? spans[7].attributes['data-label'].value : spans[4].attributes['data-label'].value;
             data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
             data.Oil.num = window.evolve.global.city.smelter.Oil;
         }
@@ -2865,14 +2900,16 @@ async function main() {
         // Iron
         data.Iron = {};
         data.Iron.num = window.evolve.global.city.smelter.Iron;
-        let ironVal = smelterModal.ironLabel();
+        data.Iron.btn = document.querySelector('.smelting > span:nth-child(1) > button');
+        let ironVal = data.Iron.btn.parentElement.attributes['data-label'].value;
         data.Iron.percent = parseInt(/[^\d]+([\d]+)%/.exec(ironVal)[1]);
 
         // Steel
         if (window.evolve.global.resource.Steel.display && window.evolve.global.tech.smelting >= 2) {
             data.Steel = {};
             data.Steel.num = window.evolve.global.city.smelter.Steel;
-            let steelVal = smelterModal.steelLabel();
+            data.Steel.btn = document.querySelector('.smelting > span:nth-child(2) > button');
+            let steelVal = data.Steel.btn.parentElement.attributes['data-label'].value;
             let temp = /[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*/.exec(steelVal);
             data.Steel.Coal = parseFloat(temp[1]);
             data.Steel.Iron = parseFloat(temp[2]);;
@@ -2883,11 +2920,12 @@ async function main() {
     async function autoSmelter(limits) {
         // Don't Auto smelt if not unlocked
         if (!researched('tech-steel')) {return;}
-        // Loading Smelter Vue
-        if (smelterModal === null) {
-            loadSmelterModal();
-            return;
-        }
+        // Opening Modal
+        if ($('.modal').length != 0) {return;}
+        if (modal) {return;}
+        modal = true;
+        $('#city-smelter > .special').click()
+        await sleep(50);
 
         // Finding relevent elements
         let data = getSmelterData();
@@ -3101,20 +3139,7 @@ async function main() {
         for (let i = 0;i < fuelKeys.length;i++) {
             if (data[fuelKeys[i]].num > fuelAllocation.alloc[i]) {
                 for (let j = 0;j < data[fuelKeys[i]].num - fuelAllocation.alloc[i];j++) {
-                    switch(fuelKeys[i]) {
-                        case 'Wood': {
-                            smelterModal.subWood();
-                            break;
-                        }
-                        case 'Coal': {
-                            smelterModal.subCoal();
-                            break;
-                        }
-                        case 'Oil': {
-                            smelterModal.subOil();
-                            break;
-                        }
-                    }
+                    data[fuelKeys[i]].decBtn.click();
                 }
             }
         }
@@ -3122,55 +3147,30 @@ async function main() {
         for (let i = 0;i < fuelKeys.length;i++) {
             if (data[fuelKeys[i]].num < fuelAllocation.alloc[i]) {
                 for (let j = 0;j < fuelAllocation.alloc[i] - data[fuelKeys[i]].num;j++) {
-                    switch(fuelKeys[i]) {
-                        case 'Wood': {
-                            smelterModal.addWood();
-                            break;
-                        }
-                        case 'Coal': {
-                            smelterModal.addCoal();
-                            break;
-                        }
-                        case 'Oil': {
-                            smelterModal.addOil();
-                            break;
-                        }
-                    }
+                    data[fuelKeys[i]].incBtn.click();
                 }
             }
         }
         // Pushing all allocation to iron
         for (let i = 0;i < totalSmelters;i++) {
-            smelterModal.ironSmelting()
+            data.Iron.btn.click();
         }
         // Adding steel
         if (produceAllocation.alloc.length == 2) {
             for (let i = 0;i < produceAllocation.alloc[1];i++) {
-                smelterModal.steelSmelting()
+                data.Steel.btn.click();
             }
         }
+
+        // Setting data to null for garbage collector maybe
+        data = null;
+
+        // Closing Modal
+        $('.modal > button').click()
+        await sleep(250);
+        modal = false;
     }
 
-    let factoryModal = null;
-    function loadFactoryModal() {
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            return;
-        }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
-        // Opening Modal
-        $('#city-factory > .special').click();
-        setTimeout(function() {
-            factoryModal = window.evolve.vues['specialModal'];
-
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
-    }
     function getFactoryData() {
         let data = {};
 
@@ -3178,19 +3178,25 @@ async function main() {
 
         // Luxury Goods
         data.Lux = {};
-        let str = factoryModal.buildLabel('Lux')
+        data.Lux.decBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(2)');
+        data.Lux.incBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(4)');
+        let str = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(1)').attributes['data-label'].value;
         let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
+        data.Lux.num = window.evolve.global.city.factory.Lux;
         data.Lux.Furs = temp[1];
         data.Lux.Money = temp[2];
 
         // Alloy
         data.Alloy = {};
-        str = factoryModal.buildLabel('Alloy')
+        data.Alloy.decBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(2)');
+        data.Alloy.incBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(4)');
+        str = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(1)').attributes['data-label'].value;
         temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+        data.Alloy.num = window.evolve.global.city.factory.Alloy;
         data.Alloy.Copper = temp[1];
         data.Alloy.Aluminium = temp[2];
         // Alloy Production
-        let factory_output = window.evolve.f_rate.Alloy.output[factoryLevel];
+        let factory_output = window.hlxii.f_rate.Alloy.output[factoryLevel];
         if (window.evolve.global.race['toxic']){
             factory_output *= 1.20;
         }
@@ -3206,13 +3212,16 @@ async function main() {
         // Polymer
         if (window.evolve.global.tech['polymer']) {
             data.Polymer = {};
-            let str = factoryModal.buildLabel('Polymer')
+            data.Polymer.decBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(2)');
+            data.Polymer.incBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(4)');
+            let str = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(1)').attributes['data-label'].value;
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)?[^\d\.]+/.exec(str)
+            data.Polymer.num = window.evolve.global.city.factory.Polymer;
             data.Polymer.Oil = temp[1];
             // Kindred Kindling
             data.Polymer.Lumber = (temp[2]) ? temp[2] : 0;
             // Polymer Production
-            let factory_output = window.evolve.f_rate.Polymer.output[factoryLevel];
+            let factory_output = window.hlxii.f_rate.Polymer.output[factoryLevel];
             if (window.evolve.global.race['toxic']) {
                 factory_output *= 1.20;
             }
@@ -3225,13 +3234,16 @@ async function main() {
         // Nano Tube
         if (window.evolve.global.tech['nano']) {
             data.Nano = {};
-            let str = factoryModal.buildLabel('Nano')
+            data.Nano.decBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(2)');
+            data.Nano.incBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(4)');
+            let str = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(1)').attributes['data-label'].value;
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            data.Nano.num = window.evolve.global.city.factory.Nano;
             data.Nano.Coal = temp[1];
             data.Nano.Neutronium = temp[2];
             data.Nano.produce = 0;
             // Nano Tube Production
-            let factory_output = window.evolve.f_rate.Nano_Tube.output[factoryLevel];
+            let factory_output = window.hlxii.f_rate.Nano_Tube.output[factoryLevel];
             if (window.evolve.global.race['toxic']) {
                 factory_output *= 1.08;
             }
@@ -3244,12 +3256,15 @@ async function main() {
         // Stanene
         if (window.evolve.global.tech['stanene']) {
             data.Stanene = {};
-            let str = factoryModal.buildLabel('Stanene')
+            data.Stanene.decBtn = document.querySelector('#specialModal > div:nth-child(6) > span:nth-child(2)');
+            data.Stanene.incBtn = document.querySelector('#specialModal > div:nth-child(6) > span:nth-child(4)');
+            let str = document.querySelector('#specialModal > div:nth-child(6) > span:nth-child(1)').attributes['data-label'].value;
             let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
+            data.Stanene.num = window.evolve.global.city.factory.Stanene;
             data.Stanene.Aluminium = temp[1];
             data.Stanene.Nano_Tube = temp[2];
             // Stanene Production
-            let factory_output = window.evolve.f_rate.Stanene.output[factoryLevel];
+            let factory_output = window.hlxii.f_rate.Stanene.output[factoryLevel];
             factory_output *= getMultiplier('Stanene') * getMultiplier('Global');
             data.Stanene.produce = factory_output;
         }
@@ -3260,40 +3275,42 @@ async function main() {
         if (!researched('tech-industrialization')) {return;}
         // Don't Auto factory if you don't have any
         if (buildings['city-factory'].numTotal < 1) {return;}
-        // Loading Factory Vue
-        if (factoryModal === null) {
-            loadFactoryModal();
-            return;
-        }
+        // Opening Modal
+        if ($('.modal').length != 0) {return;}
+        if (modal) {return;}
+        modal = true;
+        $('#city-factory > .special').click()
+        await sleep(50);
+
         let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn;
 
         let data = getFactoryData();
         console.log('FACTORY DATA:', data);
 
         // Reverting current allocation
-        if (factoryModal.Lux) {
-            resources.Furs.temp_rate += data.Lux.Furs * factoryModal.Lux;
-            resources.Money.temp_rate += data.Lux.Money * factoryModal.Lux;
+        if (data.Lux) {
+            resources.Furs.temp_rate += data.Lux.Furs * data.Lux.num;
+            resources.Money.temp_rate += data.Lux.Money * data.Lux.num;
         }
-        if (factoryModal.Alloy) {
-            resources.Copper.temp_rate += data.Alloy.Copper * factoryModal.Alloy;
-            resources.Aluminium.temp_rate += data.Alloy.Aluminium * factoryModal.Alloy;
-            resources.Alloy.temp_rate -= data.Alloy.produce * factoryModal.Alloy;
+        if (data.Alloy) {
+            resources.Copper.temp_rate += data.Alloy.Copper * data.Alloy.num;
+            resources.Aluminium.temp_rate += data.Alloy.Aluminium * data.Alloy.num;
+            resources.Alloy.temp_rate -= data.Alloy.produce * data.Alloy.num;
         }
-        if (factoryModal.Polymer) {
-            resources.Lumber.temp_rate += data.Polymer.Lumber * factoryModal.Polymer;
-            resources.Oil.temp_rate += data.Polymer.Oil * factoryModal.Polymer;
-            resources.Polymer.temp_rate -= data.Polymer.produce * factoryModal.Polymer;
+        if (data.Polymer) {
+            resources.Lumber.temp_rate += data.Polymer.Lumber * data.Polymer.num;
+            resources.Oil.temp_rate += data.Polymer.Oil * data.Polymer.num;
+            resources.Polymer.temp_rate -= data.Polymer.produce * data.Polymer.num;
         }
-        if (factoryModal.Nano) {
-            resources.Coal.temp_rate += data.Nano.Coal * factoryModal.Nano;
-            resources.Neutronium.temp_rate += data.Nano.Neutronium * factoryModal.Nano;
-            resources.Nano_Tube.temp_rate -= data.Nano.produce * factoryModal.Nano;
+        if (data.Nano) {
+            resources.Coal.temp_rate += data.Nano.Coal * data.Nano.num;
+            resources.Neutronium.temp_rate += data.Nano.Neutronium * data.Nano.num;
+            resources.Nano_Tube.temp_rate -= data.Nano.produce * data.Nano.num;
         }
-        if (factoryModal.Stanene) {
-            resources.Aluminium.temp_rate += data.Stanene.Aluminium * factoryModal.Stanene;
-            resources.Nano_Tube.temp_rate += data.Stanene.Nano_Tube * factoryModal.Stanene;
-            resources.Stanene.temp_rate -= data.Stanene.produce * factoryModal.Stanene;
+        if (data.Stanene) {
+            resources.Aluminium.temp_rate += data.Stanene.Aluminium * data.Stanene.num;
+            resources.Nano_Tube.temp_rate += data.Stanene.Nano_Tube * data.Stanene.num;
+            resources.Stanene.temp_rate -= data.Stanene.produce * data.Stanene.num;
         }
 
         // Finding Allocation
@@ -3439,19 +3456,27 @@ async function main() {
 
         // Allocating
         for (let i = 0;i < keys.length;i++) {
-            if (factoryModal[keys[i]] > allocation.alloc[i]) {
-                for (let j = 0;j < factoryModal[keys[i]] - allocation.alloc[i];j++) {
-                    factoryModal.subItem([keys[i]]);
+            if (data[keys[i]].num > allocation.alloc[i]) {
+                for (let j = 0;j < data[keys[i]].num - allocation.alloc[i];j++) {
+                    data[keys[i]].decBtn.click();
                 }
             }
         }
         for (let i = 0;i < keys.length;i++) {
-            if (factoryModal[keys[i]] < allocation.alloc[i]) {
-                for (let j = 0;j < allocation.alloc[i] - factoryModal[keys[i]];j++) {
-                    factoryModal.addItem([keys[i]]);
+            if (data[keys[i]].num < allocation.alloc[i]) {
+                for (let j = 0;j < allocation.alloc[i] - data[keys[i]].num;j++) {
+                    data[keys[i]].incBtn.click();
                 }
             }
         }
+
+        // Setting data to null for garbage collector maybe
+        data = null;
+
+        // Closing Modal
+        $('.modal > button').click()
+        await sleep(250);
+        modal = false;
     }
 
     let droidModal = null;
@@ -3816,9 +3841,17 @@ async function main() {
         let totalPriority = 0;
         let ratios = [];
         let maxes = [];
+        let support = {
+            electricity:0,
+            moon_support:0,
+            red_support:0,
+            swarm_support:0,
+            belt_support:0,
+            alpha_support:0,
+            nebula_support:0
+        }
         // Loading all buildings
         for (let x in buildings) {
-            console.log(x, buildings[x].unlocked, buildings[x].powerUnlocked, buildings[x] instanceof PoweredBuilding);
             // Ignore not unlocked buildings
             if (!buildings[x].unlocked) {continue;}
             // Ignore non powered buildings
@@ -3829,8 +3862,18 @@ async function main() {
             if (!(buildings[x] instanceof PoweredBuilding)) {continue;}
 
             // Loading production/consumption
-            console.log(x);
             [buildings[x].consume, buildings[x].produce] = await buildings[x].getCP();
+
+            // Checking for dyson net / stellar engine
+            if (buildings[x].id == 'interstellar-stellar_engine') {
+                if (buildings[x].numTotal == 100) {
+                    support.electricity += buildings[x].produce[0].cost;
+                }
+                continue;
+            }
+            if (buildings[x].id == 'interstellar-dyson_net') {
+                continue;
+            }
 
             // Reverting consumption/production
             for (let i = 0;i < buildings[x].consume.length;i++) {
@@ -3858,15 +3901,6 @@ async function main() {
         }
         for (let i = 0;i < powered.length;i++) {
             ratios.push(priorities[i] / totalPriority);
-        }
-        let support = {
-            electricity:0,
-            moon_support:0,
-            red_support:0,
-            swarm_support:0,
-            belt_support:0,
-            alpha_support:0,
-            nebula_support:0
         }
         let canTurnOn = function(index, curNum) {
             let building = powered[index];
@@ -3917,9 +3951,23 @@ async function main() {
         console.log("REMAIN:", support);
 
         // Allocating
-        /*
+        
         for (let i = 0;i < powered.length;i++) {
             let building = powered[i];
+            /*
+            for (let j = 0;j < building.consume.length;j++) {
+                if (building.consume[j].res == 'electricity') {
+                    console.log(building.id, allocation.alloc[i], building.consume[j].cost, '-', allocation.alloc[i] * building.consume[j].cost);
+                    break;
+                }
+            }
+            for (let j = 0;j < building.produce.length;j++) {
+                if (building.produce[j].res == 'electricity') {
+                    console.log(building.id, allocation.alloc[i], building.produce[j].cost, '+', allocation.alloc[i] * building.produce[j].cost);
+                    break;
+                }
+            }
+            */
             if (building.numOn < allocation.alloc[i]) {
                 building.incPower(allocation.alloc[i] - building.numOn);
             }
@@ -3927,7 +3975,7 @@ async function main() {
                 building.decPower(building.numOn - allocation.alloc[i]);
             }
         }
-        */
+        
 
     }
 
@@ -4233,29 +4281,28 @@ async function main() {
         }
 
         // Starting other Auto Settings
-        /*
-        if (settings.autoSmelter) {
+        if (settings.autoSmelter && count % settings.smelterSettings.Interval == 0) {
             if (settings.smelterSettings.pqCheck) {
                 await autoSmelter(limits);
             } else {
                 await autoSmelter();
             }
         }
-        if (settings.autoFactory) {
+        if (settings.autoFactory && count % settings.factorySettings.Interval == 0) {
             if (settings.factorySettings.pqCheck) {
                 await autoFactory(limits);
             } else {
                 await autoFactory();
             }
         }
-        if (settings.autoDroid) {
+        if (settings.autoDroid && count % settings.droidSettings.Interval == 0) {
             if (settings.droidSettings.pqCheck) {
                 await autoDroid(limits);
             } else {
                 await autoDroid();
             }
         }
-        if (settings.autoGraphene) {
+        if (settings.autoGraphene && count % settings.grapheneSettings.Interval == 0) {
             if (settings.grapheneSettings.pqCheck) {
                 await autoGraphene(limits);
             } else {
@@ -4265,7 +4312,6 @@ async function main() {
         if (settings.autoSupport) {
             await autoSupport(limits);
         }
-        */
 
         // Determining rate priorities
         console.log("LIM:", limits);
@@ -4572,19 +4618,19 @@ async function main() {
                 priorityData = await autoPriority(count);
             }
             else {
-                /*
-                if (settings.autoSmelter) {
+                if (settings.autoSmelter && count % settings.smelterSettings == 0) {
                     await autoSmelter();
                 }
-                if (settings.autoFactory) {
+                if (settings.autoFactory && count % settings.factorySettings == 0) {
                     await autoFactory();
                 }
-                if (settings.autoDroid) {
+                if (settings.autoDroid && count % settings.droidSettings == 0) {
                     await autoDroid();
                 }
-                if (settings.autoGraphene) {
+                if (settings.autoGraphene && count % settings.grapheneSettings == 0) {
                     await autoGraphene();
                 }
+                /*
                 if (settings.autoSupport) {
                     await autoSupport();
                 }
@@ -5826,8 +5872,8 @@ async function main() {
         let autoSmelterDesc = "Allocates the smelter building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoSmelterTitle, autoSmelterContent] = createAutoSettingToggle('autoSmelter', 'Auto Smelter', autoSmelterDesc, true, tab);
         Object.keys(settings.smelterSettings).forEach(function(res) {
-            // Ignoring obsolete Interval and pqCheck
-            if (res == 'interval' || res == 'pqCheck') {return;}
+            // Ignoring pqCheck
+            if (res == 'pqCheck') {return;}
             let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
             let resSub = function(mult) {
                 settings.smelterSettings[res] -= mult;
@@ -5851,8 +5897,8 @@ async function main() {
         let autoFactoryDesc = "Allocates the factory building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoFactoryTitle, autoFactoryContent] = createAutoSettingToggle('autoFactory', 'Auto Factory', autoFactoryDesc, true, tab);
         Object.keys(settings.factorySettings).forEach(function(res) {
-            // Ignoring obsolete Interval and pqCheck
-            if (res == 'interval' || res == 'pqCheck') {return;}
+            // Ignoring pqCheck
+            if (res == 'pqCheck') {return;}
             let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
             let resSub = function(mult) {
                 settings.factorySettings[res] -= mult;
@@ -5901,7 +5947,7 @@ async function main() {
         let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Currently not yet implemented.";
         let [autoGrapheneTitle, autoGrapheneContent] = createAutoSettingToggle('autoGraphene', 'Auto Graphene Plants', autoGrapheneDesc, true, tab);
         Object.keys(settings.grapheneSettings).forEach(function(res) {
-            // Ignoring and pqCheck
+            // Ignoring pqCheck
             if (res == 'pqCheck') {return;}
             let resText = $('<span class="has-text-warning" style="width:12rem;">'+res+' Priority:</span>');
             let resSub = function(mult) {
@@ -6527,7 +6573,7 @@ async function main() {
     }
 
     while(1) {
-        await sleep(1000);
+        await sleep(2000);
         await fastAutomate();
     }
 
