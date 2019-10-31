@@ -1954,6 +1954,8 @@ async function main() {
         loadDroid();
         // Graphene Plant
         loadGraphene();
+        // Support
+        loadSupport();
 
         if (!settings.hasOwnProperty('autoPrint')) {
             settings.autoPrint = true;
@@ -5861,142 +5863,91 @@ async function main() {
         loadEjectorUI(autoEjectorContent);
     }
 
-    function createSmelterSetting(id, name, toolTip) {
+    function createBuildingSetting(loc, id, name, toolTip) {
         let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
         if (toolTip) {
             resText.addClass(toolTipClass);
             resText.attr("data-label", toolTip);
         }
         let resSub = function(mult) {
-            settings.smelterSettings[id] -= mult;
-            if (settings.smelterSettings[id] < 0) {settings.smelterSettings[id] = 0;}
-            return settings.smelterSettings[id];
+            settings[loc][id] -= mult;
+            if (settings[loc][id] < 0) {settings[loc][id] = 0;}
+            return settings[loc][id];
         }
         let resAdd = function(mult) {
-            settings.smelterSettings[id] += mult;
-            return settings.smelterSettings[id];
+            settings[loc][id] += mult;
+            return settings[loc][id];
         }
-        let resControls = createNumControl(settings.smelterSettings[id], "smelter_"+id, resSub, resAdd);
+        let resControls = createNumControl(settings[loc][id], `${loc}_${id}`, resSub, resAdd);
         let div = $('<div style="display:flex"></div>').append(resText).append(resControls);
         return div;
     }
+    function loadSupportUI(content) {
+        let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
+        let intervalControl = createBuildingSetting('supportSettings', 'Interval', 'Interval', intervalToolTip);
+        content.append(intervalControl);
+        content.append($('<br>'));
+    }
     function loadSmelterUI(content) {
         let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-        let intervalControl = createSmelterSetting('Interval', 'Interval', intervalToolTip);
+        let intervalControl = createBuildingSetting('smelterSettings', 'Interval', 'Interval', intervalToolTip);
         content.append(intervalControl);
         content.append($('<br>'));
 
-        let woodControl = createSmelterSetting('Wood', 'Wood Priority');
-        let coalControl = createSmelterSetting('Coal', 'Coal Priority');
-        let oilControl = createSmelterSetting('Oil', 'Oil Priority');
+        let woodControl = createBuildingSetting('smelterSettings', 'Wood', 'Wood Priority');
+        let coalControl = createBuildingSetting('smelterSettings', 'Coal', 'Coal Priority');
+        let oilControl = createBuildingSetting('smelterSettings', 'Oil', 'Oil Priority');
         content.append(woodControl);
         content.append(coalControl);
         content.append(oilControl);
         content.append($('<br>'));
 
-        let ironControl = createSmelterSetting('Iron', 'Iron Priority');
-        let steelControl = createSmelterSetting('Steel', 'Steel Priority');
+        let ironControl = createBuildingSetting('smelterSettings', 'Iron', 'Iron Priority');
+        let steelControl = createBuildingSetting('smelterSettings', 'Steel', 'Steel Priority');
         content.append(ironControl);
         content.append(steelControl);
     }
-    function createFactorySetting(id, name, toolTip) {
-        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
-        if (toolTip) {
-            resText.addClass(toolTipClass);
-            resText.attr("data-label", toolTip);
-        }
-        let resSub = function(mult) {
-            settings.factorySettings[id] -= mult;
-            if (settings.factorySettings[id] < 0) {settings.factorySettings[id] = 0;}
-            return settings.factorySettings[id];
-        }
-        let resAdd = function(mult) {
-            settings.factorySettings[id] += mult;
-            return settings.factorySettings[id];
-        }
-        let resControls = createNumControl(settings.factorySettings[id], "factory_"+id, resSub, resAdd);
-        let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-        return newDiv;
-    }
     function loadFactoryUI(content) {
         let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-        let intervalControl = createFactorySetting('Interval', 'Interval', intervalToolTip);
+        let intervalControl = createBuildingSetting('factorySettings', 'Interval', 'Interval', intervalToolTip);
         content.append(intervalControl);
         content.append($('<br>'));
 
-        let luxControl = createFactorySetting('Luxury_Goods', 'Luxury Goods Priority');
-        let alloyControl = createFactorySetting('Alloy', 'Alloy Priority');
-        let polymerControl = createFactorySetting('Polymer', 'Polymer Priority');
-        let nanoControl = createFactorySetting('Nano_Tube', 'Nano Tube Priority');
-        let staneneControl = createFactorySetting('Stanene', 'Stanene Priority');
+        let luxControl = createBuildingSetting('factorySettings', 'Luxury_Goods', 'Luxury Goods Priority');
+        let alloyControl = createBuildingSetting('factorySettings', 'Alloy', 'Alloy Priority');
+        let polymerControl = createBuildingSetting('factorySettings', 'Polymer', 'Polymer Priority');
+        let nanoControl = createBuildingSetting('factorySettings', 'Nano_Tube', 'Nano Tube Priority');
+        let staneneControl = createBuildingSetting('factorySettings', 'Stanene', 'Stanene Priority');
         content.append(luxControl);
         content.append(alloyControl);
         content.append(polymerControl);
         content.append(nanoControl);
         content.append(staneneControl);
     }
-    function createDroidSetting(id, name, toolTip) {
-        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
-        if (toolTip) {
-            resText.addClass(toolTipClass);
-            resText.attr("data-label", toolTip);
-        }
-        let resSub = function(mult) {
-            settings.droidSettings[id] -= mult;
-            if (settings.droidSettings[id] < 0) {settings.droidSettings[id] = 0;}
-            return settings.droidSettings[id];
-        }
-        let resAdd = function(mult) {
-            settings.droidSettings[id] += mult;
-            return settings.droidSettings[id];
-        }
-        let resControls = createNumControl(settings.droidSettings[id], "droid_"+id, resSub, resAdd);
-        let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-        return newDiv;
-    }
     function loadDroidUI(content) {
         let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-        let intervalControl = createFactorySetting('Interval', 'Interval', intervalToolTip);
+        let intervalControl = createBuildingSetting('droidSettings', 'Interval', 'Interval', intervalToolTip);
         content.append(intervalControl);
         content.append($('<br>'));
 
-        let adamControl = createDroidSetting('Adamantite', 'Adamantite Priority');
-        let uranControl = createDroidSetting('Uranium', 'Uranium Priority');
-        let coalControl = createDroidSetting('Coal', 'Coal Priority');
-        let alumControl = createDroidSetting('Aluminium', 'Aluminium Priority');
+        let adamControl = createBuildingSetting('droidSettings', 'Adamantite', 'Adamantite Priority');
+        let uranControl = createBuildingSetting('droidSettings', 'Uranium', 'Uranium Priority');
+        let coalControl = createBuildingSetting('droidSettings', 'Coal', 'Coal Priority');
+        let alumControl = createBuildingSetting('droidSettings', 'Aluminium', 'Aluminium Priority');
         content.append(adamControl);
         content.append(uranControl);
         content.append(coalControl);
         content.append(alumControl);
     }
-    function createGrapheneSetting(id, name, toolTip) {
-        let resText = $(`<span class="has-text-warning" style="width:12rem;">${name}:</span>`);
-        if (toolTip) {
-            resText.addClass(toolTipClass);
-            resText.attr("data-label", toolTip);
-        }
-        let resSub = function(mult) {
-            settings.grapheneSettings[id] -= mult;
-            if (settings.grapheneSettings[id] < 0) {settings.grapheneSettings[id] = 0;}
-            return settings.grapheneSettings[id];
-        }
-        let resAdd = function(mult) {
-            settings.grapheneSettings[id] += mult;
-            return settings.grapheneSettings[id];
-        }
-        let resControls = createNumControl(settings.grapheneSettings[id], "graphene_"+id, resSub, resAdd);
-        let newDiv = $('<div style="display:flex"></div>').append(resText).append(resControls);
-        return newDiv;
-    }
     function loadGrapheneUI(content) {
         let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-        let intervalControl = createGrapheneSetting('Interval', 'Interval', intervalToolTip);
+        let intervalControl = createBuildingSetting('grapheneSettings', 'Interval', 'Interval', intervalToolTip);
         content.append(intervalControl);
         content.append($('<br>'));
 
-        let woodControl = createGrapheneSetting('Wood', 'Wood Priority');
-        let coalControl = createGrapheneSetting('Coal', 'Coal Priority');
-        let oilControl = createGrapheneSetting('Oil', 'Oil Priority');
+        let woodControl = createBuildingSetting('grapheneSettings', 'Wood', 'Wood Priority');
+        let coalControl = createBuildingSetting('grapheneSettings', 'Coal', 'Coal Priority');
+        let oilControl = createBuildingSetting('grapheneSettings', 'Oil', 'Oil Priority');
         content.append(woodControl);
         content.append(coalControl);
         content.append(oilControl);
@@ -6006,7 +5957,8 @@ async function main() {
 
         // Auto Support
         let autoSupportDesc = 'Powers buildings and allocates support. Power Priority can be changed in the Priority Tab.';
-        let [autoSupportTitle, autoSupportContent] = createAutoSettingToggle('autoSupport', 'Auto Support', autoSupportDesc, false, tab);
+        let [autoSupportTitle, autoSupportContent] = createAutoSettingToggle('autoSupport', 'Auto Support', autoSupportDesc, true, tab);
+        loadSupportUI(autoSupportContent);
 
         // Auto Smelter
         let autoSmelterDesc = "Allocates the smelter building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
