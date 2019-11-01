@@ -5968,7 +5968,7 @@ async function main() {
         autoFactoryTitle.append(factoryPQCheck);
 
         // Auto Mining Droid
-        let autoDroidDesc = "Allocates mining droids. The priorities determine how much each resource is weighted. Currently not yet implemented.";
+        let autoDroidDesc = "Allocates mining droids. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoDroidTitle, autoDroidContent] = createAutoSettingToggle('autoDroid', 'Auto Mining Droid', autoDroidDesc, true, tab);
         loadDroidUI(autoDroidContent);
 
@@ -5977,7 +5977,7 @@ async function main() {
         autoDroidTitle.append(droidPQCheck);
 
         // Auto Graphene Plant
-        let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Currently not yet implemented.";
+        let autoGrapheneDesc = "Allocates graphene plants. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";
         let [autoGrapheneTitle, autoGrapheneContent] = createAutoSettingToggle('autoGraphene', 'Auto Graphene Plants', autoGrapheneDesc, true, tab);
         loadGrapheneUI(autoGrapheneContent);
 

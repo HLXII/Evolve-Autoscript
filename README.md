@@ -36,6 +36,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Add Priority Ignore setting for Auto Priority (Turns it into old Auto Build)
 * Add initial loading UI/messages (catch UI for disabled script support, message queue for reloads? idk)
 * Add working for current game version label somewhere
+* Re-Add manual buttons for Auto Buildings
 
 ## Large
 * Auto Fortress - Manage hell soldiers for both defense and patrols
