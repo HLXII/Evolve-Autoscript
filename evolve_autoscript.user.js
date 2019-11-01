@@ -561,7 +561,8 @@ async function main() {
             if (!this.unlocked || !this.enabled) {return false;}
             if (this.craftBtn === null) {return false;}
             let btn = this.craftBtn.children[0];
-            for (let j = 0;j < this.canCraft;j++) {
+            let amt = Math.min(50,this.canCraft);
+            for (let j = 0;j < amt;j++) {
                 btn.click();
             }
         }
@@ -855,6 +856,7 @@ async function main() {
         'interstellar-g_factory': ['alpha_support'],
         'interstellar-xfer_station': ['alpha_support', 'Uranium', 'electricity'],
         'interstellar-cruiser': ['Helium_3'],
+        'interstellar-dyson_net': ['electricity'],
         'interstellar-nexus': ['nebula_support', 'electricity', 'Money'],
         'interstellar-harvester': ['nebula_support', 'Helium_3', 'Deuterium'],
         'interstellar-elerium_prospector': ['nebula_support', 'Elerium'],
@@ -2863,12 +2865,16 @@ async function main() {
                         resource.sellBtn.click();
                         curMoney += sellValue;
                         curResource -= qty;
+                        if (counter > 50) {
+                            break;
+                        }
                     }
                 }
 
                 if (resource.autoBuy && resource.ratio < resource.buyRatio && resource.buyBtn !== null) {
                     //console.log("Autobuying", resource.name);
                     let buyValue = getRealValue(resource.buyBtn.innerHTML.substr(1));
+                    let counter = 0;
                     //console.log("CURM:", curMoney, "sellV", buyValue, "MAXM", maxMoney, "CURR", curResource, "MAXR", maxResource, "MINM", getMinMoney());
                     while(true) {
                         // Break if too little money, too much resources, or buy ratio reached
@@ -2878,6 +2884,9 @@ async function main() {
                         resource.buyBtn.click();
                         curMoney -= buyValue;
                         curResource += qty;
+                        if (counter > 50) {
+                            break;
+                        }
                     }
                 }
             }
@@ -3855,6 +3864,7 @@ async function main() {
                 continue;
             }
             if (buildings[x].id == 'interstellar-dyson_net') {
+                //TODO Add dyson net electricity
                 continue;
             }
 
@@ -4402,7 +4412,6 @@ async function main() {
                 // Can buy trade route
                 //console.log("Buying", focusSequence[curFocus], curFocus);
                 newTradeRoutes[keys[focusSequence[curFocus]]] += 1;
-                resources[keys[focusSequence[curFocus]]].temp_rate += resources[keys[focusSequence[curFocus]]].tradeAmount;
                 resources.Money.temp_rate -= resources[keys[focusSequence[curFocus]]].tradeBuyCost;
                 curFreeTradeRoutes -= 1;
                 curFocus += 1;
@@ -4410,7 +4419,6 @@ async function main() {
                 // Cannot buy trade route, sell instead
                 if (curSell == sellSequence.length) {break;}
                 newTradeRoutes[sellSequence[curSell]] -= 1;
-                resources[sellSequence[curSell]].temp_rate -= resources[sellSequence[curSell]].tradeAmount;
                 resources.Money.temp_rate += resources[sellSequence[curSell]].tradeSellCost;
                 curFreeTradeRoutes -= 1;
                 curSell += 1;
