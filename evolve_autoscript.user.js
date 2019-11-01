@@ -3667,47 +3667,33 @@ async function main() {
         modal = false;
     }
 
-    let grapheneModal = null;
-    function loadGrapheneModal() {
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            return;
-        }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
-        // Opening Modal
-        $('#interstellar-g_factory > .special').click();
-        setTimeout(function() {
-            grapheneModal = window.evolve.vues['specialModal'];
-
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
-    }
     function getGrapheneData() {
         let data = {};
+        let spans = $('#specialModal > div:nth-child(2) > span');
         // Lumber
         if (!window.evolve.global.race['kindling_kindred']) {
             data.Lumber = {};
-            let str = grapheneModal.buildLabel('wood');
+            data.Lumber.decBtn = spans[0];
+            data.Lumber.incBtn = spans[2];
+            let str = spans[1].attributes['data-label'].value
             data.Lumber.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
             data.Lumber.num = window.evolve.global.interstellar.g_factory.Lumber;
-
         }
         // Coal
         if (window.evolve.global.resource.Coal.display) {
             data.Coal = {};
-            let str = grapheneModal.buildLabel('coal');
+            data.Coal.decBtn = (data.Lumber) ? spans[3] : spans[0];
+            data.Coal.incBtn = (data.Lumber) ? spans[5] : spans[2];
+            let str = (data.Lumber) ? spans[4].attributes['data-label'].value : spans[1].attributes['data-label'].value;
             data.Coal.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
             data.Coal.num = window.evolve.global.interstellar.g_factory.Coal;
         }
         // Oil
         if (window.evolve.global.resource.Oil.display) {
             data.Oil = {};
-            let str = grapheneModal.buildLabel('oil');
+            data.Oil.decBtn = (data.Lumber) ? spans[6] : spans[3];
+            data.Oil.incBtn = (data.Lumber) ? spans[8] : spans[5];
+            let str = (data.Lumber) ? spans[7].attributes['data-label'].value : spans[4].attributes['data-label'].value;
             data.Oil.fuel = parseFloat(/Consume ([\d\.]+).*/.exec(str)[1]);
             data.Oil.num = window.evolve.global.interstellar.g_factory.Oil;
         }
@@ -3716,11 +3702,12 @@ async function main() {
     async function autoGraphene(limits) {
         // Don't Auto Graphene if not unlocked
         if (!researched('tech-graphene')) {return;}
-        // Loading Graphene Plant Vue
-        if (grapheneModal === null) {
-            loadGrapheneModal();
-            return;
-        }
+        // Opening Modal
+        if ($('.modal').length != 0) {return;}
+        if (modal) {return;}
+        modal = true;
+        $('#interstellar-g_factory > .special').click()
+        await sleep(50);
 
         // Finding relevent elements
         let data = getGrapheneData();
@@ -3806,20 +3793,7 @@ async function main() {
         for (let i = 0;i < fuelKeys.length;i++) {
             if (data[fuelKeys[i]].num > fuelAllocation.alloc[i]) {
                 for (let j = 0;j < data[fuelKeys[i]].num - fuelAllocation.alloc[i];j++) {
-                    switch(fuelKeys[i]) {
-                        case 'Lumber': {
-                            grapheneModal.subWood();
-                            break;
-                        }
-                        case 'Coal': {
-                            grapheneModal.subCoal();
-                            break;
-                        }
-                        case 'Oil': {
-                            grapheneModal.subOil();
-                            break;
-                        }
-                    }
+                    data[fuelKeys[i]].decBtn.click();
                 }
             }
         }
@@ -3827,23 +3801,18 @@ async function main() {
         for (let i = 0;i < fuelKeys.length;i++) {
             if (data[fuelKeys[i]].num < fuelAllocation.alloc[i]) {
                 for (let j = 0;j < fuelAllocation.alloc[i] - data[fuelKeys[i]].num;j++) {
-                    switch(fuelKeys[i]) {
-                        case 'Lumber': {
-                            grapheneModal.addWood();
-                            break;
-                        }
-                        case 'Coal': {
-                            grapheneModal.addCoal();
-                            break;
-                        }
-                        case 'Oil': {
-                            grapheneModal.addOil();
-                            break;
-                        }
-                    }
+                    data[fuelKeys[i]].incBtn.click();
                 }
             }
         }
+
+        // Setting data to null for garbage collector maybe
+        data = null;
+
+        // Closing Modal
+        $('.modal > button').click()
+        await sleep(250);
+        modal = false;
     }
 
     async function autoSupport(priorityData) {
