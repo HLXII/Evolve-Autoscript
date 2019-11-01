@@ -4412,6 +4412,7 @@ async function main() {
                 // Can buy trade route
                 //console.log("Buying", focusSequence[curFocus], curFocus);
                 newTradeRoutes[keys[focusSequence[curFocus]]] += 1;
+                resources[keys[focusSequence[curFocus]]].temp_rate += resources[keys[focusSequence[curFocus]]].tradeAmount;
                 resources.Money.temp_rate -= resources[keys[focusSequence[curFocus]]].tradeBuyCost;
                 curFreeTradeRoutes -= 1;
                 curFocus += 1;
@@ -4419,6 +4420,7 @@ async function main() {
                 // Cannot buy trade route, sell instead
                 if (curSell == sellSequence.length) {break;}
                 newTradeRoutes[sellSequence[curSell]] -= 1;
+                resources[sellSequence[curSell]].temp_rate -= resources[sellSequence[curSell]].tradeAmount;
                 resources.Money.temp_rate += resources[sellSequence[curSell]].tradeSellCost;
                 curFreeTradeRoutes -= 1;
                 curSell += 1;
