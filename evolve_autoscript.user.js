@@ -469,7 +469,7 @@ async function main() {
         get tradeNum() {
             return window.evolve.global.resource[this.id].trade;
         }
-        get tradeBuyCost() {
+        get tradeSellCost() {
             if (this.tradeDecSpan !== null) {
                 let dataStr = this.tradeDecSpan.attributes['data-label'].value;
                 var reg = /.*([\d\.]+).*\$([\d\.]+)/.exec(dataStr);
@@ -479,7 +479,7 @@ async function main() {
                 return -1;
             }
         }
-        get tradeSellCost() {
+        get tradeBuyCost() {
             if (this.tradeIncSpan !== null) {
                 let dataStr = this.tradeIncSpan.attributes['data-label'].value;
                 var reg = /.*([\d\.]+).*\$([\d\.]+)/.exec(dataStr);
@@ -655,7 +655,7 @@ async function main() {
                 setTimeout(function() {
                     // Reading effect
                     let data = document.querySelector(`#pop${btn.id}.popper > div:nth-child(3)`);
-                    let effect = data.innerHTML;
+                    let effect = data ? data.innerHTML : "";
                     //Closing popper window
                     setTimeout(function() {
                         btn.dispatchEvent(new Event('mouseout'));
@@ -800,7 +800,7 @@ async function main() {
     let poweredBuildingList = {
         'city-apartment': ['electricity'],
         'city-mill': [],
-        'city-windmill': ['electricity'],
+        'city-windmill': [],
         'city-sawmill': ['electricity'],
         'city-rock_quarry': ['electricity'],
         'city-cement_plant': ['electricity'],
@@ -1203,6 +1203,10 @@ async function main() {
                     // TODO calculate money gain
                     break;
                 }
+                case 'city-windmill': {
+                    produce.push({res:'electricity',cost:1});
+                    break;
+                }
             }
 
             return [consume,produce];
@@ -1398,7 +1402,7 @@ async function main() {
             return document.querySelector('#arpa'+this.id+' > .head > .desc');
         }
         get btn() {
-            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x25');
+            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x1');
         }
 
         get name() {
@@ -1427,7 +1431,7 @@ async function main() {
             if (this.res === null) {
                 return null;
             }
-            return this.res[resid] * (1.05 ** this.numTotal) / 4;
+            return this.res[resid] * (1.05 ** this.numTotal) / 100;
         }
 
         click() {
@@ -1794,7 +1798,7 @@ async function main() {
         }
 
         get name() {
-             window.evolve.global.race['carnivore'] || window.evolve.global.race['soul_eater'] ? 'Hunter' : 'Unemployed';
+            return window.evolve.global.race['carnivore'] || window.evolve.global.race['soul_eater'] ? 'Hunter' : 'Unemployed';
         }
 
         get employed() {
