@@ -4,7 +4,7 @@
 // @version      1.2.12
 // @description  try to take over the world!
 // @author       HLXII
-// @match        https://pmotschmann.github.io/Evolve/
+// @match        https://evolvebeta.github.io/Evolve/
 // @grant        GM_log
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
 // @require      https://raw.githubusercontent.com/pieroxy/lz-string/master/libs/lz-string.min.js
@@ -1246,6 +1246,7 @@ async function main() {
     class SpaceDockBuilding extends Building {
         constructor(id, loc) {
             super(id, loc);
+            this.res = {};
         }
 
         get unlocked() {
@@ -1262,6 +1263,21 @@ async function main() {
         get data() {
             let [type, action] = this.id.split('-');
             return window.evolve.global['starDock'][action];
+        }
+
+        loadRes() {
+            let data = $('#' + this.id + ' > a')[0];
+            for (let i = 0;i < data.attributes.length;i++) {
+                let name = data.attributes[i].name;
+                let cost = data.attributes[i].value;
+                if (name.indexOf('data-') >= 0) {
+                    this.res[name.substr(5, name.length)] = parseInt(cost);
+                }
+            }
+        }
+
+        getResDep(resid) {
+            return this.res[resid.toLowerCase()];
         }
 
         click() {
@@ -1355,6 +1371,32 @@ async function main() {
         }
         console.log(buildings);
     }
+    function loadSpaceDockBuildings() {
+        if (buildings['space-star_dock'].numTotal < 1) {return;}
+        // Checking if modal already open
+        if ($('.modal').length != 0) {
+            return;
+        }
+        // Ensuring no modal conflicts
+        if (modal) {return;}
+        modal = true;
+
+        // Opening modal
+        $('#space-star_dock > .special').click();
+        // Delaying for modal animation
+        setTimeout(function() {
+            // Getting info
+            buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
+            buildings['spcdock-probes'].loadRes();
+            buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
+            buildings['spcdock-seeder'].loadRes();
+            //console.log(buildings['spcdock-probes'].num,buildings['spcdock-seeder'].num);
+            // Closing modal
+            let closeBtn = $('.modal-close')[0];
+            if (closeBtn !== undefined) {closeBtn.click();}
+            modal = false;
+        }, 100);
+    }
     class Research extends Action {
         constructor(id, loc) {
             super(id, loc);
@@ -1402,7 +1444,7 @@ async function main() {
             return document.querySelector('#arpa'+this.id+' > .head > .desc');
         }
         get btn() {
-            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x1');
+            return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x25');
         }
 
         get name() {
@@ -1431,7 +1473,7 @@ async function main() {
             if (this.res === null) {
                 return null;
             }
-            return this.res[resid] * (1.05 ** this.numTotal) / 100;
+            return this.res[resid] * (1.05 ** this.numTotal) / 4;
         }
 
         click() {
@@ -1960,6 +2002,7 @@ async function main() {
         try { loadResearches(); } catch(e) {console.log('Error: Load Researches');}
         // Buildings
         try { loadBuildings(); } catch(e) {console.log('Error: Load Buildings');}
+        try { loadSpaceDockBuildings(); } catch(e) {console.log('Error: Load SpaceDock Buildings');}
         // Jobs
         try { loadJobs(); } catch(e) {console.log('Error: Load Jobs');}
         try { loadCraftJobs(); } catch(e) {console.log('Error: Load Craft Jobs');}
@@ -2958,7 +3001,7 @@ async function main() {
         if (modal) {return;}
         modal = true;
         $('#city-smelter > .special').click()
-        await sleep(50);
+        await sleep(250);
 
         // Finding relevent elements
         let data = getSmelterData();
@@ -3198,8 +3241,9 @@ async function main() {
         // Setting data to null for garbage collector maybe
         data = null;
 
-        // Closing Modal
-        $('.modal > button').click()
+        // Closing modal
+        console.log("MODAL",$('.modal-close'));
+        $('.modal-close').click()
         await sleep(250);
         modal = false;
     }
@@ -3313,7 +3357,7 @@ async function main() {
         if (modal) {return;}
         modal = true;
         $('#city-factory > .special').click()
-        await sleep(50);
+        await sleep(250);
 
         let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn;
 
@@ -3506,8 +3550,9 @@ async function main() {
         // Setting data to null for garbage collector maybe
         data = null;
 
-        // Closing Modal
-        $('.modal > button').click()
+        // Closing modal
+        let closeBtn = $('.modal-close')[0];
+        if (closeBtn !== undefined) {closeBtn.click();}
         await sleep(250);
         modal = false;
     }
@@ -3555,7 +3600,7 @@ async function main() {
         if (modal) {return;}
         modal = true;
         $('#interstellar-mining_droid > .special').click()
-        await sleep(50);
+        await sleep(250);
 
         let totalDroids = buildings['interstellar-mining_droid'].numOn;
 
@@ -3674,8 +3719,9 @@ async function main() {
         // Setting data to null for garbage collector maybe
         data = null;
 
-        // Closing Modal
-        $('.modal > button').click()
+        // Closing modal
+        let closeBtn = $('.modal-close')[0];
+        if (closeBtn !== undefined) {closeBtn.click();}
         await sleep(250);
         modal = false;
     }
@@ -3720,7 +3766,7 @@ async function main() {
         if (modal) {return;}
         modal = true;
         $('#interstellar-g_factory > .special').click()
-        await sleep(50);
+        await sleep(250);
 
         // Finding relevent elements
         let data = getGrapheneData();
@@ -3823,7 +3869,8 @@ async function main() {
         data = null;
 
         // Closing Modal
-        $('.modal > button').click()
+        let closeBtn = $('.modal-close')[0];
+        if (closeBtn !== undefined) {closeBtn.click();}
         await sleep(250);
         modal = false;
     }
