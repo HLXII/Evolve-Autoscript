@@ -6,6 +6,8 @@ Install the [Tampermonkey](https://www.tampermonkey.net) plugin. (I tried my scr
 
 Goto this [page](https://github.com/HLXII/Evolve-Autoscript/raw/master/evolve_autoscript.user.js) to install the plugin. Tampermonkey should redirect you to an install page. Or just create a new script in Tampermonkey and copy/paste this script into the editor.
 
+Make sure to toggle the Enable Script Support setting in the Settings tab, otherwise this script will not work.
+
 It is highly recommended to import settings from [Saved Settings](https://github.com/HLXII/Evolve-Autoscript/blob/master/Saved%20Settings). The script does not have settings at initialization, and using the exported saves can give you a starting point for changing priorities.
 
 All priority settings are very opaque. As in, it is not very clear how changes in priorities affects the underlying script decisions. Thus, asking about what a 'good' priority setting to have is a bit hard to answer. I suggest playing around with the values until you're happy with the result. If you are very curious of how the priorities affect the script, you'll have to dig into the algorithm.
