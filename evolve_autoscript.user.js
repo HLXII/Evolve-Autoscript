@@ -4,7 +4,7 @@
 // @version      1.2.12
 // @description  try to take over the world!
 // @author       HLXII
-// @match        https://evolvebeta.github.io/Evolve/
+// @match        https://pmotschmann.github.io/Evolve/
 // @grant        GM_log
 // @require      https://code.jquery.com/jquery-3.3.1.min.js
 // @require      https://raw.githubusercontent.com/pieroxy/lz-string/master/libs/lz-string.min.js
