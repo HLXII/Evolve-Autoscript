@@ -8,7 +8,7 @@ export default function sleep(ms) {
 
 // Gets the multiplier on the resource
 // 'Global' returns the global multiplier
-export default function getMultiplier(res) {
+export function getMultiplier(res) {
     let multiplier = 1;
     for (let val in window.evolve.breakdown.p[res]) {
         let data = window.evolve.breakdown.p[res][val];
