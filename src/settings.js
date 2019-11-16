@@ -332,9 +332,13 @@ export function autoTax(priorityData) {
     let morale = getCurrentMorale();
     let maxMorale = getMaxMorale();
     let moneyRate = resources.Money.temp_rate || resources.Money.rate;
-    //console.log(morale, maxMorale, moneyRate);
+    console.log(morale, maxMorale, moneyRate);
+    // Currently below minimum morale
+    if (morale < settings.minimumMorale) {
+        decTax();
+    }
     // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
-    if (resources.Money.ratio == 1) {
+    else if (resources.Money.ratio == 1) {
         //TODO Figure out a good way of doing this
         //decTax();
     }
@@ -342,10 +346,7 @@ export function autoTax(priorityData) {
     else if (morale >= maxMorale) {
         incTax(morale - maxMorale);
     }
-    // Currently below minimum Morale
-    else if (morale <= settings.minimumMorale) {
-        decTax(settings.minimumMorale - morale);
-    } else {
+    else {
         if (resources.Money.ratio < 0.99 || moneyRate < 0) {
             incTax();
         }
