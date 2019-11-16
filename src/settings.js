@@ -8,7 +8,7 @@ import { buildings, loadBuildings, loadSpaceDockBuildings } from './buildings.js
 import { loadJobs, loadCraftJobs } from './jobs.js';
 import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './modalbuildings.js';
 import { loadSupport } from './support.js';
-import { updateUI } from './ui.js';
+import { updateUI, resetUI } from './ui.js';
 
 export var settings = {};
 export function loadSettings() {
@@ -195,7 +195,7 @@ export function updateSettings(){
     localStorage.setItem('settings', JSON.stringify(settings));
 }
 
-function importSettings() {
+export function importSettings() {
     console.log("Importing Settings");
     if ($('textarea#settingsImportExport').val().length > 0){
         let settingStr = $('textarea#settingsImportExport').val();
@@ -204,7 +204,7 @@ function importSettings() {
         resetUI();
     }
 }
-function exportSettings() {
+export function exportSettings() {
     console.log("Exporting Settings");
     $('textarea#settingsImportExport').val(LZString.compressToBase64(JSON.stringify(settings)));
     $('textarea#settingsImportExport').select();

@@ -1,6 +1,6 @@
 import { url, version } from './main.js';
 import { keyMult, inEvolution, getTab } from './utility.js';
-import { settings, updateSettings, printSettings } from './settings.js';
+import { settings, updateSettings, printSettings, importSettings, exportSettings } from './settings.js';
 import { evoChallengeActions } from './evolution.js';
 import { loadFarm } from './farm.js';
 import { resources, TradeableResource, CraftableResource } from './resources.js';

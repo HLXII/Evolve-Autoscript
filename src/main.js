@@ -11,7 +11,7 @@ import { updateUI } from './ui.js';
 import { autoBattle } from './war.js';
 
 export const url = 'https://github.com/HLXII/Evolve-Autoscript';
-export const version = '1.2.12';
+export const version = '1.3';
 
 (async function() {
     console.log("Waiting for game to load...");
