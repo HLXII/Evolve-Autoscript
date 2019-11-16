@@ -1,5 +1,13 @@
-// Stores functions for Auto Priority
-
+import { resources, TradeableResource, CraftableResource } from './resources.js';
+import { Action } from './actions.js';
+import { buildings, Building } from './buildings.js';
+import { researches, Research, researched } from './researches.js';
+import { miscActions, arpas, storages, ArpaAction } from './miscactions.js';
+import { messageQueue, getTotalGameDays, prioCompare } from './utility.js';
+import { resetUICheck } from './ui.js';
+import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './modalbuildings.js';
+import { autoSupport } from './support.js';
+import { settings } from './settings.js';
 
 function priorityScale(value, priority, action) {
     let scale = Math.exp(-0.25 * priority);
@@ -15,9 +23,6 @@ function priorityScale(value, priority, action) {
     return value * scale;
 }
 
-function prioCompare(a, b) {
-    return b.priority - a.priority;
-}
 function getAvailableBuildings() {
     let build = [];
     for (var x in buildings) {
@@ -136,7 +141,7 @@ function getAvailableResources() {
     return res;
 }
 
-async function autoPriority(count) {
+export async function autoPriority(count) {
     // Finding available actions
     let actions = getAvailableActions();
     //console.log(actions);

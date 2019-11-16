@@ -1,10 +1,12 @@
-// Contains all the resource definitions
+import { disableMult, getRealValue, getMinMoney, allocate, prioCompare } from './utility.js';
+import { settings, updateSettings } from './settings.js';
+import { researched } from './researches.js';
 
 // List of all advanced resources for coloring
 let advancedResources = ['Deuterium','Neutronium','Adamantite','Infernite','Elerium','Nano_Tube','Graphene','Stanene'];
 
 // Base class for resources
-class Resource {
+export class Resource {
     constructor(id) {
         this.id = id;
         this.color = 'has-text-info';
@@ -62,6 +64,7 @@ class Resource {
         return window.evolve.global.interstellar.mass_ejector[this.id];
     }
     get ejectMass() {
+        // TODO: Fix in 0.7.0
         return window.evolve.atomic_mass[this.id].mass / window.evolve.atomic_mass[this.id].size;
     }
     ejectInc(num) {
@@ -192,7 +195,7 @@ class Resource {
 }
 
 // Class for resources that can be traded
-class TradeableResource extends Resource {
+export class TradeableResource extends Resource {
     constructor(id) {
         super(id);
         if (!settings.resources.hasOwnProperty(this.id)) {settings.resources[this.id] = {};}
@@ -320,7 +323,8 @@ class TradeableResource extends Resource {
 }
 
 // Loads resource data from the global
-function loadResources() {
+export var resources = {};
+export function loadResources() {
     if (!settings.hasOwnProperty('resources')) {settings.resources = {};}
     Object.keys(window.evolve.global.resource).forEach(function(res) {
         // Craftable Resources
@@ -342,7 +346,7 @@ function loadResources() {
 }
 
 // Class for resources that can be crafted
-class CraftableResource extends Resource {
+export class CraftableResource extends Resource {
     constructor(id) {
         super(id);
         this.color = 'has-text-danger';
@@ -405,7 +409,7 @@ function getConsumed(res) {
     return consumed;
 }
 
-function autoCraft() {
+export function autoCraft() {
     //console.log("AutoCrafting");
     for (var x in resources) {
         if (resources[x] instanceof CraftableResource) {
@@ -414,7 +418,7 @@ function autoCraft() {
     }
 }
 
-function autoMarket() {
+export function autoMarket() {
     // Don't start autoMarket if haven't unlocked market
     if (!researched('tech-market')) {return;}
     let curMoney = resources.Money.amount;
@@ -491,7 +495,7 @@ function autoMarket() {
     }, 25);
 }
 
-function autoTrade(priorityData) {
+export function autoTrade(priorityData) {
     // If haven't researched trade, don't do anything
     if (!researched('tech-trade')) {return;}
     // Haven't made non-AutoPriority autoTrade, so ignore otherwise
@@ -672,7 +676,7 @@ function autoTrade(priorityData) {
     }
 }
 
-function autoStorage() {
+export function autoStorage() {
     // Don't do autoStorage if haven't unlocked storage
     if (!researched('tech-containerization')) {return;}
     // Finding values
@@ -761,7 +765,7 @@ function autoStorage() {
     }
 }
 
-function autoEjector() {
+export function autoEjector() {
     // Don't do autoEjector if haven't unlocked mass ejectors
     if (!window.evolve.global.interstellar.hasOwnProperty('mass_ejector')) {return;}
     if (window.evolve.global.interstellar.mass_ejector.count == 0) {return;}

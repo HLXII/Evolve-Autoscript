@@ -1,27 +1,42 @@
-// Stores code for general/misc settings
+import { sleep, inEvolution, disableMult } from './utility.js';
+import { loadEvolution, evoChallengeActions } from './evolution.js';
+import { loadFarm } from './farm.js';
+import { resources, loadResources } from './resources.js';
+import { arpas, loadMiscActions, loadArpas, loadStorages } from './miscactions.js';
+import { loadResearches, researched } from './researches.js';
+import { buildings, loadBuildings, loadSpaceDockBuildings } from './buildings.js';
+import { loadJobs, loadCraftJobs } from './jobs.js';
+import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './modalbuildings.js';
+import { loadSupport } from './support.js';
+import { updateUI } from './ui.js';
 
-function loadSettings() {
+export var settings = {};
+export function loadSettings() {
     console.log("Loading Settings");
+
+    let jsonSettings = localStorage.getItem('settings');
+    if (jsonSettings != null) {settings = JSON.parse(jsonSettings);}
+
     // Evolution
-    try { loadEvolution(); } catch(e) {console.log('Error: Load Evolution');}
+    try { loadEvolution(); } catch(e) {console.log('Error: Load Evolution', e);}
     // Farm
-    try { loadFarm(); } catch(e) {console.log('Error: Load Farm');}
+    try { loadFarm(); } catch(e) {console.log('Error: Load Farm', e);}
     // Resources
-    try { loadResources(); } catch(e) {console.log('Error: Load Resources');}
+    try { loadResources(); } catch(e) {console.log('Error: Load Resources', e);}
     // Storages
-    try { loadStorages(); } catch(e) {console.log('Error: Load Storage');}
+    try { loadStorages(); } catch(e) {console.log('Error: Load Storage', e);}
     // Misc Actions
-    try { loadMiscActions(); } catch(e) {console.log('Error: Load Misc Actions');}
+    try { loadMiscActions(); } catch(e) {console.log('Error: Load Misc Actions', e);}
     // Research
-    try { loadResearches(); } catch(e) {console.log('Error: Load Researches');}
+    try { loadResearches(); } catch(e) {console.log('Error: Load Researches', e);}
     // Buildings
-    try { loadBuildings(); } catch(e) {console.log('Error: Load Buildings');}
-    try { loadSpaceDockBuildings(); } catch(e) {console.log('Error: Load SpaceDock Buildings');}
+    try { loadBuildings(); } catch(e) {console.log('Error: Load Buildings', e);}
+    try { loadSpaceDockBuildings(); } catch(e) {console.log('Error: Load SpaceDock Buildings', e);}
     // Jobs
-    try { loadJobs(); } catch(e) {console.log('Error: Load Jobs');}
-    try { loadCraftJobs(); } catch(e) {console.log('Error: Load Craft Jobs');}
+    try { loadJobs(); } catch(e) {console.log('Error: Load Jobs', e);}
+    try { loadCraftJobs(); } catch(e) {console.log('Error: Load Craft Jobs', e);}
     // ARPA
-    try { loadArpas(); } catch(e) {console.log('Error: Load ARPAs');}
+    try { loadArpas(); } catch(e) {console.log('Error: Load ARPAs', e);}
 
     // Smelter
     loadSmelter();
@@ -174,11 +189,12 @@ function loadSettings() {
     if (!settings.hasOwnProperty('log')) {settings.log = []};
 }
 
-let printSettings = ['Buildings','Researches','Misc'];
+export const printSettings = ['Buildings','Researches','Misc'];
 
-function updateSettings(){
+export function updateSettings(){
     localStorage.setItem('settings', JSON.stringify(settings));
 }
+
 function importSettings() {
     console.log("Importing Settings");
     if ($('textarea#settingsImportExport').val().length > 0){
@@ -195,45 +211,8 @@ function exportSettings() {
     document.execCommand('copy');
 }
 
-let foodBtn = null;
-let lumberBtn = null;
-let stoneBtn = null;
-let rnaBtn = null;
-let dnaBtn = null;
-let slaughterBtn = null;
-function loadFarm () {
-    rnaBtn = document.querySelector('#evo-rna > a');
-    dnaBtn = document.querySelector('#evo-dna > a');
-    foodBtn = document.querySelector('#city-food > a');
-    lumberBtn = document.querySelector('#city-lumber > a');
-    stoneBtn = document.querySelector('#city-stone > a');
-    slaughterBtn = document.querySelector('#city-slaughter > a');
-}
-
-function farm() {
-    if(foodBtn!==null){foodBtn.click();}
-    if(lumberBtn!==null){lumberBtn.click();}
-    if(stoneBtn!==null){stoneBtn.click();}
-    if(rnaBtn!==null){rnaBtn.click();}
-    if(dnaBtn!==null){dnaBtn.click();}
-    if(slaughterBtn!==null){slaughterBtn.click();}
-}
-
-let farmInterval = null;
-function autoFarm() {
-    if(settings.autoFarm && farmInterval === null) {
-        console.log("Setting farm interval");
-        farmInterval = setInterval(farm, settings.farmRate);
-    } else {
-        if (!settings.autoFarm && !(farmInterval === null)) {
-            clearInterval(farmInterval);
-            farmInterval = null;
-        }
-    }
-}
-
 let refreshInterval = null;
-function autoRefresh() {
+export function autoRefresh() {
     if(settings.autoRefresh && refreshInterval === null) {
         refreshInterval = setInterval(function() {location.reload();}, 200 * 1000);
     } else {
@@ -245,7 +224,7 @@ function autoRefresh() {
 }
 
 let prestigeCheck = false;
-function autoPrestige() {
+export function autoPrestige() {
     switch(settings.prestige) {
         case 'mad': {
             // Checking if MAD unlocked
@@ -347,7 +326,7 @@ function incTax(num) {
         incTaxBtn.click();
     }
 }
-function autoTax(priorityData) {
+export function autoTax(priorityData) {
     // Don't start taxes if haven't researched
     if (!researched('tech-tax_rates')) {return;}
     let morale = getCurrentMorale();

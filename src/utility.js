@@ -1,8 +1,7 @@
-// Stores generic utility functions
-
+import { settings } from './settings.js';
 
 // async function for sleeping
-export default function sleep(ms) {
+export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -19,7 +18,11 @@ export function getMultiplier(res) {
     return multiplier;
 }
 
-function allocate(totalNum,priorities,ratios,args) {
+export function prioCompare(a, b) {
+    return b.priority - a.priority;
+}
+
+export function allocate(totalNum,priorities,ratios,args) {
     args = args || {};
     let allocationList = [];
     let curNum = [];
@@ -67,7 +70,7 @@ function allocate(totalNum,priorities,ratios,args) {
     return {seq:allocationList,alloc:curNum,total:totalAllocated};
 }
 
-function messageQueue(msg,color){
+export function messageQueue(msg,color){
     color = color || 'warning';
     var new_message = $('<p class="has-text-'+color+'">'+msg+'</p>');
     $('#autolog').prepend(new_message);
@@ -76,7 +79,7 @@ function messageQueue(msg,color){
     }
 }
 
-function getTotalGameDays() {
+export function getTotalGameDays() {
     try {
     let str = $('#statsPanel')[0].children[$('#statsPanel')[0].children.length-1].innerText;
     let reg = /Game Days Played: ([\d]+)/.exec(str);
@@ -86,7 +89,7 @@ function getTotalGameDays() {
         return null;
     }
 }
-function getYear() {
+export function getYear() {
     try {
         return parseInt($('.year > .has-text-warning')[0].innerText);
     } catch(e) {
@@ -94,7 +97,7 @@ function getYear() {
         return null;
     }
 }
-function getDay() {
+export function getDay() {
     try {
         return parseInt($('.day > .has-text-warning')[0].innerText);
     } catch(e) {
@@ -102,7 +105,7 @@ function getDay() {
         return null;
     }
 }
-function getLunarPhase() {
+export function getLunarPhase() {
     let moon = document.querySelector('.calendar > .is-primary');
     if (moon !== null) {
         return moon.attributes['data-label'].value;
@@ -111,7 +114,7 @@ function getLunarPhase() {
         return "";
     }
 }
-function getRace() {
+export function getRace() {
     try {
         return $('#race > .column > span')[0].innerText;
     } catch(e) {
@@ -121,12 +124,12 @@ function getRace() {
 }
 
 // Forces keyup event for all the multiplier keys
-function disableMult() {
+export function disableMult() {
     var evt = new KeyboardEvent('keyup', {'ctrlKey':false, 'shiftKey':false, 'altKey':false});
     document.dispatchEvent (evt);
 }
 // Finds total key multiplier from keyEvent
-function keyMult(e) {
+export function keyMult(e) {
     let mult = 1;
     mult *= (e.ctrlKey) ? 10 : 1;
     mult *= (e.shiftKey) ? 25 : 1;
@@ -135,7 +138,7 @@ function keyMult(e) {
 }
 
 // Convert from abbreviated value to actual number
-function getRealValue(num){
+export function getRealValue(num){
     var suffix = {
         K:1000,
         M:1000000
@@ -151,22 +154,19 @@ function getRealValue(num){
     }
     return parseFloat(num);
 }
-// Determines if the research given has already been researched
-function researched(id) {
-    return researches[id].researched;
-}
+
 // Determines if stage is currently in evolution
-function inEvolution() {
+export function inEvolution() {
     return window.evolve.global.race.species == 'protoplasm';
 }
 // Determines if the civics tab has been unlocked
-function civicsOn() {
+export function civicsOn() {
     let civicsTabLabel = getTabLabel("Civics");
     if (civicsTabLabel === null) {return false;}
     return civicsTabLabel.style.display != 'none';
 }
 // Finding tab-items
-function getTab(name) {
+export function getTab(name) {
     let nav = $('#mainColumn > .content > .b-tabs > .tabs > ul > li > a > span');
     for (let i = 0;i < nav.length;i++) {
         if (nav[i].innerText.trim() == name) {
@@ -190,7 +190,7 @@ function getTabLabel(name) {
 }
 
 // Determines if a perk has been unlocked
-function perkUnlocked(perk) {
+export function perkUnlocked(perk) {
     let pat = "";
     switch(perk) {
         case 'Morphogenesis':
@@ -210,7 +210,7 @@ function perkUnlocked(perk) {
 // Determines if an achievement has been unlocked
 // Returns the achievement level (1-5) if unlocked
 // Returns -1 if not unlocked
-function achievementUnlocked(achievement) {
+export function achievementUnlocked(achievement) {
     let divList = $('.achievement');
     for (let i = 0;i < divList.length;i++) {
         if (divList[i].children[0].innerText == achievement) {
@@ -220,7 +220,7 @@ function achievementUnlocked(achievement) {
     return -1;
 }
 
-function getMinMoney() {
+export function getMinMoney() {
     if (settings.minimumMoney < 1) {
         return settings.minimumMoney * resources.Money.storage;
     } else {

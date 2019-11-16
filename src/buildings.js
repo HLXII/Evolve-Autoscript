@@ -1,6 +1,11 @@
-// Stores details about buildings
+import { disableMult } from './utility.js';
+import { settings, updateSettings } from './settings.js';
+import { Action } from './actions.js';
+import { researched } from './researches.js';
+import { checkPowerRequirements, getBaseCP, poweredBuildingList } from './support.js';
+import { openModal, closeModal } from './modal.js';
 
-class Building extends Action {
+export class Building extends Action {
     constructor(id, loc) {
         super(id, loc);
         if (!settings.actions[this.id].hasOwnProperty('atLeast')) {settings.actions[this.id].atLeast = 0;}
@@ -75,7 +80,101 @@ class Building extends Action {
     }
 }
 
-class SpaceDockBuilding extends Building {
+export class PoweredBuilding extends Building {
+    constructor(id, loc) {
+        super(id, loc);
+        if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = 0;}
+        /*
+        try {
+        [this.consume,this.produce] = getPowerData(id, this.def);
+        //console.log(this.consume, this.produce);
+        } catch(e) {
+            console.log("Error loading power for ",this.id);
+        }
+        */
+    }
+
+    get powerPriority() {return settings.actions[this.id].powerPriority;}
+    set powerPriority(powerPriority) {settings.actions[this.id].powerPriority = powerPriority;}
+
+    get powerUnlocked() {
+        return checkPowerRequirements(this.def);
+    }
+
+    get incBtn() {
+        return document.querySelector('#'+this.id+' > .on');
+    }
+    get decBtn() {
+        return document.querySelector('#'+this.id+' > .off');
+    }
+
+    get numOn() {
+        if (this.data && this.data.on) {
+            return this.data.on;
+        }
+        return 0;
+    }
+
+    async getCP() {
+        let consume = [];
+        let produce = [];
+        let effectFunc = this.effect;
+        let effect = await effectFunc(this.btn);
+        [consume,produce] = getBaseCP(poweredBuildingList[this.id],effect);
+
+        // Special since we can't read this info easily from the effect
+        switch(this.id) {
+            case 'city-mill': {
+                consume.push({res:'Food',cost:10});
+                produce.push({res:'electricity',cost:1});
+                break;
+            }
+            case 'city-tourist_center': {
+                // TODO calculate money gain
+                break;
+            }
+            case 'city-windmill': {
+                produce.push({res:'electricity',cost:1});
+                break;
+            }
+        }
+
+        return [consume,produce];
+    }
+
+    incPower(num) {
+        num = (num === undefined) ? 1 : num;
+        if (this.incBtn === null) {return false;}
+        disableMult();
+        for (let i = 0;i < num;i++) {
+            this.incBtn.click();
+        }
+        return true;
+    }
+    decPower(num) {
+        num = (num === undefined) ? 1 : num;
+        if (this.decBtn === null) {return false;}
+        for (let i = 0;i < num;i++) {
+            this.decBtn.click();
+        }
+        return true;
+    }
+
+    decPowerPriority(mult) {
+        if (this.powerPriority == 0) {return;}
+        this.powerPriority -= mult;
+        if (this.powerPriority < 0) {this.powerPriority = 0;}
+        updateSettings();
+        console.log("Decrementing Power Priority", this.id, this.powerPriority);
+    }
+    incPowerPriority(mult) {
+        this.powerPriority += mult;
+        updateSettings();
+        console.log("Incrementing Priority", this.id, this.powerPriority);
+    }
+}
+
+export class SpaceDockBuilding extends Building {
     constructor(id, loc) {
         super(id, loc);
         this.res = {};
@@ -112,35 +211,29 @@ class SpaceDockBuilding extends Building {
         return this.res[resid.toLowerCase()];
     }
 
-    click() {
+    async click() {
         if (!this.unlocked) {return false;}
-        // Checking if modal already open
-        if ($('.modal').length != 0) {
-            return;
-        }
-        // Ensuring no modal conflicts
-        if (modal) {return;}
-        modal = true;
+
         // Opening modal
-        $('#space-star_dock > .special').click();
+        let opened = await openModal($('#space-star_dock > .special'));
+        if (!opened) {return false;}
+
         // Delaying for modal animation
         let tempID = this.id;
-        setTimeout(function() {
-            // Getting info
-            let build = buildings[tempID];
-            // Buying
-            if (build.btn !== null) {
-                build.btn.getElementsByTagName("a")[0].click();
-            }
-            // Closing modal
-            let closeBtn = $('.modal-close')[0];
-            if (closeBtn !== undefined) {closeBtn.click();}
-            modal = false;
-        }, 100);
+        // Getting info
+        let build = buildings[tempID];
+        // Buying
+        if (build.btn !== null) {
+            build.btn.getElementsByTagName("a")[0].click();
+        }
+
+        await closeModal();
+        return true;
     }
 }
 
-function loadBuildings() {
+export var buildings = {};
+export function loadBuildings() {
     if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
     // City
     for (let action in window.evolve.actions.city) {
@@ -204,29 +297,20 @@ function loadBuildings() {
     console.log(buildings);
 }
 
-function loadSpaceDockBuildings() {
+export async function loadSpaceDockBuildings() {
     if (buildings['space-star_dock'].numTotal < 1) {return;}
-    // Checking if modal already open
-    if ($('.modal').length != 0) {
-        return;
-    }
-    // Ensuring no modal conflicts
-    if (modal) {return;}
-    modal = true;
 
     // Opening modal
-    $('#space-star_dock > .special').click();
-    // Delaying for modal animation
-    setTimeout(function() {
-        // Getting info
-        buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
-        buildings['spcdock-probes'].loadRes();
-        buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
-        buildings['spcdock-seeder'].loadRes();
-        //console.log(buildings['spcdock-probes'].num,buildings['spcdock-seeder'].num);
-        // Closing modal
-        let closeBtn = $('.modal-close')[0];
-        if (closeBtn !== undefined) {closeBtn.click();}
-        modal = false;
-    }, 100);
+    let opened = await openModal($('#space-star_dock > .special'));
+    if (!opened) {return false;}
+
+    // Getting info
+    buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
+    buildings['spcdock-probes'].loadRes();
+    buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
+    buildings['spcdock-seeder'].loadRes();
+
+    // Closing modal
+    await closeModal();
+
 }

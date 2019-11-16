@@ -1,12 +1,18 @@
-// Stores details on misc actions
+import { resources } from './resources.js';
+import { Action } from './actions.js';
+import { Building } from './buildings.js';
+import { researched } from './researches.js';
+import { getAvailableSoldiers, getMaxSoldiers } from './war.js';
+import { settings } from './settings.js';
 
-class MiscAction extends Action {
+export class MiscAction extends Action {
     constructor(id) {
         super(id, ['misc']);
         this.color = 'has-text-advanced';
     }
 }
-class ArpaAction extends Building {
+
+export class ArpaAction extends Building {
     constructor(id, res) {
         super(id, ['misc']);
         this.loc.push('arpa');
@@ -58,9 +64,9 @@ class ArpaAction extends Building {
             return false;
         }
     }
-
 }
-class MonumentAction extends ArpaAction {
+
+export class MonumentAction extends ArpaAction {
     constructor(id) {
         super(id, {});
     }
@@ -75,8 +81,8 @@ class MonumentAction extends ArpaAction {
         }
     }
 }
-var arpas = {};
-function loadMonumentRes() {
+
+export function loadMonumentRes() {
     if (arpas.monument.label !== null) {
         switch(arpas.monument.label.innerText) {
             case "Obelisk":
@@ -102,7 +108,9 @@ function loadMonumentRes() {
         }
     }
 }
-function loadArpas() {
+
+export var arpas = {};
+export function loadArpas() {
     if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
     arpas.lhc = new ArpaAction('lhc',
                                {Money:2500000,
@@ -127,7 +135,8 @@ function loadArpas() {
     arpas.monument = new MonumentAction('monument');
     loadMonumentRes();
 }
-class StorageAction extends MiscAction {
+
+export class StorageAction extends MiscAction {
     constructor(id, res) {
         super(id);
         this.loc.push('storage');
@@ -181,8 +190,9 @@ class StorageAction extends MiscAction {
         return true;
     }
 }
-var storages = {};
-function loadStorages() {
+
+export var storages = {};
+export function loadStorages() {
     if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
     storages.Crate = new StorageAction('Crate',
                                        (resources.Lumber.unlocked) ?
@@ -192,7 +202,8 @@ function loadStorages() {
     storages.Container = new StorageAction('Container',
                                            {Steel:1250});
 }
-class GeneAction extends MiscAction {
+
+export class GeneAction extends MiscAction {
     constructor(id) {
         super(id);
         this.res = {Knowledge:200000};
@@ -225,7 +236,8 @@ class GeneAction extends MiscAction {
         return true;
     }
 }
-class MercenaryAction extends MiscAction {
+
+export class MercenaryAction extends MiscAction {
     constructor(id) {
         super(id);
         this.loc.push('mercenary');
@@ -263,7 +275,8 @@ class MercenaryAction extends MiscAction {
         return true;
     }
 }
-class FortressMercenaryAction extends MercenaryAction {
+
+export class FortressMercenaryAction extends MercenaryAction {
     constructor(id) {
         super(id);
     }
@@ -277,7 +290,8 @@ class FortressMercenaryAction extends MercenaryAction {
         return "Hire Fortress Mercenary";
     }
 }
-class AlterAction extends MiscAction {
+
+export class AlterAction extends MiscAction {
    constructor(id) {
         super(id);
         this.res = {};
@@ -313,8 +327,9 @@ class AlterAction extends MiscAction {
         return true;
     }
 }
-var miscActions = {};
-function loadMiscActions() {
+
+export var miscActions = {};
+export function loadMiscActions() {
     if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
     miscActions.Gene = new GeneAction("Gene");
     miscActions.Mercenary = new MercenaryAction("Mercenary");

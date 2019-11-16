@@ -1,4 +1,6 @@
-// Contains variables and functions for Auto Evolution
+import { settings, loadSettings } from './settings.js';
+import { resetUI } from './ui.js';
+import { perkUnlocked, achievementUnlocked } from './utility.js';
 
 // IDs of the farming buttons
 const evoFarmActions = ["evo-rna", "evo-dna"];
@@ -22,7 +24,7 @@ const evoRaceActions = [
 	"evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp",'evo-seraph','evo-unicorn'];
 
 // IDs of all the challenge options
-const evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
+export const evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
 // IDs of all the harder challenge options
 const evoHardChallengeActions = ['evo-junker', 'evo-joyless', 'evo-decay'];
 
@@ -70,7 +72,7 @@ const evoRaceTrees = {
 var maxEvo = {}
 
 // Loads maxEvo
-export default function loadEvolution() {
+export function loadEvolution() {
     // Loading all maximum values for evolution upgrades
     maxEvo = {};
     // Need these to unlock next upgrades
@@ -104,7 +106,7 @@ export default function loadEvolution() {
     maxEvo['evo-mitochondria'] = (maxEvo['evo-mitochondria'] <= 0) ? 1 : maxEvo['evo-mitochondria'];
 }
 
-function autoEvolution() {
+export function autoEvolution() {
     let actions = document.querySelectorAll('#evolution .action');
     let chosenAction = null;
     let chosenPriority = 0;

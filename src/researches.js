@@ -1,6 +1,7 @@
-// Stores details about research
+import { Action } from './actions.js';
+import { settings } from './settings.js';
 
-class Research extends Action {
+export class Research extends Action {
     constructor(id, loc) {
         super(id, loc);
         this.color = 'has-text-danger';
@@ -19,7 +20,8 @@ class Research extends Action {
     }
 }
 
-function loadResearches() {
+export var researches = {};
+export function loadResearches() {
     if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
     // Tech
     for (let action in window.evolve.actions.tech) {
@@ -28,4 +30,9 @@ function loadResearches() {
         let id = window.evolve.actions.tech[action].id;
         researches[id] = new Research(id, ['tech', action]);
     }
+}
+
+// Determines if the research given has already been researched
+export function researched(id) {
+    return researches[id].researched;
 }

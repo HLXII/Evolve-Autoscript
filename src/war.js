@@ -1,4 +1,6 @@
-// Stores all code for battles
+import { disableMult } from './utility.js'; 
+import { settings } from './settings.js';
+import { researched } from './researches.js';
 
 function getWounded() {
     return window.evolve.global.civic.garrison.wounded;
@@ -12,10 +14,10 @@ function getFortressSoldiers() {
     }
     return 0;
 }
-function getMaxSoldiers() {
+export function getMaxSoldiers() {
     return getTotalSoldiers() - getFortressSoldiers();
 }
-function getAvailableSoldiers() {
+export function getAvailableSoldiers() {
     if (window.evolve.global.portal.hasOwnProperty('fortress')) {
         return window.evolve.global.civic.garrison.workers - window.evolve.global.portal.fortress.assigned;
     }
@@ -184,7 +186,7 @@ function battle() {
     }
 }
 let battleInterval = null;
-function autoBattle() {
+export function autoBattle() {
     if(settings.autoBattle && battleInterval === null) {
         battleInterval = setInterval(battle, 25);
     } else {

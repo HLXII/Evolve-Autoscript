@@ -1,4 +1,14 @@
-// Stores all custom UI code
+import { url, version } from './main.js';
+import { keyMult, inEvolution, getTab } from './utility.js';
+import { settings, updateSettings, printSettings } from './settings.js';
+import { evoChallengeActions } from './evolution.js';
+import { loadFarm } from './farm.js';
+import { resources, TradeableResource, CraftableResource } from './resources.js';
+import { Action } from './actions.js';
+import { miscActions, arpas, storages, MiscAction, ArpaAction } from './miscactions.js';
+import { researches, Research, researched } from './researches.js';
+import { buildings, Building, PoweredBuilding } from './buildings.js';
+import { jobs, craftJobs } from './jobs.js';
 
 let farmReset = ['tech-club', 'tech-bone_tools'];
 let jobReset = ['city-lumber_yard',
@@ -33,7 +43,7 @@ let resourceReset = ['city-garrison',
                      'interstellar-g_factory',
                      'interstellar-nexus',
                      'portal-carport',];
-function resetUICheck(action) {
+export function resetUICheck(action) {
     if (farmReset.includes(action.id)) {loadFarm();}
     if (jobReset.includes(action.id)) {
         if (settings.autoEmploy) {createEmploySettings();}
@@ -216,7 +226,7 @@ function createInputControl(currentValue, id, name, args) {
     return div;
 }
 
-function updateUI(){
+export function updateUI(){
     if ($('.as-autolog').length == 0) {
         createAutoLog();
     }
@@ -243,7 +253,7 @@ function updateUI(){
     }
 }
 
-function resetUI() {
+export function resetUI() {
     console.log("Resetting UI");
     removeStorageSettings();
     removeMarketSettings();
@@ -345,8 +355,6 @@ function removeStorageSettings() {
 
 function createMarketSetting(resource){
     let marketDiv = $(`<div style="display:flex;" class="as-market-settings as-market-${resource.id}"></div>`);
-
-
 
     let manualBuy = $('<div style="display:flex;"></div>');
     marketDiv.append(manualBuy);

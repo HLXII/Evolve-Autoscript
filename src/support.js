@@ -1,6 +1,10 @@
-// Stores details about power and support
+import { resources } from './resources.js';
+import { buildings, PoweredBuilding } from './buildings.js';
+import { disableMult, getMultiplier, allocate } from './utility.js';
+import { settings, updateSettings } from './settings.js';
+import { researched } from './researches.js';
 
-function checkPowerRequirements(c_action){
+export function checkPowerRequirements(c_action){
     var isMet = true;
     if (c_action['power_reqs']){
         Object.keys(c_action.power_reqs).forEach(function (req){
@@ -15,7 +19,7 @@ function checkPowerRequirements(c_action){
 
     return isMet;
 }
-let poweredBuildingList = {
+export const poweredBuildingList = {
     'city-apartment': ['electricity'],
     'city-mill': [],
     'city-windmill': [],
@@ -89,7 +93,7 @@ let poweredBuildingList = {
     'portal-sensor_drone': ['electricity'],
     'portal-attractor': ['electricity'],
 }
-function getBaseCP(baseCPList, effect) {
+export function getBaseCP(baseCPList, effect) {
     let consume = [];
     let produce = [];
     //console.log(`Getting base consume/produce:${baseCPList} ${effect}`);
@@ -368,106 +372,13 @@ function getBaseCP(baseCPList, effect) {
     }
     return [consume,produce];
 }
-class PoweredBuilding extends Building {
-    constructor(id, loc) {
-        super(id, loc);
-        if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = 0;}
-        /*
-        try {
-        [this.consume,this.produce] = getPowerData(id, this.def);
-        //console.log(this.consume, this.produce);
-        } catch(e) {
-            console.log("Error loading power for ",this.id);
-        }
-        */
-    }
 
-    get powerPriority() {return settings.actions[this.id].powerPriority;}
-    set powerPriority(powerPriority) {settings.actions[this.id].powerPriority = powerPriority;}
-
-    get powerUnlocked() {
-        return checkPowerRequirements(this.def);
-    }
-
-    get incBtn() {
-        return document.querySelector('#'+this.id+' > .on');
-    }
-    get decBtn() {
-        return document.querySelector('#'+this.id+' > .off');
-    }
-
-    get numOn() {
-        if (this.data && this.data.on) {
-            return this.data.on;
-        }
-        return 0;
-    }
-
-    async getCP() {
-        let consume = [];
-        let produce = [];
-        let effectFunc = this.effect;
-        let effect = await effectFunc(this.btn);
-        [consume,produce] = getBaseCP(poweredBuildingList[this.id],effect);
-
-        // Special since we can't read this info easily from the effect
-        switch(this.id) {
-            case 'city-mill': {
-                consume.push({res:'Food',cost:10});
-                produce.push({res:'electricity',cost:1});
-                break;
-            }
-            case 'city-tourist_center': {
-                // TODO calculate money gain
-                break;
-            }
-            case 'city-windmill': {
-                produce.push({res:'electricity',cost:1});
-                break;
-            }
-        }
-
-        return [consume,produce];
-    }
-
-    incPower(num) {
-        num = (num === undefined) ? 1 : num;
-        if (this.incBtn === null) {return false;}
-        disableMult();
-        for (let i = 0;i < num;i++) {
-            this.incBtn.click();
-        }
-        return true;
-    }
-    decPower(num) {
-        num = (num === undefined) ? 1 : num;
-        if (this.decBtn === null) {return false;}
-        for (let i = 0;i < num;i++) {
-            this.decBtn.click();
-        }
-        return true;
-    }
-
-    decPowerPriority(mult) {
-        if (this.powerPriority == 0) {return;}
-        this.powerPriority -= mult;
-        if (this.powerPriority < 0) {this.powerPriority = 0;}
-        updateSettings();
-        console.log("Decrementing Power Priority", this.id, this.powerPriority);
-    }
-    incPowerPriority(mult) {
-        this.powerPriority += mult;
-        updateSettings();
-        console.log("Incrementing Priority", this.id, this.powerPriority);
-    }
-}
-
-function loadSupport() {
+export function loadSupport() {
     if (!settings.hasOwnProperty('supportSettings')) {settings.supportSettings = {};}
     if (!settings.supportSettings.hasOwnProperty('Interval')) {settings.supportSettings.Interval = 23;}
 }
 
-async function autoSupport(priorityData) {
+export async function autoSupport(priorityData) {
     // Don't start autoSupport if haven't unlocked power
     if (!researched('tech-electricity')) {return;}
     let powered = [];

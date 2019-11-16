@@ -1,6 +1,6 @@
-// Stores functions for actions
+import { settings, updateSettings } from './settings.js'
 
-class Action {
+export class Action {
     constructor(id, loc) {
         this.id = id;
         this.loc = loc;

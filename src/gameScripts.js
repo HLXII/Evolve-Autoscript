@@ -33,7 +33,7 @@ export const f_rate = {
 
 // From space.js
 // Determines the mining droid output bonus
-export default function zigguratBonus(){
+export function zigguratBonus(){
     let bonus = 1;
     if (window.evolve.global.space['ziggurat'] && window.evolve.global.space['ziggurat'].count > 0){
         let study = window.evolve.global.tech['ancient_study'] ? 0.006 : 0.004;

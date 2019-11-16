@@ -1,5 +1,5 @@
-// Stores details on jobs
-
+import { settings, updateSettings } from './settings.js';
+import { disableMult, allocate } from './utility.js';
 
 class Job {
     constructor(id, priority) {
@@ -70,7 +70,6 @@ class Job {
         }
         return true;
     }
-
 }
 class Unemployed extends Job {
     constructor(id, priority) {
@@ -106,7 +105,6 @@ class Unemployed extends Job {
     get unlocked() {
         return true;
     }
-
 }
 class Craftsman extends Job {
     constructor(id, priority) {
@@ -119,10 +117,10 @@ class Craftsman extends Job {
     get fireBtn() {
         return document.querySelector('#foundry .job:nth-child(2) > .controls > .sub')
     }
-
 }
-var jobs = {};
-function loadJobs() {
+
+export var jobs = {};
+export function loadJobs() {
     if (!settings.hasOwnProperty('jobs')) {settings.jobs = {};}
     jobs.free = new Unemployed('free', 0);
     for (var x in window.evolve.global.civic) {
@@ -163,8 +161,9 @@ class CraftJob extends Job {
         return -1;
     }
 }
-var craftJobs = {};
-function loadCraftJobs() {
+
+export var craftJobs = {};
+export function loadCraftJobs() {
     if (!settings.hasOwnProperty('jobs')) {settings.jobs = {};}
     Object.keys(window.evolve.global.resource).forEach(function(res) {
         // Craftable Resources
@@ -174,7 +173,7 @@ function loadCraftJobs() {
     });
 }
 
-function autoEmploy(priorityData) {
+export function autoEmploy(priorityData) {
     let sortedJobs = [];
     var x;
     let population = 0;

@@ -1,12 +1,22 @@
+import { sleep, inEvolution } from './utility.js';
+import { autoEvolution } from './evolution.js';
+import { autoEmploy } from './jobs.js';
+import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './modalbuildings.js';
+import { autoPriority } from './priority.js';
+import { autoCraft, autoTrade, autoMarket, autoStorage, autoEjector } from './resources.js';
+import { settings, loadSettings, updateSettings, autoRefresh, autoTax, autoPrestige } from './settings.js';
+import { autoFarm } from './farm.js';
+import { autoSupport } from './support.js';
+import { updateUI } from './ui.js';
+import { autoBattle } from './war.js';
 
-import sleep from './utility.js';
-import { f_rate, zigguratBonus } from './gameScripts.js';
-import { loadEvolution } from './evolution.js';
+export const url = 'https://github.com/HLXII/Evolve-Autoscript';
+export const version = '1.2.12';
 
 (async function() {
     console.log("Waiting for game to load...");
     await sleep(2000);
-    main();
+    await main();
 })();
 
 async function main() {
@@ -14,31 +24,20 @@ async function main() {
     window.evolve = unsafeWindow.evolve;
     console.log(window.evolve);
     'use strict';
-    var settings = {};
-    var jsonSettings = localStorage.getItem('settings');
-    if(jsonSettings != null){settings = JSON.parse(jsonSettings);}
-
-    var url = 'https://github.com/HLXII/Evolve-Autoscript';
-    var version = '1.2.12';
-
-    // Used to ensure no modal window conflicts
-    var modal = false;
-
-    var resources = {};
-    var buildings = {};
-    var researches = {};
 
     loadSettings();
+    console.log(settings);
 
     // Main script loop
     var count = 1;
     while(1) {
         await sleep(2000);
-        await fastAutomate();
+        await fastAutomate(count);
+        count += 1;
     }
 }
 
-async function fastAutomate() {
+async function fastAutomate(count) {
     console.clear();
     console.log(count);
     updateUI();
@@ -97,5 +96,4 @@ async function fastAutomate() {
             autoPrestige();
         }
     }
-    count += 1;
 }
