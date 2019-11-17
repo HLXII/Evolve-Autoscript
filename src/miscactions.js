@@ -174,6 +174,23 @@ export class StorageAction extends MiscAction {
         super(id);
         this.loc.push('storage');
         this.res = res;
+        if (!settings.actions[this.id].hasOwnProperty('size')) {settings.actions[this.id].size = 10;}
+    }
+
+    get size() {return settings.actions[this.id].size;}
+    set size(size) {settings.actions[this.id].size = size;}
+
+    decSize(mult) {
+        if (this.size == 1) {return;}
+        this.size -= mult;
+        if (this.size <= 0) {this.size = 1;}
+        updateSettings();
+        console.log("Decrementing Button Size", this.id, this.size);
+    }
+    incSize(mult) {
+        this.size += mult;
+        updateSettings();
+        console.log("Incrementing Button Size", this.id, this.size);
     }
 
     get countLabel() {
@@ -211,13 +228,13 @@ export class StorageAction extends MiscAction {
         if (this.res === null) {
             return null;
         }
-        return this.res[resid];
+        return this.res[resid] * this.size;
     }
 
     click() {
         let btn = this.btn;
         if (btn === null) {return false;}
-        for (let i = 0;i < 10;i++) {
+        for (let i = 0;i < this.size;i++) {
             btn.click();
         }
         return true;
@@ -229,11 +246,11 @@ export function loadStorages() {
     if (!settings.hasOwnProperty('actions')) {settings.actions = {};}
     storages.Crate = new StorageAction('Crate',
                                        (resources.Lumber.unlocked) ?
-                                       {Plywood:100}
+                                       {Plywood:10}
                                        :
-                                       {Stone:2000});
+                                       {Stone:200});
     storages.Container = new StorageAction('Container',
-                                           {Steel:1250});
+                                           {Steel:125});
 }
 
 export class GeneAction extends MiscAction {

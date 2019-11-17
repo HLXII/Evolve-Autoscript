@@ -5,7 +5,7 @@ import { evoChallengeActions } from './evolution.js';
 import { loadFarm } from './farm.js';
 import { resources, TradeableResource, CraftableResource } from './resources.js';
 import { Action } from './actions.js';
-import { miscActions, arpas, storages, MiscAction, ArpaAction } from './miscactions.js';
+import { miscActions, arpas, storages, MiscAction, ArpaAction, StorageAction } from './miscactions.js';
 import { researches, Research, researched } from './researches.js';
 import { buildings, Building, PoweredBuilding } from './buildings.js';
 import { jobs, craftJobs } from './jobs.js';
@@ -669,6 +669,7 @@ function createSettingTab() {
     }
 }
 function createAutoSettingToggle(id, name, description, hasContent, tab, enabledCallBack, disabledCallBack) {
+    tab.append($('<br></br>'));
     let settingDiv = $(`<div id=as-${id}-title></div>`)
     tab.append(settingDiv)
     let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
@@ -677,14 +678,13 @@ function createAutoSettingToggle(id, name, description, hasContent, tab, enabled
     titleDiv.append(toggle);
     let details = $(`<span>${description}</span>`);
     settingDiv.append(details);
-    tab.append($('<br></br>'));
     let content = null;
     if (hasContent) {
         let contentId = 'as-' + id + '-content';
         let style = 'margin-left:0.5em;overflow:hidden;max-height:0;transition:max-height 0.2s ease-out;'
         content = $(`<div style="${style}" id="${contentId}"></div>`);
         tab.append(content);
-        tab.append($('<br></br>'));
+        content.append($('<br></br>'));
         let btn = $(`<div class="sub" style="position:absolute;left:0px;width:1.5rem;height:25px;">+</button>`);
         settingDiv.prepend(btn);
         btn.on('click', function(e) {
@@ -1683,9 +1683,30 @@ function drawArpaItem(arpa, arpaDiv) {
 
     let toolTip = 'Determines what increment size to build. Used in case 25x is beyond storage cap.';
     let sizeControls = createNumControl(arpa.size, arpa.id+'-size', sizeSub, sizeAdd, {toolTip:toolTip});
-    let sizeDiv = $('<div style="width:10%;" title="'+arpa.id+' Increment"></div>');
+    let sizeDiv = $('<div style="width:10%;"></div>');
     sizeDiv.append(sizeControls);
     arpaDiv.append(sizeDiv);
+}
+function drawStorageItem(storage, storageDiv) {
+
+    // Adding filler
+    storageDiv.append($('<div style="width:40%;"></div>'));
+
+    // Arpa Increments
+    let sizeSub = function(mult) {
+        storage.decSize(mult);
+        return storage.size;
+    }
+    let sizeAdd = function(mult) {
+        storage.incSize(mult);
+        return storage.size;
+    }
+
+    let toolTip = 'Determines how many to build each time.';
+    let sizeControls = createNumControl(storage.size, storage.id+'-size', sizeSub, sizeAdd, {toolTip:toolTip});
+    let sizeDiv = $('<div style="width:10%;"></div>');
+    sizeDiv.append(sizeControls);
+    storageDiv.append(sizeDiv);
 }
 function populatePriorityList() {
     let priorityList = $('#priorityList')[0];
@@ -1748,6 +1769,10 @@ function populatePriorityList() {
 
         if (action instanceof ArpaAction) {
             drawArpaItem(action,actionDiv);
+        }
+
+        if (action instanceof StorageAction) {
+            drawStorageItem(action,actionDiv);
         }
     }
 }
