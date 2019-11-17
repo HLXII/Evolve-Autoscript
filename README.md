@@ -15,14 +15,11 @@ All priority settings are very opaque. As in, it is not very clear how changes i
 # Known Issues (AKA I won't fix)
 If the game is run for long enough without refreshing, then clicking buttons on the modal windows (smelter, factory, etc) will lag the game. I don't know why this is, and I don't know how to fix it. So... I added an Auto Refresh setting to reload the page every 200 seconds. Use if you want (but most people don't).
 
-Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because the script pulls game info from the global. However, during the evolution stage, some of the info isn't loaded. This causes the tabs to load incorrectly/crash. I don't feel like figuring out a clean solution, so I'm choosing to ignore it. You only really need the General and Evolution tabs during the evolution stage anyways.
-
 # Stuff to do
 
 ## Bugfix
 * Theoretical bug: Calculating smelter rate changes may be inaccurate if there is something that also consumes Iron.
 * Major Bug: Auto Market doesn't work. Will require a lot of searching
-
 
 ## Small
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger. (Currently limiting to 50 clicks)

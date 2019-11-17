@@ -691,9 +691,11 @@ function createAutoSettingToggle(id, name, description, hasContent, tab, enabled
             if (content[0].style.maxHeight != '0px'){
               content[0].style.maxHeight = '0px';
               btn[0].innerText = '+';
+              content[0].style.overflow = 'hidden';
             } else {
               content[0].style.maxHeight = content[0].scrollHeight + 'px';
               btn[0].innerText = '-';
+              content[0].style.overflow = '';
             }
         });
     }
