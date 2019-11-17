@@ -25,6 +25,12 @@ async function main() {
     console.log(window.evolve);
     'use strict';
 
+    if (!window.evolve) {
+        let alertStr = 'You currently have Evolve AutoScript installed, however the Enable Script Support toggle is not active. Please enable that in the Settings tab and refresh the page for the script to work correctly.';
+        alert(alertStr);
+        return;
+    }
+
     loadSettings();
     console.log(settings);
 

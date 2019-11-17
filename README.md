@@ -26,10 +26,10 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market)
 * Add setting to display/hide inline UI
 * Add additional settings to Auto Ejector (max rate, min rate, ratio?)
-* Add special settings column to Priority List ( crate/container buy amount, mercs max money)
 * Optimize UI clicks with multiplier buttons
 * Update Auto Tax to not suck (Need to figure out a better solution for max money)
 * Add Balorg slave catching setting to Auto Battle (If can get more slaves, override max campaign to ambush)
+* Add Slave Market Action
 * Maybe create a backend refresh script for Auto Support so the poppers don't need to be read every time (maybe?)
 * Add Priority Ignore setting for Auto Priority (Turns it into old Auto Build)
 * Add initial loading UI/messages (catch UI for disabled script support, message queue for reloads? idk)
