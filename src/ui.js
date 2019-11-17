@@ -1,4 +1,4 @@
-import { url, version } from './main.js';
+import { url, version, workingVersion } from './main.js';
 import { keyMult, inEvolution, getTab } from './utility.js';
 import { settings, updateSettings, printSettings, importSettings, exportSettings } from './settings.js';
 import { evoChallengeActions } from './evolution.js';
@@ -1913,5 +1913,7 @@ function createAutoLog() {
 
 function createScriptWatermark() {
     let watermark = $(`<div id="as-watermark" style="text-align:center"><span>Evolve AutoScript by HLXII - Version <a href="${url}">${version}</a></span></div>`);
+    $('#resources').append(watermark);
+    watermark = $(`<div id="as-watermark-2" style="text-align:center"><span>Working for Game Version ${workingVersion}</span></div>`);
     $('#resources').append(watermark);
 }

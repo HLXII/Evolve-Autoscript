@@ -32,8 +32,6 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Add Slave Market Action
 * Maybe create a backend refresh script for Auto Support so the poppers don't need to be read every time (maybe?)
 * Add Priority Ignore setting for Auto Priority (Turns it into old Auto Build)
-* Add initial loading UI/messages (catch UI for disabled script support, message queue for reloads? idk)
-* Add working for current game version label somewhere
 * Re-Add manual buttons for Auto Buildings
 
 ## Large
