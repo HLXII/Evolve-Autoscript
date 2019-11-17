@@ -57,7 +57,8 @@ export function resetUICheck(action) {
 }
 
 let toolTipClass = 'is-primary is-bottom is-small b-tooltip is-animated is-multiline';
-function createNumControl(currentValue, name, subFunc, addFunc) {
+function createNumControl(currentValue, name, subFunc, addFunc, args) {
+    args = args || {};
     let subBtn = $(`<span role="button" aria-label="Decrease ${name}" class="sub">«</span>`);
     let label = $(`<span id="${name}_control" class="count current" style="width:2rem;">${currentValue}</span>`);
     subBtn.on('click', function(e) {
@@ -72,6 +73,10 @@ function createNumControl(currentValue, name, subFunc, addFunc) {
         updateSettings();
     });
     let control = $(`<div class="controls as-${name}-settings" style="display:flex"></div>`).append(subBtn).append(label).append(addBtn);
+    if (args.toolTip !== undefined) {
+        control.addClass(toolTipClass);
+        control.attr('data-label', args.toolTip);
+    }
     return control;
 }
 function createToggleControl(toggleId, toggleName, args) {
@@ -1660,6 +1665,27 @@ function drawBuildingItem(building, buildingDiv) {
         buildingDiv.append(powerDiv);
     }
 }
+function drawArpaItem(arpa, arpaDiv) {
+
+    // Adding filler
+    arpaDiv.append($('<div style="width:10%;"></div>'));
+
+    // Arpa Increments
+    let sizeSub = function(mult) {
+        arpa.decSize();
+        return arpa.size;
+    }
+    let sizeAdd = function(mult) {
+        arpa.incSize();
+        return arpa.size;
+    }
+
+    let toolTip = 'Determines what increment size to build. Used in case 25x is beyond storage cap.';
+    let sizeControls = createNumControl(arpa.size, arpa.id+'-size', sizeSub, sizeAdd, {toolTip:toolTip});
+    let sizeDiv = $('<div style="width:10%;" title="'+arpa.id+' Increment"></div>');
+    sizeDiv.append(sizeControls);
+    arpaDiv.append(sizeDiv);
+}
 function populatePriorityList() {
     let priorityList = $('#priorityList')[0];
     var x;
@@ -1717,6 +1743,10 @@ function populatePriorityList() {
 
         if (action instanceof Building) {
             drawBuildingItem(action,actionDiv);
+        }
+
+        if (action instanceof ArpaAction) {
+            drawArpaItem(action,actionDiv);
         }
     }
 }
@@ -1809,6 +1839,7 @@ function createPriorityList(settingsTab) {
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will stop building this building after reaching this limit">Max</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the priority for powering this building">Power</span></div>
+                                <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Special settings for this action. Hover over for details.">Special</span></div>
                                 </div>`);
     priorityList.append(priorityListLabel);
     settingsTab.append(priorityList);

@@ -3,7 +3,7 @@ import { Action } from './actions.js';
 import { Building } from './buildings.js';
 import { researched } from './researches.js';
 import { getAvailableSoldiers, getMaxSoldiers } from './war.js';
-import { settings } from './settings.js';
+import { settings, updateSettings } from './settings.js';
 
 export class MiscAction extends Action {
     constructor(id) {
@@ -18,13 +18,17 @@ export class ArpaAction extends Building {
         this.loc.push('arpa');
         this.res = res;
         this.color = 'has-text-special';
+        if (!settings.actions[this.id].hasOwnProperty('size')) {settings.actions[this.id].size = 25;}
     }
+
+    get size() {return settings.actions[this.id].size;}
+    set size(size) {settings.actions[this.id].size = size;}
 
     get label() {
         return document.querySelector('#arpa'+this.id+' > .head > .desc');
     }
     get btn() {
-        return document.querySelector('#arpa'+this.id+' > div.buy > button.button.x25');
+        return document.querySelector(`#arpa${this.id} > div.buy > button.button.x${this.size}`);
     }
 
     get name() {
@@ -49,11 +53,40 @@ export class ArpaAction extends Building {
         return 0;
     }
 
+    decSize() {
+        if (this.size == 1) {return;}
+        switch(this.size) {
+            case 25: {this.size = 10;break;}
+            case 10: {this.size = 1;break;}
+        }
+        updateSettings();
+        console.log("Decrementing Button Size", this.id, this.size);
+    }
+    incSize() {
+        if (this.size == 25) {return;}
+        switch(this.size) {
+            case 1: {this.size = 10;break;}
+            case 10: {this.size = 25;break;}
+        }
+        updateSettings();
+        console.log("Incrementing Button Size", this.id, this.size);
+    }
+
     getResDep(resid) {
         if (this.res === null) {
             return null;
         }
-        return this.res[resid] * (1.05 ** this.numTotal) / 4;
+        let multiplier = 1;
+        switch(this.id) {
+            case 'lhc': {multiplier = 1.05;break;}
+            case 'stock_exchange': {multiplier = 1.06;break;}
+            case 'launch_facility': {multiplier = 1.1;break;}
+            case 'monument': {multiplier = 1.1;break;}
+        }
+        if (window.evolve.global.race['creative']){
+            multiplier -= 0.01;
+        }
+        return this.res[resid] * (multiplier ** this.numTotal) / (100 / this.size);
     }
 
     click() {

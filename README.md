@@ -28,7 +28,6 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger. (Currently limiting to 50 clicks)
 * Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market)
 * Add setting to display/hide inline UI
-* Add collapsibility to auto settings tabs
 * Add additional settings to Auto Ejector (max rate, min rate, ratio?)
 * Add special settings column to Priority List (percent buy for ARPA, crate/container buy amount, mercs max money)
 * Optimize UI clicks with multiplier buttons
