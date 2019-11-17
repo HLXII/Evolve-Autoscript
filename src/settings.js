@@ -9,6 +9,7 @@ import { loadJobs, loadCraftJobs } from './jobs.js';
 import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './modalbuildings.js';
 import { loadSupport } from './support.js';
 import { updateUI, resetUI } from './ui.js';
+import { openModal, closeModal } from './modal.js';
 
 export var settings = {};
 export function loadSettings() {
@@ -224,7 +225,7 @@ export function autoRefresh() {
 }
 
 let prestigeCheck = false;
-export function autoPrestige() {
+export async function autoPrestige() {
     switch(settings.prestige) {
         case 'mad': {
             // Checking if MAD unlocked
@@ -251,27 +252,18 @@ export function autoPrestige() {
             if (seedCount !== 100) {return;}
             // Checking if already clicked
             if (prestigeCheck) {return;}
-            // Checking if modal already open
-            if ($('.modal').length != 0) {
-                return;
-            }
-            // Ensuring no modal conflicts
-            if (modal) {return;}
-            modal = true;
-            // Opening modal
-            $('#space-star_dock > .special').click();
-            // Delaying for modal animation
-            setTimeout(function() {
-                // Getting buttons
-                let prep_ship = document.querySelector('#spcdock-prep_ship > a');
-                let launch_ship = document.querySelector('#spcdock-launch_ship > a');
-                if (prep_ship) {prep_ship.click();}
-                if (launch_ship) {launch_ship.click();}
-                // Closing modal
-                let closeBtn = $('.modal-close')[0];
-                if (closeBtn !== undefined) {closeBtn.click();}
-                modal = false;
-            }, 100);
+
+            let opened = await openModal($('#space-star_dock > .special'));
+            if (!opened) {return;}
+
+            // Getting buttons
+            let prep_ship = document.querySelector('#spcdock-prep_ship > a');
+            let launch_ship = document.querySelector('#spcdock-launch_ship > a');
+            if (prep_ship) {prep_ship.click();}
+            if (launch_ship) {launch_ship.click();}
+            // Closing modal
+            await closeModal();
+
             prestigeCheck = true;
             break;
         }

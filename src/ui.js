@@ -688,7 +688,6 @@ function createAutoSettingToggle(id, name, description, hasContent, tab, enabled
         let btn = $(`<div class="sub" style="position:absolute;left:0px;width:1.5rem;height:25px;">+</button>`);
         settingDiv.prepend(btn);
         btn.on('click', function(e) {
-            console.log(content[0], content[0].style.maxHeight);
             if (content[0].style.maxHeight != '0px'){
               content[0].style.maxHeight = '0px';
               btn[0].innerText = '+';

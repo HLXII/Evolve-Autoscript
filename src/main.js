@@ -5,7 +5,7 @@ import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './modalbuildi
 import { autoPriority } from './priority.js';
 import { autoCraft, autoTrade, autoMarket, autoStorage, autoEjector } from './resources.js';
 import { settings, loadSettings, updateSettings, autoRefresh, autoTax, autoPrestige } from './settings.js';
-import { autoFarm } from './farm.js';
+import { autoFarm, loadFarm } from './farm.js';
 import { autoSupport } from './support.js';
 import { updateUI } from './ui.js';
 import { autoBattle } from './war.js';
@@ -93,7 +93,7 @@ async function fastAutomate(count) {
             autoStorage();
         }
         if (settings.autoPrestige) {
-            autoPrestige();
+            await autoPrestige();
         }
     }
 }

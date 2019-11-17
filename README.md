@@ -29,7 +29,7 @@ Some Auto Setting tabs aren't loaded during the Evolution Stage. This is because
 * Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market)
 * Add setting to display/hide inline UI
 * Add additional settings to Auto Ejector (max rate, min rate, ratio?)
-* Add special settings column to Priority List (percent buy for ARPA, crate/container buy amount, mercs max money)
+* Add special settings column to Priority List ( crate/container buy amount, mercs max money)
 * Optimize UI clicks with multiplier buttons
 * Update Auto Tax to not suck (Need to figure out a better solution for max money)
 * Add Balorg slave catching setting to Auto Battle (If can get more slaves, override max campaign to ambush)
