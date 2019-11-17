@@ -664,19 +664,34 @@ function createSettingTab() {
     }
 }
 function createAutoSettingToggle(id, name, description, hasContent, tab, enabledCallBack, disabledCallBack) {
+    let settingDiv = $(`<div id=as-${id}-title></div>`)
+    tab.append(settingDiv)
     let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
-    tab.append(titleDiv);
+    settingDiv.append(titleDiv);
     let toggle = createToggleControl(id, name, {enabledCallBack:enabledCallBack, disabledCallBack:disabledCallBack});
     titleDiv.append(toggle);
-    let details = $(`<div><span>${description}</span></div>`);
-    tab.append(details);
+    let details = $(`<span>${description}</span>`);
+    settingDiv.append(details);
     tab.append($('<br></br>'));
     let content = null;
     if (hasContent) {
         let contentId = 'as-' + id + '-content';
-        content = $(`<div style="margin-left:2em;" id="${contentId}"></div>`);
+        let style = 'margin-left:0.5em;overflow:hidden;max-height:0;transition:max-height 0.2s ease-out;'
+        content = $(`<div style="${style}" id="${contentId}"></div>`);
         tab.append(content);
         tab.append($('<br></br>'));
+        let btn = $(`<div class="sub" style="position:absolute;left:0px;width:1.5rem;height:25px;">+</button>`);
+        settingDiv.prepend(btn);
+        btn.on('click', function(e) {
+            console.log(content[0], content[0].style.maxHeight);
+            if (content[0].style.maxHeight != '0px'){
+              content[0].style.maxHeight = '0px';
+              btn[0].innerText = '+';
+            } else {
+              content[0].style.maxHeight = content[0].scrollHeight + 'px';
+              btn[0].innerText = '-';
+            }
+        });
     }
     return [titleDiv, content];
 }
