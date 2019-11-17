@@ -185,12 +185,12 @@ export class StorageAction extends MiscAction {
         this.size -= mult;
         if (this.size <= 0) {this.size = 1;}
         updateSettings();
-        console.log("Decrementing Button Size", this.id, this.size);
+        console.log("Decrementing Craft Size", this.id, this.size);
     }
     incSize(mult) {
         this.size += mult;
         updateSettings();
-        console.log("Incrementing Button Size", this.id, this.size);
+        console.log("Incrementing Craft Size", this.id, this.size);
     }
 
     get countLabel() {
@@ -292,6 +292,23 @@ export class MercenaryAction extends MiscAction {
         super(id);
         this.loc.push('mercenary');
         this.res = {};
+        if (!settings.actions[this.id].hasOwnProperty('maxPrice')) {settings.actions[this.id].maxPrice = 25001;}
+    }
+
+    get maxPrice() {return settings.actions[this.id].maxPrice;}
+    set maxPrice(maxPrice) {settings.actions[this.id].maxPrice = maxPrice;}
+
+    decMaxPrice(mult) {
+        if (this.maxPrice == -1) {return;}
+        this.maxPrice -= mult;
+        if (this.maxPrice < -1) {this.maxPrice = -1;}
+        updateSettings();
+        console.log("Decrementing Max Price", this.id, this.maxPrice);
+    }
+    incMaxPrice(mult) {
+        this.maxPrice += mult;
+        updateSettings();
+        console.log("Incrementing Max Price", this.id, this.maxPrice);
     }
 
     get btn() {
@@ -300,7 +317,10 @@ export class MercenaryAction extends MiscAction {
     }
 
     get unlocked() {
-        return window.evolve.global.civic.garrison.mercs;
+        let unlocked = window.evolve.global.civic.garrison.mercs;
+        if (this.maxPrice == -1) {return unlocked;}
+
+        return unlocked && this.getResDep('Money') < this.maxPrice;
     }
 
     get name() {

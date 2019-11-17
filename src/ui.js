@@ -5,7 +5,7 @@ import { evoChallengeActions } from './evolution.js';
 import { loadFarm } from './farm.js';
 import { resources, TradeableResource, CraftableResource } from './resources.js';
 import { Action } from './actions.js';
-import { miscActions, arpas, storages, MiscAction, ArpaAction, StorageAction } from './miscactions.js';
+import { miscActions, arpas, storages, MiscAction, ArpaAction, StorageAction, MercenaryAction } from './miscactions.js';
 import { researches, Research, researched } from './researches.js';
 import { buildings, Building, PoweredBuilding } from './buildings.js';
 import { jobs, craftJobs } from './jobs.js';
@@ -1708,6 +1708,27 @@ function drawStorageItem(storage, storageDiv) {
     sizeDiv.append(sizeControls);
     storageDiv.append(sizeDiv);
 }
+function drawMercenaryItem(action, actionDiv) {
+
+    // Adding filler
+    actionDiv.append($('<div style="width:40%;"></div>'));
+
+    // Increments
+    let priceSub = function(mult) {
+        action.decMaxPrice(mult);
+        return action.maxPrice;
+    }
+    let priceAdd = function(mult) {
+        action.incMaxPrice(mult);
+        return action.maxPrice;
+    }
+
+    let toolTip = 'Determines the max price to buy mercenaries. Set to -1 to ignore.';
+    let priceControls = createNumControl(action.maxPrice, action.id+'-maxPrice', priceSub, priceAdd, {toolTip:toolTip});
+    let priceDiv = $('<div style="width:10%;"></div>');
+    priceDiv.append(priceControls);
+    actionDiv.append(priceDiv);
+}
 function populatePriorityList() {
     let priorityList = $('#priorityList')[0];
     var x;
@@ -1773,6 +1794,10 @@ function populatePriorityList() {
 
         if (action instanceof StorageAction) {
             drawStorageItem(action,actionDiv);
+        }
+
+        if (action instanceof MercenaryAction) {
+            drawMercenaryItem(action,actionDiv);
         }
     }
 }
