@@ -22,7 +22,7 @@ export function prioCompare(a, b) {
     return b.priority - a.priority;
 }
 
-export function allocate(totalNum,priorities,ratios,args) {
+export function oldAllocate(totalNum,priorities,ratios,args) {
     args = args || {};
     let allocationList = [];
     let curNum = [];
@@ -68,6 +68,75 @@ export function allocate(totalNum,priorities,ratios,args) {
         }
     }
     return {seq:allocationList,alloc:curNum,total:totalAllocated};
+}
+
+export function allocate(totalNum,priorities,args) {
+    args = args || {};
+    let allocSeq = [];
+    let allocNum = [];
+    let totalAllocated = 0;
+    // Setting up curNum array
+    for (let i = 0;i < priorities.length;i++) {allocNum.push(0);}
+    for (let i = 0;i < totalNum;i++) {
+        let candidates = [];
+        let totalPriority = 0;
+        let total = totalAllocated;
+        for (let j = 0;j < priorities.length;j++) {
+            // Assuming will ignore, remove allocated from total pool
+            total -= allocNum[j];
+
+            // Ignoring zero priority zero ratio choices
+            if (priorities[j] == 0) {continue;}
+
+            // Checking maxes
+            if (args.hasOwnProperty('max') && args.max[j] != -1 && allocNum[j] >= args.max[j]) {continue;}
+
+            // Checking requirement function
+            if (args.hasOwnProperty('requireFunc') && !args.requireFunc(j, allocNum[j])) {continue;}
+
+            // Checking mins
+            if (args.hasOwnProperty('min') && allocNum[j] < args.min[j]) {
+                candidates = [j];
+                break;
+            }
+
+            candidates.push(j);
+            totalPriority += priorities[j];
+
+            // Did not ignore, re-add allocated to pool
+            total += allocNum[j];
+        }
+
+        // Calculating new ratios
+        total += 1;
+        let error = null;
+        let choice = null;
+        let ratios = [];
+        for (let k = 0;k < candidates.length;k++) {
+            let candidate = candidates[k];
+            let ratio = priorities[candidate] / totalPriority;
+            // Finding error differential
+            let tempError = (((allocNum[candidate]+1) / total) - ratio) ** 2;
+            if (total != 1) {tempError -= ((allocNum[candidate] / (total-1)) - ratio) ** 2;}
+
+            if (error === null || tempError < error) {
+                error = tempError;
+                choice = candidate;
+            }
+        }
+
+        if (choice === null) {
+            break;
+        }
+        allocSeq[i] = choice;
+        allocNum[choice] += 1;
+        totalAllocated += 1;
+        console.log(candidates, choice, allocNum);
+        if (args.hasOwnProperty('allocFunc')) {
+            args.allocFunc(choice, allocNum[choice]);
+        }
+    }
+    return {seq:allocSeq,alloc:allocNum,total:totalAllocated};
 }
 
 export function messageQueue(msg,color){

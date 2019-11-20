@@ -195,7 +195,8 @@ export function autoEmploy(priorityData) {
     }
 
     // Allocating jobs
-    let allocation = allocate(population,priorities,ratios,{max:maxes});
+    let allocation = allocate(population,priorities,{max:maxes});
+    console.log("JOBS MAX:", maxes);
     console.log("JOBS:", sortedJobs, priorities, ratios, allocation.alloc);
     console.log(allocation.seq);
 
@@ -235,7 +236,7 @@ export function autoEmploy(priorityData) {
             ratios.push(cjobs[i].priority / totalPriority);
         }
         // Optimizing craftsman placement
-        let allocation = allocate(totalCraftsman,priorities,ratios);
+        let allocation = allocate(totalCraftsman,priorities);
 
         console.log("CRAFTJOBS:", cjobs, priorities, ratios, allocation.alloc);
 

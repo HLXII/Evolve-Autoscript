@@ -204,7 +204,7 @@ export async function autoSmelter(limits) {
             case 'Oil': {resources.Oil.temp_rate -= data.Oil.fuel;break;}
         }
     };
-    let fuelAllocation = allocate(totalSmelters,fuelPriorities,fuelRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+    let fuelAllocation = allocate(totalSmelters,fuelPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
     console.log("SMELTER FUEL:", fuelAllocation);
 
@@ -281,7 +281,7 @@ export async function autoSmelter(limits) {
         }
     }
 
-    let produceAllocation = allocate(fuelAllocation.total,prodPriorities,prodRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+    let produceAllocation = allocate(fuelAllocation.total,prodPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
     console.log("SMELTER PRODUCE:", produceAllocation);
 
@@ -605,7 +605,7 @@ export async function autoFactory(limits) {
     };
 
     // Creating allocation list
-    let allocation = allocate(totalFactories,priorities,ratios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+    let allocation = allocate(totalFactories,priorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
     console.log('FACTORY PRIO:', priorities, 'FACTORY RATIO:', ratios);
     console.log('FACTORY ALLOC:', allocation);
@@ -778,7 +778,7 @@ export async function autoDroid(limits) {
     };
 
     // Creating allocation list
-    let allocation = allocate(totalDroids,priorities,ratios,{allocFunc:allocFunc});
+    let allocation = allocate(totalDroids,priorities,{allocFunc:allocFunc});
 
     console.log('DROID PRIO:', priorities, 'DROID RATIO:', ratios);
     console.log('DROID ALLOC:', allocation);
@@ -929,7 +929,7 @@ export async function autoGraphene(limits) {
             case 'Oil': {resources.Oil.temp_rate -= data.Oil.fuel;break;}
         }
     };
-    let fuelAllocation = allocate(totalFactories,fuelPriorities,fuelRatios,{requireFunc:resourceCheck, allocFunc:allocFunc});
+    let fuelAllocation = allocate(totalFactories,fuelPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
     console.log("GRAPHENE PRIO:", fuelPriorities);
     console.log("GRAPHENE FUEL:", fuelAllocation);

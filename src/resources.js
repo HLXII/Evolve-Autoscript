@@ -572,7 +572,7 @@ export function autoTrade(priorityData) {
             //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
             //console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
         }
-        allocations = allocate(totalTradeRoutes,priorities,ratios);
+        allocations = allocate(totalTradeRoutes,priorities);
     }
     // Allocating trade routes
     focusSequence = allocations['seq'];

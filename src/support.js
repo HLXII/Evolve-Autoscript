@@ -491,7 +491,7 @@ export async function autoSupport(priorityData) {
         }
     }
 
-    let allocation = allocate(totalPowered,priorities,ratios,{max:maxes,requireFunc:canTurnOn,allocFunc:turnOn})
+    let allocation = allocate(totalPowered,priorities,{max:maxes,requireFunc:canTurnOn,allocFunc:turnOn})
 
     console.log("POWERED:", powered, "PRIO:", priorities, "RATIO:", ratios);
     console.log("SUPPORT ALLOC:", allocation);
