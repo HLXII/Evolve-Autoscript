@@ -1,4 +1,5 @@
 import { settings } from './settings.js';
+import { resources } from './resources.js';
 
 // async function for sleeping
 export function sleep(ms) {
@@ -131,7 +132,6 @@ export function allocate(totalNum,priorities,args) {
         allocSeq[i] = choice;
         allocNum[choice] += 1;
         totalAllocated += 1;
-        console.log(candidates, choice, allocNum);
         if (args.hasOwnProperty('allocFunc')) {
             args.allocFunc(choice, allocNum[choice]);
         }

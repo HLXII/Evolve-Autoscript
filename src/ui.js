@@ -394,7 +394,7 @@ function createMarketSetting(resource){
     marketDiv.append(manualSell);
     let sellToggleOnChange = function(state) {
         let buyToggle = $(`#${resource.id}-autoBuy_toggle`);
-        let otherState = sellToggle.children('input').attr('value') === 'true';
+        let otherState = buyToggle.children('input').attr('value') === 'true';
         if(state && otherState){
             buyToggle.click();
             console.log("Turning off buyToggle");

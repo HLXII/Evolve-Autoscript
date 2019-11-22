@@ -19,7 +19,6 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 
 ## Bugfix
 * Theoretical bug: Calculating smelter rate changes may be inaccurate if there is something that also consumes Iron.
-* Major Bug: Auto Market doesn't work. Will require a lot of searching
 
 ## Small
 * Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger. (Currently limiting to 50 clicks)
