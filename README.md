@@ -21,11 +21,10 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Theoretical bug: Calculating smelter rate changes may be inaccurate if there is something that also consumes Iron.
 
 ## Small
-* Implement Auto Craft to use multiplier buttons, as large storage values cause clicks to crash/not trigger. (Currently limiting to 50 clicks)
+* Add click limit settings (Currently limiting to 50 clicks)
 * Add granularity to Auto Print (Auto Settings / Auto Battle / Auto Fortress / Auto Craft / Auto Market)
 * Add setting to display/hide inline UI
 * Add additional settings to Auto Ejector (max rate, min rate, ratio?)
-* Optimize UI clicks with multiplier buttons
 * Update Auto Tax to not suck (Need to figure out a better solution for max money)
 * Add Balorg slave catching setting to Auto Battle (If can get more slaves, override max campaign to ambush)
 * Add Slave Market Action
