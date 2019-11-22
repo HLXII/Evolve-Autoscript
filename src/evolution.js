@@ -12,6 +12,7 @@ const evoRaceActions = [
 	"evo-ectothermic", "evo-endothermic",
 	"evo-humanoid", "evo-gigantism", "evo-animalism", "evo-dwarfism",
 	"evo-aquatic", "evo-demonic",
+    "evo-fey", "evo-sand", "evo-heat", "evo-polar",
 	"evo-entish", "evo-cacti",
 	"evo-sporgar", "evo-shroomi",
 	"evo-arraak", "evo-pterodacti", "evo-dracnid",
@@ -21,7 +22,8 @@ const evoRaceActions = [
 	"evo-kobold", "evo-goblin", "evo-gnome",
 	"evo-cath", "evo-wolven", "evo-centaur",
 	"evo-mantis", "evo-scorpid", "evo-antid",
-	"evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp",'evo-seraph','evo-unicorn'];
+	"evo-sharkin", "evo-octigoran", "evo-balorg", "evo-imp",'evo-seraph','evo-unicorn',
+    "evo-dryad", "evo-satyr", "evo-phoenix", "evo-salamander", "evo-yeti", "evo-wendigo", "evo-tuskin", "evo-kamel"];
 
 // IDs of all the challenge options
 export const evoChallengeActions = ['evo-plasmid', 'evo-mastery', 'evo-trade', 'evo-craft', 'evo-crispr', 'evo-junker', 'evo-joyless', 'evo-decay'];
@@ -65,6 +67,14 @@ const evoRaceTrees = {
     "imp":["evo-phagocytosis", "evo-mammals", "evo-demonic", "evo-imp"],
     "seraph":["evo-phagocytosis", "evo-mammals", "evo-angelic", "evo-seraph"],
     "unicorn":["evo-phagocytosis", "evo-mammals", "evo-angelic", "evo-unicorn"],
+    "dryad":["evo-phagocytosis", "evo-fey", "evo-dryad"],
+    "satyr":["evo-phagocytosis", "evo-fey", "evo-satyr"],
+    "phoenix":["evo-phagocytosis", "evo-heat", "evo-"],
+    "salamander":["evo-phagocytosis", "evo-heat", "evo-"],
+    "yeti":["evo-phagocytosis", "evo-polar", "evo-yeti"],
+    "wendigo":["evo-phagocytosis", "evo-polar", "evo-wendigo"],
+    "tuskin":["evo-phagocytosis", "evo-sand", "evo-tuskin"],
+    "kamel":["evo-phagocytosis", "evo-sand", "evo-kamel"],
 };
 
 // Will contain the minimum amount of each evolution building to move onto civilization
