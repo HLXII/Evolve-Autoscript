@@ -70,8 +70,8 @@ function subSoldiers(num) {
         btn.click();
     }
 }
-function getWinRate() {
-    let span = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span');
+function getWinRate(num) {
+    let span = document.querySelector(`#garrison > div:nth-child(4) > div:nth-child(${num+1}) > span`);
     if (span === null) {return 0;}
     span = span.attributes['data-label'].value;
     span = /([\d\.]+)% ([\w]+)/.exec(span);
@@ -80,8 +80,8 @@ function getWinRate() {
     winRate *= (advantage == 'advantage') ? 1 : -1;
     return winRate;
 }
-function runCampaign() {
-    let btn = document.querySelector('#garrison > div:nth-child(4) > div:nth-child(2) > span > button');
+function runCampaign(num) {
+    let btn = document.querySelector(`#garrison > div:nth-child(4) > div:nth-child(${num+1}) > span > button`);
     if (btn === null) {return;}
     btn.click();
 }
@@ -132,7 +132,7 @@ function battle() {
             // Decrement Stage
             case 1: {
                 // Checking winrate
-                let winrate = getWinRate();
+                let winrate = getWinRate(1);
                 //console.log("WIN:", winrate);
                 // Lower Win Rate
                 if (winrate <= settings.minWinRate) {
@@ -141,7 +141,7 @@ function battle() {
                         //console.log("Chosen Campaign", getCurrentCampaign(), "Win", winrate, settings.minWinRate);
                         addSoldiers();
                         if (getCurrentSoldiers() <= healthy) {
-                            runCampaign();
+                            runCampaign(1);
                         }
                         armyStatus = false;
                         chosenCampaign = false;
@@ -172,7 +172,7 @@ function battle() {
                     if (getCurrentSoldiers() == 0) {
                         addSoldiers();
                         if (getCurrentSoldiers() < healthy) {
-                            runCampaign();
+                            runCampaign(1);
                         }
                         armyStatus = false;
                         chosenCampaign = false;
