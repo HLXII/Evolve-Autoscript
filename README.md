@@ -31,6 +31,8 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Maybe create a backend refresh script for Auto Support so the poppers don't need to be read every time (maybe?)
 * Add Priority Ignore setting for Auto Priority (Turns it into old Auto Build)
 * Re-Add manual buttons for Auto Buildings
+* Dryad Dams and Wind Farms may break Auto Support
+* Salamander Forge may break Auto Smelter
 
 ## Large
 * Auto Fortress - Manage hell soldiers for both defense and patrols
