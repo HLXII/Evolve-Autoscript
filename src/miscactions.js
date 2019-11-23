@@ -13,10 +13,11 @@ export class MiscAction extends Action {
 }
 
 export class ArpaAction extends Building {
-    constructor(id, res) {
+    constructor(id, res, multiplier) {
         super(id, ['misc']);
         this.loc.push('arpa');
         this.res = res;
+        this.multiplier = multiplier;
         this.color = 'has-text-special';
         if (!settings.actions[this.id].hasOwnProperty('size')) {settings.actions[this.id].size = 25;}
     }
@@ -76,13 +77,7 @@ export class ArpaAction extends Building {
         if (this.res === null) {
             return null;
         }
-        let multiplier = 1;
-        switch(this.id) {
-            case 'lhc': {multiplier = 1.05;break;}
-            case 'stock_exchange': {multiplier = 1.06;break;}
-            case 'launch_facility': {multiplier = 1.1;break;}
-            case 'monument': {multiplier = 1.1;break;}
-        }
+        let multiplier = this.multiplier;
         if (window.evolve.global.race['creative']){
             multiplier -= 0.01;
         }
@@ -100,8 +95,8 @@ export class ArpaAction extends Building {
 }
 
 export class MonumentAction extends ArpaAction {
-    constructor(id) {
-        super(id, {});
+    constructor(id, multiplier) {
+        super(id, {}, multiplier);
     }
 
     click() {
@@ -150,22 +145,31 @@ export function loadArpas() {
                                Knowledge:500000,
                                Copper:125000,
                                Cement:250000,
-                               Steel:187500,
+                               Aluminium:350000,
                                Titanium:50000,
-                               Polymer:12000});
+                               Polymer:12000},
+                               1.05);
     arpas.stock_exchange = new ArpaAction('stock_exchange',
                                           {Money:3000000,
                                            Plywood:25000,
                                            Brick:20000,
-                                           Wrought_Iron:10000});
+                                           Wrought_Iron:10000},
+                                           1.06);
     arpas.launch_facility = new ArpaAction('launch_facility',
                                     {Money:2000000,
                                     Knowledge:500000,
                                     Cement:150000,
                                     Oil:20000,
                                     Sheet_Metal:15000,
-                                    Alloy:25000});
-    arpas.monument = new MonumentAction('monument');
+                                    Alloy:25000},
+                                    1.1);
+    arpas.monument = new MonumentAction('monument', 1.1);
+    arpas.railway = new ArpaAction('railway',
+                                    {Money:2500000,
+                                    Lumber:750000,
+                                    Iron:300000,
+                                    Steel:450000},
+                                    1.08);
     loadMonumentRes();
 }
 
