@@ -34,6 +34,13 @@ async function main() {
         return;
     }
 
+    // Waiting for global to load
+    while(1) {
+        if (window.evolve.hasOwnProperty('global')) {
+            break;
+        }
+    }
+
     loadSettings();
     console.log(settings);
 

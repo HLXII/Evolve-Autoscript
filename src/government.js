@@ -85,7 +85,9 @@ export function autoTax(priorityData) {
     }
     else {
         if (resources.Money.ratio < 0.99 || moneyRate < 0) {
-            incTax();
+        	if (morale >= settings.minimumMorale + 1) {
+        		incTax();
+        	}
         }
         else {
             decTax();
@@ -112,7 +114,7 @@ function getGovernmentChangeBtn() {
 function canChangeGovernment() {
 	let btn = getGovernmentChangeBtn();
 	if (btn === null) {return false;}
-	return btn.attributes.disabled.value != 'disabled';
+	return !btn.attributes.hasOwnProperty('disabled');
 }
 
 function governmentAvailable(government) {
