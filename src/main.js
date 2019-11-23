@@ -1,14 +1,16 @@
 import { sleep, inEvolution } from './utility.js';
 import { autoEvolution } from './evolution.js';
 import { autoEmploy } from './jobs.js';
+import { autoBattle } from './war.js';
+import { autoTax, autoGovernment } from './government.js';
 import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './modalbuildings.js';
 import { autoPriority } from './priority.js';
 import { autoCraft, autoTrade, autoMarket, autoStorage, autoEjector } from './resources.js';
-import { settings, loadSettings, updateSettings, autoRefresh, autoTax, autoPrestige } from './settings.js';
+import { settings, loadSettings, updateSettings, autoRefresh, autoPrestige } from './settings.js';
 import { autoFarm, loadFarm } from './farm.js';
 import { autoSupport } from './support.js';
 import { updateUI } from './ui.js';
-import { autoBattle } from './war.js';
+
 
 export const url = 'https://github.com/HLXII/Evolve-Autoscript';
 export const version = '1.3.2';
@@ -98,6 +100,9 @@ async function fastAutomate(count) {
         }
         if (settings.autoStorage) {
             autoStorage();
+        }
+        if (settings.autoGovernment) {
+            await autoGovernment();
         }
         if (settings.autoPrestige) {
             await autoPrestige();

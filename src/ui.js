@@ -9,6 +9,7 @@ import { miscActions, arpas, storages, MiscAction, ArpaAction, StorageAction, Me
 import { researches, Research, researched } from './researches.js';
 import { buildings, Building, PoweredBuilding } from './buildings.js';
 import { jobs, craftJobs } from './jobs.js';
+import { governments } from './government.js';
 
 let farmReset = ['tech-club', 'tech-bone_tools'];
 let jobReset = ['city-lumber_yard',
@@ -592,7 +593,7 @@ function removeEmploySettings() {
 
 function createAutoSettingPage(name, labelElm, contentElm) {
     let label = $('<li class="as-settings"><a><span>'+name+'</span></a></li>');
-    let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item as-settings" style="display:none"><h2 class="is-sr-only">'+name+'</h2></div>');
+    let tab = $('<div id="'+name+'_setting_tab'+'" class="tab-item as-settings" style="display:none;margin-left:1rem;"><h2 class="is-sr-only">'+name+'</h2></div>');
     label.on('click',function(e) {
         if (e.which != 1) {return;}
         for (let i = 0;i < labelElm.children().length;i++) {
@@ -658,6 +659,8 @@ function createSettingTab() {
     if (!inEvolution()) {
         let jobTab = createAutoSettingPage("Jobs/Army", ul, section);
         createAutoSettingJobPage(jobTab);
+        let govTab = createAutoSettingPage("Government", ul, section);
+        createAutoSettingGovPage(govTab);
         let resourceTab = createAutoSettingPage("Resources", ul, section);
         createAutoSettingResourcePage(resourceTab);
         let buildingTab = createAutoSettingPage("Buildings", ul, section);
@@ -767,7 +770,6 @@ function createAutoSettingGeneralPage(tab) {
     autoPrestigeContent.append(prestige);
 
     // Advanced
-
 }
 
 function createAutoSettingEvolutionPage(tab) {
@@ -925,9 +927,25 @@ function loadBattleUI(content) {
     let campaignFailCheckStr = 'Enable to stop Auto Battle for an time if the campaign algorithm fails. This is to stop infinite loops when the algorithm cannot find a optimal battle.';
     let campaignFailCheck = createCheckBoxControl(settings.campaignFailCheck, 'campaignFailCheck', "Fail Check", {toolTip:campaignFailCheckStr});
     secondDiv.append(campaignFailCheck);
-
 }
 function createAutoSettingJobPage(tab) {
+
+    // Auto Employ
+    let autoEmployDesc = 'Allocates the population to jobs. May add min/max settings later on.';
+    let [autoEmployTitle, autoEmployContent] = createAutoSettingToggle('autoEmploy', 'Auto Employ', autoEmployDesc, true, tab, createEmploySettings, removeEmploySettings);
+    loadEmployUI(autoEmployContent);
+
+    // Auto Battle
+    let autoBattleDesc = 'Automatically runs battle campaigns. Will choose the highest campaign that allows for the minimum win rate. You can limit the highest campaign as well, as Siege is always less efficient.';
+    let [autoBattleTitle, autoBattleContent] = createAutoSettingToggle('autoBattle', 'Auto Battle', autoBattleDesc, true, tab);
+    loadBattleUI(autoBattleContent);
+
+    // Auto Fortress
+    let autoFortressDesc = 'Manages soldier allocation in the fortress. Currently not yet implemented.';
+    let [autoFortressTitle, autoFortressContent] = createAutoSettingToggle('autoFortress', 'Auto Fortress', autoFortressDesc, true, tab);
+}
+
+function createAutoSettingGovPage(tab) {
 
     // Auto Tax
     let autoTaxDesc = 'Manages the tax rate for optimal morale and taxes.';
@@ -950,20 +968,43 @@ function createAutoSettingJobPage(tab) {
     let minMoraleControl = createNumControl(settings.minimumMorale, "minimum_morale", minMoraleSub, minMoraleAdd);
     minMoraleDiv.append(minMoraleControl);
 
-    // Auto Employ
-    let autoEmployDesc = 'Allocates the population to jobs. May add min/max settings later on.';
-    let [autoEmployTitle, autoEmployContent] = createAutoSettingToggle('autoEmploy', 'Auto Employ', autoEmployDesc, true, tab, createEmploySettings, removeEmploySettings);
-    loadEmployUI(autoEmployContent);
+    // Auto Government
+    let autoGovDesc = 'Manages changing government types. Will choose the highest priority government type available.';
+    let [autoGovTitle, autoGovContent] = createAutoSettingToggle('autoGovernment', 'Auto Government', autoGovDesc, true, tab);
 
-    // Auto Battle
-    let autoBattleDesc = 'Automatically runs battle campaigns. Will choose the highest campaign that allows for the minimum win rate. You can limit the highest campaign as well, as Siege is always less efficient.';
-    let [autoBattleTitle, autoBattleContent] = createAutoSettingToggle('autoBattle', 'Auto Battle', autoBattleDesc, true, tab);
-    loadBattleUI(autoBattleContent);
+    // Government Priority
+    let labelDiv = $('<div style="display:flex" class="alt market-item"></div>');
+    autoGovContent.append(labelDiv);
+    let govLabel = $('<span class="has-text-warning" style="width:12rem;">Government Types:</span>');
+    labelDiv.append(govLabel);
+    let priorityLabel = $('<span class="has-text-warning" style="width:12rem;">Priority</span>');
+    labelDiv.append(priorityLabel);
+    for (let i = 0;i < governments.length;i++) {
+        let gov = governments[i];
+        let div = null;
+        if (i % 2) {
+            div = $('<div style="display:flex" class="alt market-item"></div>');
+        } else {
+            div = $('<div style="display:flex" class="market-item"></div>');
+        }
+        autoGovContent.append(div);
 
-    // Auto Fortress
-    let autoFortressDesc = 'Manages soldier allocation in the fortress. Currently not yet implemented.';
-    let [autoFortressTitle, autoFortressContent] = createAutoSettingToggle('autoFortress', 'Auto Fortress', autoFortressDesc, true, tab);
+        let label = $(`<span class="has-text-danger" style="width:12rem;">${gov}</span>`);
+        div.append(label);
 
+        let prioDec = function(mult) {
+            settings.government[gov].priority -= mult;
+            if (settings.government[gov].priority < 0) {settings.government[gov].priority = 0;}
+            return settings.government[gov].priority;
+        }
+        let prioInc = function(mult) {
+            settings.government[gov].priority += mult;
+            return settings.government[gov].priority;
+        }
+        let value = settings.government[gov].priority;
+        let prioControls = createNumControl(value,gov+"_priority",prioDec,prioInc);
+        div.append(prioControls);
+    }
 }
 
 function loadTradeUI(content) {
@@ -1431,7 +1472,6 @@ function createAutoSettingResearchPage(tab) {
     autoResearchContent.append(unifyDetails);
     let unify = createDropDownControl(settings.unify, 'unify', 'Unification', {unify:'Unify',reject:'Reject'});
     autoResearchContent.append(unify);
-
 }
 
 function nameCompare(a, b) {

@@ -1,11 +1,12 @@
-import { sleep, inEvolution, disableMult } from './utility.js';
+import { sleep, inEvolution } from './utility.js';
 import { loadEvolution, evoChallengeActions } from './evolution.js';
 import { loadFarm } from './farm.js';
-import { resources, loadResources } from './resources.js';
-import { arpas, loadMiscActions, loadArpas, loadStorages } from './miscactions.js';
-import { loadResearches, researched } from './researches.js';
-import { buildings, loadBuildings, loadSpaceDockBuildings } from './buildings.js';
+import { loadResources } from './resources.js';
+import { loadMiscActions, loadArpas, loadStorages } from './miscactions.js';
+import { loadResearches } from './researches.js';
+import { loadBuildings, loadSpaceDockBuildings } from './buildings.js';
 import { loadJobs, loadCraftJobs } from './jobs.js';
+import { loadGovernments } from './government.js';
 import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './modalbuildings.js';
 import { loadSupport } from './support.js';
 import { updateUI, resetUI } from './ui.js';
@@ -36,6 +37,8 @@ export function loadSettings() {
     // Jobs
     try { loadJobs(); } catch(e) {console.log('Error: Load Jobs', e);}
     try { loadCraftJobs(); } catch(e) {console.log('Error: Load Craft Jobs', e);}
+    // Government
+    try { loadGovernments(); } catch(e) {console.log('Error: Load Governments', e);}
     // ARPA
     try { loadArpas(); } catch(e) {console.log('Error: Load ARPAs', e);}
 
@@ -89,12 +92,6 @@ export function loadSettings() {
         settings.evolution = "antid";
     }
 
-    if (!settings.hasOwnProperty('autoTax')) {
-        settings.autoTax = false;
-    }
-    if (!settings.hasOwnProperty('minimumMorale')) {
-        settings.minimumMorale = 100;
-    }
     if (!settings.hasOwnProperty('autoEmploy')) {
         settings.autoEmploy = false;
     }
@@ -118,6 +115,16 @@ export function loadSettings() {
     }
     if (!settings.hasOwnProperty('autoFortress')) {
         settings.autoFortress = false;
+    }
+
+    if (!settings.hasOwnProperty('autoTax')) {
+        settings.autoTax = false;
+    }
+    if (!settings.hasOwnProperty('minimumMorale')) {
+        settings.minimumMorale = 100;
+    }
+    if  (!settings.hasOwnProperty('autoGovernment')) {
+        settings.autoGovernment = false;
     }
 
     if (!settings.hasOwnProperty('autoCraft')) {
@@ -281,69 +288,3 @@ export async function autoPrestige() {
     }
 }
 
-
-function getCurrentMorale() {
-    let totalMorale = 100;
-    for (var x in window.evolve.global.city.morale) {
-        if (x == 'current') {continue;}
-        totalMorale += window.evolve.global.city.morale[x];
-    }
-    return totalMorale;
-}
-function getMaxMorale() {
-    let maxMorale = 100;
-    maxMorale += buildings['city-amphitheatre'].numTotal;
-    maxMorale += buildings['city-casino'].numTotal;
-    maxMorale += buildings['space-vr_center'].numOn * 2;
-    if (researched('tech-superstars')) {maxMorale += window.evolve.global.civic.entertainer.workers;}
-    maxMorale += arpas['monument'].numTotal * 2;
-    if (window.evolve.global.civic.taxes.tax_rate < 20){
-        maxMorale += 10 - Math.floor(window.evolve.global.civic.taxes.tax_rate / 2);
-    }
-    return maxMorale;
-}
-function decTax(num) {
-    num = (num === undefined) ? 1 : num;
-    let decTaxBtn = $('#tax_rates > .sub');
-    disableMult();
-    for (let i = 0;i < num;i++) {
-        decTaxBtn.click();
-    }
-}
-function incTax(num) {
-    num = (num === undefined) ? 1 : num;
-    let incTaxBtn = $('#tax_rates > .add');
-    disableMult();
-    for (let i = 0;i < num;i++) {
-        incTaxBtn.click();
-    }
-}
-export function autoTax(priorityData) {
-    // Don't start taxes if haven't researched
-    if (!researched('tech-tax_rates')) {return;}
-    let morale = getCurrentMorale();
-    let maxMorale = getMaxMorale();
-    let moneyRate = resources.Money.temp_rate || resources.Money.rate;
-    console.log(morale, maxMorale, moneyRate);
-    // Currently below minimum morale
-    if (morale < settings.minimumMorale) {
-        decTax();
-    }
-    // Setting to lowest taxes to get the max morale bonus (since taxes aren't needed)
-    else if (resources.Money.ratio == 1) {
-        //TODO Figure out a good way of doing this
-        //decTax();
-    }
-    // Currently above max Morale
-    else if (morale >= maxMorale) {
-        incTax(morale - maxMorale);
-    }
-    else {
-        if (resources.Money.ratio < 0.99 || moneyRate < 0) {
-            incTax();
-        }
-        else {
-            decTax();
-        }
-    }
-}
