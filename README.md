@@ -40,3 +40,6 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Auto Gene - Automatically buy traits with genes
 * Improve Auto Employ (Depending on Auto Priority for craftsman, manage morale with entertainers, manage farmers with food rate)
 * Create additional setting templates in Saved Settings
+* Auto Spy
+* Fix Auto Battle for multiple factions
+* Migrate modal buildings to use Industry Tab
