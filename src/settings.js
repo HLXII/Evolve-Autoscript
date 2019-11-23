@@ -7,7 +7,7 @@ import { loadResearches } from './researches.js';
 import { loadBuildings, loadSpaceDockBuildings } from './buildings.js';
 import { loadJobs, loadCraftJobs } from './jobs.js';
 import { loadGovernments } from './government.js';
-import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './modalbuildings.js';
+import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './industry.js';
 import { loadSupport } from './support.js';
 import { updateUI, resetUI } from './ui.js';
 import { openModal, closeModal } from './modal.js';

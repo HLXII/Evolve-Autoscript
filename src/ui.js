@@ -1338,10 +1338,6 @@ function loadSupportUI(content) {
     content.append($('<br>'));
 }
 function loadSmelterUI(content) {
-    let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-    let intervalControl = createBuildingSetting('smelterSettings', 'Interval', 'Interval', intervalToolTip);
-    content.append(intervalControl);
-    content.append($('<br>'));
 
     let woodControl = createBuildingSetting('smelterSettings', 'Wood', 'Wood Priority');
     let coalControl = createBuildingSetting('smelterSettings', 'Coal', 'Coal Priority');
@@ -1357,10 +1353,6 @@ function loadSmelterUI(content) {
     content.append(steelControl);
 }
 function loadFactoryUI(content) {
-    let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-    let intervalControl = createBuildingSetting('factorySettings', 'Interval', 'Interval', intervalToolTip);
-    content.append(intervalControl);
-    content.append($('<br>'));
 
     let luxControl = createBuildingSetting('factorySettings', 'Luxury_Goods', 'Luxury Goods Priority');
     let alloyControl = createBuildingSetting('factorySettings', 'Alloy', 'Alloy Priority');
@@ -1374,10 +1366,6 @@ function loadFactoryUI(content) {
     content.append(staneneControl);
 }
 function loadDroidUI(content) {
-    let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-    let intervalControl = createBuildingSetting('droidSettings', 'Interval', 'Interval', intervalToolTip);
-    content.append(intervalControl);
-    content.append($('<br>'));
 
     let adamControl = createBuildingSetting('droidSettings', 'Adamantite', 'Adamantite Priority');
     let uranControl = createBuildingSetting('droidSettings', 'Uranium', 'Uranium Priority');
@@ -1389,10 +1377,6 @@ function loadDroidUI(content) {
     content.append(alumControl);
 }
 function loadGrapheneUI(content) {
-    let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-    let intervalControl = createBuildingSetting('grapheneSettings', 'Interval', 'Interval', intervalToolTip);
-    content.append(intervalControl);
-    content.append($('<br>'));
 
     let woodControl = createBuildingSetting('grapheneSettings', 'Wood', 'Wood Priority');
     let coalControl = createBuildingSetting('grapheneSettings', 'Coal', 'Coal Priority');

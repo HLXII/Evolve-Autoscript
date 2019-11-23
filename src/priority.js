@@ -5,7 +5,7 @@ import { researches, Research, researched } from './researches.js';
 import { miscActions, arpas, storages, ArpaAction } from './miscactions.js';
 import { messageQueue, getTotalGameDays, prioCompare } from './utility.js';
 import { resetUICheck } from './ui.js';
-import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './modalbuildings.js';
+import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './industry.js';
 import { autoSupport } from './support.js';
 import { settings } from './settings.js';
 
@@ -323,28 +323,28 @@ export async function autoPriority(count) {
     }
 
     // Starting other Auto Settings
-    if (settings.autoSmelter && count % settings.smelterSettings.Interval == 0) {
+    if (settings.autoSmelter) {
         if (settings.smelterSettings.pqCheck) {
             await autoSmelter(limits);
         } else {
             await autoSmelter();
         }
     }
-    if (settings.autoFactory && count % settings.factorySettings.Interval == 0) {
+    if (settings.autoFactory) {
         if (settings.factorySettings.pqCheck) {
             await autoFactory(limits);
         } else {
             await autoFactory();
         }
     }
-    if (settings.autoDroid && count % settings.droidSettings.Interval == 0) {
+    if (settings.autoDroid) {
         if (settings.droidSettings.pqCheck) {
             await autoDroid(limits);
         } else {
             await autoDroid();
         }
     }
-    if (settings.autoGraphene && count % settings.grapheneSettings.Interval == 0) {
+    if (settings.autoGraphene) {
         if (settings.grapheneSettings.pqCheck) {
             await autoGraphene(limits);
         } else {

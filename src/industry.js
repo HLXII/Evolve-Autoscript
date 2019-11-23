@@ -2,13 +2,12 @@ import { resources } from './resources.js';
 import { researched } from './researches.js';
 import { buildings } from './buildings.js';
 import { sleep, getMultiplier, allocate } from './utility.js';
-import { f_rate, zigguratBonus } from './gameScripts.js';
+import { zigguratBonus, calcLux, calcAlloy, calcPolymer, calcNano_Tube, calcStanene } from './gameScripts.js';
 import { settings } from './settings.js';
 import { openModal, closeModal } from './modal.js';
 
 export function loadSmelter() {
     if (!settings.hasOwnProperty('smelterSettings')) {settings.smelterSettings = {};}
-    if (!settings.smelterSettings.hasOwnProperty('Interval')) {settings.smelterSettings.Interval = 10;}
     if (!settings.smelterSettings.hasOwnProperty('pqCheck')) {settings.smelterSettings.pqCheck = true;}
     if (!settings.smelterSettings.hasOwnProperty('Wood')) {settings.smelterSettings.Wood = 1;}
     if (!settings.smelterSettings.hasOwnProperty('Coal')) {settings.smelterSettings.Coal = 1;}
@@ -17,7 +16,7 @@ export function loadSmelter() {
     if (!settings.smelterSettings.hasOwnProperty('Steel')) {settings.smelterSettings.Steel = 3;}
 }
 function getSmelterData() {
-    let spans = $('.fuels > span');
+    let spans = document.querySelectorAll('#iSmelter > .fuels > span');
     let data = {};
     // Wood (Lumber/Souls/Flesh)
     if (!window.evolve.global.race['kindling_kindred'] || window.evolve.global.race['evil']) {
@@ -52,7 +51,7 @@ function getSmelterData() {
     // Iron
     data.Iron = {};
     data.Iron.num = window.evolve.global.city.smelter.Iron;
-    data.Iron.btn = document.querySelector('.smelting > span:nth-child(1) > button');
+    data.Iron.btn = document.querySelector('#iSmelter > .smelting > span:nth-child(1) > button');
     let ironVal = data.Iron.btn.parentElement.attributes['data-label'].value;
     data.Iron.percent = parseInt(/[^\d]+([\d]+)%/.exec(ironVal)[1]);
 
@@ -60,7 +59,7 @@ function getSmelterData() {
     if (window.evolve.global.resource.Steel.display && window.evolve.global.tech.smelting >= 2) {
         data.Steel = {};
         data.Steel.num = window.evolve.global.city.smelter.Steel;
-        data.Steel.btn = document.querySelector('.smelting > span:nth-child(2) > button');
+        data.Steel.btn = document.querySelector('#iSmelter > .smelting > span:nth-child(2) > button');
         let steelVal = data.Steel.btn.parentElement.attributes['data-label'].value;
         let temp = /[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*([\d\.]+)[^\d\.]*/.exec(steelVal);
         data.Steel.Coal = parseFloat(temp[1]);
@@ -72,10 +71,6 @@ function getSmelterData() {
 export async function autoSmelter(limits) {
     // Don't Auto smelt if not unlocked
     if (!researched('tech-steel')) {return;}
-
-    // Opening Modal
-    let opened = await openModal($('#city-smelter > .special'));
-    if (!opened) {return;}
 
     // Finding relevent elements
     let data = getSmelterData();
@@ -314,14 +309,10 @@ export async function autoSmelter(limits) {
 
     // Setting data to null for garbage collector maybe
     data = null;
-
-    // Closing modal
-    await closeModal();
 }
 
 export function loadFactory() {
     if (!settings.hasOwnProperty('factorySettings')) {settings.factorySettings = {};}
-    if (!settings.factorySettings.hasOwnProperty('Interval')) {settings.factorySettings.Interval = 11;}
     if (!settings.factorySettings.hasOwnProperty('pqCheck')) {settings.factorySettings.pqCheck = true;}
     if (!settings.factorySettings.hasOwnProperty('Luxury_Goods')) {settings.factorySettings.Luxury_Goods = 0;}
     if (!settings.factorySettings.hasOwnProperty('Alloy')) {settings.factorySettings.Alloy = 3;}
@@ -336,93 +327,72 @@ function getFactoryData() {
 
     // Luxury Goods
     data.Lux = {};
-    data.Lux.decBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(2)');
-    data.Lux.incBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(4)');
-    let str = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(1)').attributes['data-label'].value;
+    data.Lux.decBtn = document.querySelector('#iFactory > div:nth-child(3) > span:nth-child(2)');
+    data.Lux.incBtn = document.querySelector('#iFactory > div:nth-child(3) > span:nth-child(4)');
+    let str = document.querySelector('#iFactory > div:nth-child(3) > span:nth-child(1)').attributes['data-label'].value;
     let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)/.exec(str)
     data.Lux.num = window.evolve.global.city.factory.Lux;
     data.Lux.Furs = temp[1];
-    data.Lux.Money = temp[2];
+    data.Lux.Money = calcLux(factoryLevel);
 
     // Alloy
     data.Alloy = {};
-    data.Alloy.decBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(2)');
-    data.Alloy.incBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(4)');
-    str = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(1)').attributes['data-label'].value;
+    data.Alloy.decBtn = document.querySelector('#iFactory > div:nth-child(4) > span:nth-child(2)');
+    data.Alloy.incBtn = document.querySelector('#iFactory > div:nth-child(4) > span:nth-child(4)');
+    str = document.querySelector('#iFactory > div:nth-child(4) > span:nth-child(1)').attributes['data-label'].value;
     temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
     data.Alloy.num = window.evolve.global.city.factory.Alloy;
     data.Alloy.Copper = temp[1];
     data.Alloy.Aluminium = temp[2];
     // Alloy Production
-    let factory_output = f_rate.Alloy.output[factoryLevel];
-    if (window.evolve.global.race['toxic']){
-        factory_output *= 1.20;
-    }
-    if (window.evolve.global.tech['alloy']){
-        factory_output *= 1.37;
-    }
-    if (window.evolve.global.race['metallurgist']){
-        factory_output *= 1 + (window.evolve.global.race['metallurgist'] * 0.04);
-    }
+    let factory_output = calcAlloy(factoryLevel);
     factory_output *= getMultiplier('Alloy') * getMultiplier('Global');
     data.Alloy.produce = factory_output;
 
     // Polymer
     if (window.evolve.global.tech['polymer']) {
         data.Polymer = {};
-        data.Polymer.decBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(2)');
-        data.Polymer.incBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(4)');
-        let str = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(1)').attributes['data-label'].value;
+        data.Polymer.decBtn = document.querySelector('#iFactory > div:nth-child(5) > span:nth-child(2)');
+        data.Polymer.incBtn = document.querySelector('#iFactory > div:nth-child(5) > span:nth-child(4)');
+        let str = document.querySelector('#iFactory > div:nth-child(5) > span:nth-child(1)').attributes['data-label'].value;
         let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)?[^\d\.]+/.exec(str)
         data.Polymer.num = window.evolve.global.city.factory.Polymer;
         data.Polymer.Oil = temp[1];
         // Kindred Kindling
         data.Polymer.Lumber = (temp[2]) ? temp[2] : 0;
         // Polymer Production
-        let factory_output = f_rate.Polymer.output[factoryLevel];
-        if (window.evolve.global.race['toxic']) {
-            factory_output *= 1.20;
-        }
-        if (window.evolve.global.tech['polymer'] >= 2){
-            factory_output *= 1.42;
-        }
+        let factory_output = calcPolymer(factoryLevel);
         factory_output *= getMultiplier('Polymer') * getMultiplier('Global');
         data.Polymer.produce = factory_output;
     }
     // Nano Tube
     if (window.evolve.global.tech['nano']) {
         data.Nano = {};
-        data.Nano.decBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(2)');
-        data.Nano.incBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(4)');
-        let str = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(1)').attributes['data-label'].value;
+        data.Nano.decBtn = document.querySelector('#iFactory > div:nth-child(6) > span:nth-child(2)');
+        data.Nano.incBtn = document.querySelector('#iFactory > div:nth-child(6) > span:nth-child(4)');
+        let str = document.querySelector('#iFactory > div:nth-child(6) > span:nth-child(1)').attributes['data-label'].value;
         let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
         data.Nano.num = window.evolve.global.city.factory.Nano;
         data.Nano.Coal = temp[1];
         data.Nano.Neutronium = temp[2];
         data.Nano.produce = 0;
         // Nano Tube Production
-        let factory_output = f_rate.Nano_Tube.output[factoryLevel];
-        if (window.evolve.global.race['toxic']) {
-            factory_output *= 1.08;
-        }
-        if (window.evolve.global.tech['polymer'] >= 2){
-            factory_output *= 1.42;
-        }
+        let factory_output = calcNano_Tube(factoryLevel);
         factory_output *= getMultiplier('Nano_Tube') * getMultiplier('Global');
         data.Nano.produce = factory_output;
     }
     // Stanene
     if (window.evolve.global.tech['stanene']) {
         data.Stanene = {};
-        data.Stanene.decBtn = document.querySelector('#specialModal > div:nth-child(6) > span:nth-child(2)');
-        data.Stanene.incBtn = document.querySelector('#specialModal > div:nth-child(6) > span:nth-child(4)');
-        let str = document.querySelector('#specialModal > div:nth-child(6) > span:nth-child(1)').attributes['data-label'].value;
+        data.Stanene.decBtn = document.querySelector('#iFactory > div:nth-child(7) > span:nth-child(2)');
+        data.Stanene.incBtn = document.querySelector('#iFactory > div:nth-child(7) > span:nth-child(4)');
+        let str = document.querySelector('#iFactory > div:nth-child(7) > span:nth-child(1)').attributes['data-label'].value;
         let temp = /[^\d\.]+([\d\.]+)[^\d\.]+([\d\.]+)[^\d\.]+/.exec(str)
         data.Stanene.num = window.evolve.global.city.factory.Stanene;
         data.Stanene.Aluminium = temp[1];
         data.Stanene.Nano_Tube = temp[2];
         // Stanene Production
-        let factory_output = f_rate.Stanene.output[factoryLevel];
+        let factory_output = calcStanene(factoryLevel);
         factory_output *= getMultiplier('Stanene') * getMultiplier('Global');
         data.Stanene.produce = factory_output;
     }
@@ -433,10 +403,6 @@ export async function autoFactory(limits) {
     if (!researched('tech-industrialization')) {return;}
     // Don't Auto factory if you don't have any
     if (buildings['city-factory'].numTotal < 1) {return;}
-
-    // Opening Modal
-    let opened = await openModal($('#city-factory > .special'));
-    if (!opened) {return;}
 
     let totalFactories = buildings['city-factory'].numOn + buildings['space-red_factory'].numOn;
 
@@ -628,14 +594,10 @@ export async function autoFactory(limits) {
 
     // Setting data to null for garbage collector maybe
     data = null;
-
-    // Closing modal
-    await closeModal();
 }
 
 export function loadDroid() {
     if (!settings.hasOwnProperty('droidSettings')) {settings.droidSettings = {};}
-    if (!settings.droidSettings.hasOwnProperty('Interval')) {settings.droidSettings.Interval = 13;}
     if (!settings.droidSettings.hasOwnProperty('pqCheck')) {settings.droidSettings.pqCheck = true;}
     if (!settings.droidSettings.hasOwnProperty('Adamantite')) {settings.droidSettings.Adamantite = 10;}
     if (!settings.droidSettings.hasOwnProperty('Uranium')) {settings.droidSettings.Uranium = 0;}
@@ -649,29 +611,29 @@ function getDroidData() {
     data.Adamantite = {};
     data.Adamantite.produce = 0.075 * zigguratBonus();
     data.Adamantite.num = window.evolve.global.interstellar.mining_droid.adam;
-    data.Adamantite.decBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(2)');
-    data.Adamantite.incBtn = document.querySelector('#specialModal > div:nth-child(2) > span:nth-child(4)');
+    data.Adamantite.decBtn = document.querySelector('#iDroid > div:nth-child(3) > span:nth-child(2)');
+    data.Adamantite.incBtn = document.querySelector('#iDroid > div:nth-child(3) > span:nth-child(4)');
 
     // Uranium
     data.Uranium = {};
     data.Uranium.produce = 0.12 * zigguratBonus();
     data.Uranium.num = window.evolve.global.interstellar.mining_droid.uran;
-    data.Uranium.decBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(2)');
-    data.Uranium.incBtn = document.querySelector('#specialModal > div:nth-child(3) > span:nth-child(4)');
+    data.Uranium.decBtn = document.querySelector('#iDroid > div:nth-child(4) > span:nth-child(2)');
+    data.Uranium.incBtn = document.querySelector('#iDroid > div:nth-child(4) > span:nth-child(4)');
 
     // Coal
     data.Coal = {};
     data.Coal.produce = 3.75 * zigguratBonus();
     data.Coal.num = window.evolve.global.interstellar.mining_droid.coal;
-    data.Coal.decBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(2)');
-    data.Coal.incBtn = document.querySelector('#specialModal > div:nth-child(4) > span:nth-child(4)');
+    data.Coal.decBtn = document.querySelector('#iDroid > div:nth-child(5) > span:nth-child(2)');
+    data.Coal.incBtn = document.querySelector('#iDroid > div:nth-child(5) > span:nth-child(4)');
 
     // Aluminium
     data.Aluminium = {};
     data.Aluminium.produce = 2.75 * zigguratBonus();
     data.Aluminium.num = window.evolve.global.interstellar.mining_droid.alum;
-    data.Aluminium.decBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(2)');
-    data.Aluminium.incBtn = document.querySelector('#specialModal > div:nth-child(5) > span:nth-child(4)');
+    data.Aluminium.decBtn = document.querySelector('#iDroid > div:nth-child(6) > span:nth-child(2)');
+    data.Aluminium.incBtn = document.querySelector('#iDroid > div:nth-child(6) > span:nth-child(4)');
 
     return data;
 }
@@ -680,10 +642,6 @@ export async function autoDroid(limits) {
     if (window.evolve.global.tech['alpha'] < 2) {return;}
     // Don't Auto Droid if you don't have any
     if (buildings['interstellar-mining_droid'].numTotal < 1) {return;}
-
-    // Opening Modal
-    let opened = await openModal($('#interstellar-mining_droid > .special'));
-    if (!opened) {return;}
 
     let totalDroids = buildings['interstellar-mining_droid'].numOn;
 
@@ -801,14 +759,10 @@ export async function autoDroid(limits) {
 
     // Setting data to null for garbage collector maybe
     data = null;
-
-    // Closing modal
-    await closeModal();
 }
 
 export function loadGraphene() {
     if (!settings.hasOwnProperty('grapheneSettings')) {settings.grapheneSettings = {};}
-    if (!settings.grapheneSettings.hasOwnProperty('Interval')) {settings.grapheneSettings.Interval = 17;}
     if (!settings.grapheneSettings.hasOwnProperty('pqCheck')) {settings.grapheneSettings.pqCheck = true;}
     if (!settings.grapheneSettings.hasOwnProperty('Wood')) {settings.grapheneSettings.Wood = 0;}
     if (!settings.grapheneSettings.hasOwnProperty('Coal')) {settings.grapheneSettings.Coal = 10;}
@@ -816,7 +770,7 @@ export function loadGraphene() {
 }
 function getGrapheneData() {
     let data = {};
-    let spans = $('#specialModal > div:nth-child(2) > span');
+    let spans = $('#iGraphene > div:nth-child(3) > span');
     // Lumber
     if (!window.evolve.global.race['kindling_kindred']) {
         data.Lumber = {};
@@ -849,10 +803,6 @@ function getGrapheneData() {
 export async function autoGraphene(limits) {
     // Don't Auto Graphene if not unlocked
     if (!researched('tech-graphene')) {return;}
-
-    // Opening Modal
-    let opened = await openModal($('#interstellar-g_factory > .special'));
-    if (!opened) {return;}
 
     // Finding relevent elements
     let data = getGrapheneData();
@@ -953,8 +903,5 @@ export async function autoGraphene(limits) {
 
     // Setting data to null for garbage collector maybe
     data = null;
-
-    // Closing Modal
-    await closeModal();
 }
 

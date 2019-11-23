@@ -3,7 +3,7 @@ import { autoEvolution } from './evolution.js';
 import { autoEmploy } from './jobs.js';
 import { autoBattle } from './war.js';
 import { autoTax, autoGovernment } from './government.js';
-import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './modalbuildings.js';
+import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './industry.js';
 import { autoPriority } from './priority.js';
 import { autoCraft, autoTrade, autoMarket, autoStorage, autoEjector } from './resources.js';
 import { settings, loadSettings, updateSettings, autoRefresh, autoPrestige } from './settings.js';
@@ -75,16 +75,16 @@ async function fastAutomate(count) {
             priorityData = await autoPriority(count);
         }
         else {
-            if (settings.autoSmelter && count % settings.smelterSettings.Interval == 0) {
+            if (settings.autoSmelter) {
                 await autoSmelter();
             }
-            if (settings.autoFactory && count % settings.factorySettings.Interval == 0) {
+            if (settings.autoFactory) {
                 await autoFactory();
             }
-            if (settings.autoDroid && count % settings.droidSettings.Interval == 0) {
+            if (settings.autoDroid) {
                 await autoDroid();
             }
-            if (settings.autoGraphene && count % settings.grapheneSettings.Interval == 0) {
+            if (settings.autoGraphene) {
                 await autoGraphene();
             }
             if (settings.autoSupport && count % settings.supportSettings.Interval == 0) {
