@@ -1005,6 +1005,19 @@ function createAutoSettingGovPage(tab) {
         let prioControls = createNumControl(value,gov+"_priority",prioDec,prioInc);
         div.append(prioControls);
     }
+
+    // Auto Unification
+
+    let autoUniDesc = 'Manages spies for unification. Automatically purchases the research as well when available.';
+    let [autoUniTitle, autoUniContent] = createAutoSettingToggle('autoUnification', 'Auto Unification', autoUniDesc, true, tab);
+
+    let optionToolTips = {};
+    optionToolTips['reject'] = 'Does not do any espionage, and automatically rejects unity';
+    optionToolTips['conquest'] = 'Always sabotages and begins sieges when available.';
+    optionToolTips['money'] = 'Does no espionage.';
+    optionToolTips['morale'] = 'Always influences until max relations, then incites.';
+    let unify = createDropDownControl(settings.unification, 'unification', 'Unification', {reject:'Reject Unity',conquest:'Conquest',morale:'Cultural Supremacy',money:'Buy the World'}, {optionToolTips:optionToolTips});
+    autoUniContent.append(unify);
 }
 
 function loadTradeUI(content) {
@@ -1449,13 +1462,6 @@ function createAutoSettingResearchPage(tab) {
     autoResearchContent.append(religionDetails2);
     let religion2 = createDropDownControl(settings.religion2, 'religion2', 'Religion Tier 2', {study:'Study Ancients',deify:'Deify Ancients'});
     autoResearchContent.append(religion2);
-
-    // Creating Unification choice
-    let unifyStr = 'This setting chooses between Unifying or Reject Unification.';
-    let unifyDetails = $(`<div><span>${unifyStr}</span></div>`);
-    autoResearchContent.append(unifyDetails);
-    let unify = createDropDownControl(settings.unify, 'unify', 'Unification', {unify:'Unify',reject:'Reject'});
-    autoResearchContent.append(unify);
 }
 
 function nameCompare(a, b) {

@@ -102,7 +102,6 @@ function getCurGovernment() {
 	}
 	return null;
 }
-
 function getGovernmentChangeSpan() {
 	return document.querySelector('#govType > div:nth-child(2) > span');
 }
@@ -116,7 +115,6 @@ function canChangeGovernment() {
 	if (btn === null) {return false;}
 	return !btn.attributes.hasOwnProperty('disabled');
 }
-
 function governmentAvailable(government) {
 	switch(government) {
 		case 'Anarchy': {
@@ -202,3 +200,115 @@ export async function autoGovernment() {
  	await closeModal();
 }
 
+function getSpyCount(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].spy;
+}
+function isTraining(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].trn != 0;
+}
+function isEspionage(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].sab != 0;
+}
+function getEcon(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].eco;
+}
+function getMilitary(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].mil;
+}
+function getRelation(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].hstl;
+}
+function getUnrest(num) {
+	let gov = `gov${num}`;
+	return window.evolve.global.civic.foreign[gov].hstl;
+}
+
+async function runEspionage(gov, action) {
+
+	let id = `gov${gov}`;
+	let btn = document.querySelector(`#${id} > div:nth-child(3) > span:nth-child(3) > button`);
+	if (btn === null) {return false;}
+
+	// Opening Modal
+	let opened = await openModal(btn);
+	if (!opened) {return false;}
+
+	btn = null;
+	switch(action) {
+		case 'influence': {
+			btn = document.querySelector('#espModal > button:nth-child(1)');
+			break;
+		}
+		case 'sabotage': {
+			btn = document.querySelector('#espModal > button:nth-child(2)');
+			break;
+		}
+		case 'incite': {
+			btn = document.querySelector('#espModal > button:nth-child(3)');
+			break;
+		}
+	}
+
+	if (btn !== null) {
+		btn.click();
+		await closeModal(false);
+		return true;
+	}
+
+	await closeModal();
+	return false;
+}
+
+export async function autoUnification() {
+	// Don't Auto Unification if already controlled the world
+	if (window.evolve.global.tech['world_control']) {return;}
+
+	// Trying to purchase unification tech
+	if (window.evolve.global.tech['unify'] == 1 && !window.evolve.global.tech['m_boost']) {
+		let action = 'wc_' + settings.unification;
+		let btn = document.getElementById(action);
+		if (btn !== null) {
+			btn.children[0].click();
+			return;
+		}
+	}
+
+	// Espionage
+	for (let i = 0;i < 3;i++) {
+		// Don't start espionage if there are no spies
+		if (!getSpyCount(i)) {continue;}
+		// Don't start espionage if currently on mission
+		if (isEspionage(i)) {continue;}
+
+		let action = null;
+		switch(settings.unification) {
+			case 'conquest': {
+				// Can still lower military
+				if (getMilitary(i) != 50) {
+					action = 'sabotage';
+				}				
+				break;
+			}
+			case 'morale' : {
+				// Can still increase relations
+				if (getRelation(i) != 0) {
+					action = 'influence';
+				}
+				else if (getUnrest(i) < 100) {
+					action = 'incite';
+				}
+			}
+		}
+
+		if (action !== null) {
+			await runEspionage(i, action);			
+		}
+	}
+
+}

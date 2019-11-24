@@ -238,7 +238,7 @@ export function loadBuildings() {
     // City
     for (let action in window.evolve.actions.city) {
         // Remove manual buttons
-        if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter') {continue;}
+        if (action == 'food' || action == 'lumber' || action == 'stone' || action == 'slaughter' || action == 'slave_market') {continue;}
         let id = window.evolve.actions.city[action].id;
         if (id in poweredBuildingList) {
             //console.log(action,"POWER", window.evolve.actions.city[action].powered, "SUPPORT", window.evolve.actions.city[action].support);

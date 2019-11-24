@@ -126,6 +126,12 @@ export function loadSettings() {
     if  (!settings.hasOwnProperty('autoGovernment')) {
         settings.autoGovernment = false;
     }
+    if (!settings.hasOwnProperty('autoUnification')) {
+        settings.autoUnification = false;
+    }
+    if (!settings.hasOwnProperty('unification')) {
+        settings.unification = 'reject';
+    }
 
     if (!settings.hasOwnProperty('autoCraft')) {
         settings.autoCraft = false;
@@ -173,9 +179,6 @@ export function loadSettings() {
     }
     if (!settings.hasOwnProperty('religion2')) {
         settings.religion2 = "study";
-    }
-    if (!settings.hasOwnProperty('unify')) {
-        settings.unify = 'unify';
     }
 
     if (!settings.hasOwnProperty('autoPriority')) {

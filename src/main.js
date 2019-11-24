@@ -2,7 +2,7 @@ import { sleep, inEvolution } from './utility.js';
 import { autoEvolution } from './evolution.js';
 import { autoEmploy } from './jobs.js';
 import { autoBattle } from './war.js';
-import { autoTax, autoGovernment } from './government.js';
+import { autoTax, autoGovernment, autoUnification } from './government.js';
 import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './industry.js';
 import { autoPriority } from './priority.js';
 import { autoCraft, autoTrade, autoMarket, autoStorage, autoEjector } from './resources.js';
@@ -110,6 +110,9 @@ async function fastAutomate(count) {
         }
         if (settings.autoGovernment) {
             await autoGovernment();
+        }
+        if (settings.autoUnification) {
+            await autoUnification();
         }
         if (settings.autoPrestige) {
             await autoPrestige();

@@ -20,7 +20,13 @@ export async function openModal(btn) {
 	return true;
 }
 
-export async function closeModal() {
+export async function closeModal(close) {
+	close = (close === undefined) ? true : close;
+	if (!close) {
+		modal = false;
+		return true;
+	}
+
 	// Closing modal
 	let closeBtn = $('.modal-close')[0];
 	if (closeBtn !== undefined) {

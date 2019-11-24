@@ -68,14 +68,6 @@ function getAvailableResearches() {
             // Checking if study/deify ancients
             if(researches[x].id == "tech-study" && settings.religion2 == "deify") {continue;}
             if(researches[x].id == "tech-deify" && settings.religion2 == "study") {continue;}
-            // Checking if unification
-            if(researches[x].id.indexOf("wc") >= 0) {
-                if (settings.uniChoice == 'unify') {
-                    if (researches[x].id == 'tech-wc_reject') {continue;}
-                } else {
-                    if (researches[x].id == 'tech-wc_conquest' || researches[x].id == 'tech-wc_morale' || researches[x].id == 'tech-wc_money') {continue;}
-                }
-            }
         }
         research.push(researches[x]);
     }

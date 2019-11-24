@@ -30,7 +30,6 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Add Slave Market Action
 * Maybe create a backend refresh script for Auto Support so the poppers don't need to be read every time (maybe?)
 * Add Priority Ignore setting for Auto Priority (Turns it into old Auto Build)
-* Re-Add manual buttons for Auto Buildings
 * Dryad Dams and Wind Farms may break Auto Support
 * Salamander Forge may break Auto Smelter
 
@@ -42,6 +41,5 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Auto Gene - Automatically buy traits with genes
 * Improve Auto Employ (Depending on Auto Priority for craftsman, manage morale with entertainers, manage farmers with food rate)
 * Create additional setting templates in Saved Settings
-* Auto Spy
-* Fix Auto Battle for multiple factions
-* Migrate modal buildings to use Industry Tab
+* Fix Auto Battle for multiple factions (Make dependant on Auto Unification as well for seiges or Cultural Supremacy)
+* Update Auto Unification with more settings. (maybe make it smarter somehow? idk how)

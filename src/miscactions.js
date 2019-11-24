@@ -269,7 +269,7 @@ export class GeneAction extends MiscAction {
     }
 
     get unlocked() {
-        return this.btn !== null;
+        return resources.Knowledge.max > 200000 && this.btn !== null;
     }
 
     get name() {
@@ -322,9 +322,9 @@ export class MercenaryAction extends MiscAction {
 
     get unlocked() {
         let unlocked = window.evolve.global.civic.garrison.mercs;
-        if (this.maxPrice == -1) {return unlocked;}
-
-        return unlocked && this.getResDep('Money') < this.maxPrice;
+        let canBuySoldiers = getAvailableSoldiers() != getMaxSoldiers();
+        let belowMaxPrice = (this.maxPrice == -1) ? true : this.getResDep('Money') < this.maxPrice;
+        return unlocked && canBuySoldiers && belowMaxPrice;
     }
 
     get name() {
