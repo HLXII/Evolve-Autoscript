@@ -13,8 +13,8 @@ import { updateUI } from './ui.js';
 
 
 export const url = 'https://github.com/HLXII/Evolve-Autoscript';
-export const version = '1.3.3';
-export const workingVersion = '0.7.0';
+export const version = '1.3.4';
+export const workingVersion = '0.7.1';
 
 (async function() {
     console.log("Waiting for game to load...");
