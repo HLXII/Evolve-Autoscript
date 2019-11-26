@@ -1,4 +1,4 @@
-import { disableMult, getRealValue, getMinMoney, allocate, prioCompare } from './utility.js';
+import { sleep, disableMult, getRealValue, getMinMoney, allocate, prioCompare } from './utility.js';
 import { settings, updateSettings } from './settings.js';
 import { researched } from './researches.js';
 
@@ -418,81 +418,71 @@ export function autoCraft() {
     }
 }
 
-export function autoMarket() {
+export async function autoMarket() {
     // Don't start autoMarket if haven't unlocked market
     if (!researched('tech-market')) {return;}
     let curMoney = resources.Money.amount;
     let maxMoney = resources.Money.storage;
-    let multipliers = $('#market-qty').children();
-    // If multipliers don't exist (aka cannot manual buy/sell) don't autoMarket
-    if (multipliers === null || multipliers === undefined || multipliers.length == 0) {return;}
-    let curMarketVolume = Math.min(settings.marketVolume,multipliers.length);
-    multipliers[curMarketVolume].click();
-    let qty = 25;
-    switch(curMarketVolume) {
-        case 1: qty = 10; break;
-        case 2: qty = 25; break;
-        case 3: qty = 100; break;
-        case 4: qty = 250; break;
-        case 5: qty = 1000; break;
-        case 6: qty = 2500; break;
-        case 7: qty = 10000; break;
-        case 8: qty = 25000; break;
-    }
-    setTimeout(function(){ //timeout needed to let the click on multiplier take effect
-        for (var x in resources) {
-            let resource = resources[x];
-            // Continue if resource hasn't been unlocked
-            if(!resource.unlocked) {continue;}
-            // Continue if resource isn't tradeable
-            if(!(resource instanceof TradeableResource)) {continue;}
+    // If market input doesn't exist (aka cannot manual buy/sell) don't autoMarket
+    let marketInput = document.querySelector(".market input");
+    if (marketInput === null) {return;}
+    let qty = Math.min(+marketInput.max, settings.marketVolume);
 
-            //console.log("Auto Market", resource.name);
-            let curResource = resource.amount;
-            let maxResource = resource.storage;
-            // Can sell resource
-            //console.log(resource.id, resource.ratio, resource.sellRatio);
-            if (resource.autoSell && resource.ratio > resource.sellRatio && resource.sellBtn !== null) {
-                //console.log("Autoselling", resource.name);
-                let sellValue = getRealValue(resource.sellBtn.innerHTML.substr(1));
-                let counter = 0;
-                //console.log("CURM:", curMoney, "sellV", sellValue, "MAXM", maxMoney, "CURR", curResource, "MAXR", maxResource);
-                while(true) {
-                    // Break if too much money, not enough resources, or sell ratio reached
-                    if (curMoney + sellValue >= maxMoney || curResource - qty <= 0 || curResource / maxResource < resource.sellRatio) {
-                        //console.log("Sold", counter*100);
-                        break;
-                    }
-                    counter += 1;
-                    resource.sellBtn.click();
-                    curMoney += sellValue;
-                    curResource -= qty;
-                    if (counter > 50) {
-                        break;
-                    }
+    marketInput.value = qty;
+    await sleep(25);
+
+    for (var x in resources) {
+        let resource = resources[x];
+        // Continue if resource hasn't been unlocked
+        if(!resource.unlocked) {continue;}
+        // Continue if resource isn't tradeable
+        if(!(resource instanceof TradeableResource)) {continue;}
+
+        //console.log("Auto Market", resource.name);
+        let curResource = resource.amount;
+        let maxResource = resource.storage;
+        // Can sell resource
+        //console.log(resource.id, resource.ratio, resource.sellRatio);
+        if (resource.autoSell && resource.ratio > resource.sellRatio && resource.sellBtn !== null) {
+            //console.log("Autoselling", resource.name);
+            let sellValue = getRealValue(resource.sellBtn.innerHTML.substr(1));
+            let counter = 0;
+            //console.log("CURM:", curMoney, "sellV", sellValue, "MAXM", maxMoney, "CURR", curResource, "MAXR", maxResource);
+            while(true) {
+                // Break if too much money, not enough resources, or sell ratio reached
+                if (curMoney + sellValue >= maxMoney || curResource - qty <= 0 || curResource / maxResource < resource.sellRatio) {
+                    //console.log("Sold", counter*100);
+                    break;
                 }
-            }
-
-            if (resource.autoBuy && resource.ratio < resource.buyRatio && resource.buyBtn !== null) {
-                //console.log("Autobuying", resource.name);
-                let buyValue = getRealValue(resource.buyBtn.innerHTML.substr(1));
-                let counter = 0;
-                //console.log("CURM:", curMoney, "sellV", buyValue, "MAXM", maxMoney, "CURR", curResource, "MAXR", maxResource, "MINM", getMinMoney());
-                while(true) {
-                    // Break if too little money, too much resources, or buy ratio reached
-                    if (curMoney - buyValue < getMinMoney() || curResource + qty > resource.storage || curResource / maxResource > resource.buyRatio) {
-                        break;
-                    }
-                    resource.buyBtn.click();
-                    curMoney -= buyValue;
-                    curResource += qty;
-                    if (counter > 50) {
-                        break;
-                    }
+                counter += 1;
+                resource.sellBtn.click();
+                curMoney += sellValue;
+                curResource -= qty;
+                if (counter > 50) {
+                    break;
                 }
             }
         }
-    }, 25);
+
+        if (resource.autoBuy && resource.ratio < resource.buyRatio && resource.buyBtn !== null) {
+            //console.log("Autobuying", resource.name);
+            let buyValue = getRealValue(resource.buyBtn.innerHTML.substr(1));
+            let counter = 0;
+            //console.log("CURM:", curMoney, "sellV", buyValue, "MAXM", maxMoney, "CURR", curResource, "MAXR", maxResource, "MINM", getMinMoney());
+            while(true) {
+                // Break if too little money, too much resources, or buy ratio reached
+                if (curMoney - buyValue < getMinMoney() || curResource + qty > resource.storage || curResource / maxResource > resource.buyRatio) {
+                    break;
+                }
+                resource.buyBtn.click();
+                curMoney -= buyValue;
+                curResource += qty;
+                if (counter > 50) {
+                    break;
+                }
+            }
+        }
+    }
 }
 
 export function autoTrade(priorityData) {

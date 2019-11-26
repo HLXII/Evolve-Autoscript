@@ -1,5 +1,5 @@
 import { url, version, workingVersion } from './main.js';
-import { keyMult, inEvolution, getTab } from './utility.js';
+import { keyMult, inEvolution, getTab, getRealValue } from './utility.js';
 import { settings, loadSettings, updateSettings, printSettings, importSettings, exportSettings } from './settings.js';
 import { evoChallengeActions } from './evolution.js';
 import { loadFarm } from './farm.js';
@@ -1280,24 +1280,15 @@ function createAutoSettingResourcePage(tab) {
     let volumeOption = $('<div style="display:flex;"></div>');
     autoMarketContent.append(volumeOption);
     autoMarketContent.append($('<br></br>'));
-    volumeOption.append($('<h3 class="has-text-warning" style="width:12rem;">Market Volume:</h3>'));
-    let volumeDropdown = $(`<select style="width:12rem;">
-                        <option value="1">10x</option>
-                        <option value="2">25x</option>
-                        <option value="3">100x</option>
-                        <option value="4">250x</option>
-                        <option value="5">1000x</option>
-                        <option value="6">2500x</option>
-                        <option value="7">10000x</option>
-                        <option value="8">25000x</option>
-                        </select>`);
-    volumeDropdown[0].value = settings.marketVolume;
-    volumeDropdown[0].onchange = function(){
-        settings.marketVolume = volumeDropdown[0].value;
-        console.log("Changing market volume to ", settings.marketVolume);
-        updateSettings();
-    };
-    volumeOption.append(volumeDropdown);
+    let volumeConvert = function(val) {
+        val = getRealValue(val);
+        if (isNaN(val)) {return null;}
+        if (val <= 0) {return 1;}
+        if (val > 1000000) {return 1000000;}
+        return val;
+    }
+    let volumeInput = createInputControl(settings.marketVolume, 'marketVolume', 'Market Volume', {convertFunc:volumeConvert});
+    volumeOption.append(volumeInput);
 
     let convertFunc = function(val) {
         val = getRealValue(val);

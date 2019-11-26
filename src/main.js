@@ -103,7 +103,7 @@ async function fastAutomate(count) {
             autoTax();
         }
         if (settings.autoMarket){
-            autoMarket();
+            await autoMarket();
         }
         if (settings.autoStorage) {
             autoStorage();

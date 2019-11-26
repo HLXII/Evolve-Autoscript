@@ -140,7 +140,7 @@ export function loadSettings() {
         settings.autoMarket = false;
     }
     if (!settings.hasOwnProperty('marketVolume')) {
-        settings.marketVolume = 1;
+        settings.marketVolume = 1000;
     }
     if (!settings.hasOwnProperty('minimumMoney')) {
         settings.minimumMoney = 0;
