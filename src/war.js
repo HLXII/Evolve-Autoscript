@@ -75,6 +75,7 @@ function getWinRate(num) {
     if (span === null) {return 0;}
     span = span.attributes['data-label'].value;
     span = /([\d\.]+)% ([\w]+)/.exec(span);
+    if (span === null) {return 0;}
     let [ meh, winRate, advantage] = span;
     winRate = parseFloat(winRate);
     winRate *= (advantage == 'advantage') ? 1 : -1;

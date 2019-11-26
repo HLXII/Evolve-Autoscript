@@ -151,6 +151,8 @@ function governmentAvailable(government) {
 }
 
 export async function autoGovernment() {
+	// Don't start if government not unlocked
+	if (!researched('tech-government')) {return;}
 	// Don't start Auto Government if can't change
 	if (!canChangeGovernment()) {return;}
 
