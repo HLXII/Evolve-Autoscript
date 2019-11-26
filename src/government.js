@@ -281,36 +281,46 @@ export async function autoUnification() {
 		}
 	}
 
-	// Espionage
+	// TEMP - buying spies
 	for (let i = 0;i < 3;i++) {
-		// Don't start espionage if there are no spies
-		if (!getSpyCount(i)) {continue;}
-		// Don't start espionage if currently on mission
-		if (isEspionage(i)) {continue;}
+		let id = `gov${i}`;
+		let btn = document.querySelector(`#${id} > div:nth-child(3) > span:nth-child(2) > button`);
+		if (btn !== null) {btn.click();}
+	}
 
-		let action = null;
-		switch(settings.unification) {
-			case 'conquest': {
-				// Can still lower military
-				if (getMilitary(i) != 50) {
-					action = 'sabotage';
-				}				
-				break;
-			}
-			case 'morale' : {
-				// Can still increase relations
-				if (getRelation(i) != 0) {
-					action = 'influence';
-				}
-				else if (getUnrest(i) < 100) {
-					action = 'incite';
-				}
-			}
-		}
+	// Espionage
+	if (window.evolve.global.tech['spy'] && window.evolve.global.tech['spy'] >= 2) {
+		for (let i = 0;i < 3;i++) {
+			// Don't start espionage if there are no spies
+			if (!getSpyCount(i)) {continue;}
+			// Don't start espionage if currently on mission
+			if (isEspionage(i)) {continue;}
 
-		if (action !== null) {
-			await runEspionage(i, action);			
+			let action = null;
+			switch(settings.unification) {
+				case 'conquest': {
+					// Can still lower military
+					if (getMilitary(i) != 50) {
+						action = 'sabotage';
+					}				
+					break;
+				}
+				case 'morale' : {
+					// Can still increase relations
+					if (getRelation(i) != 0) {
+						action = 'influence';
+					}
+					else if (getUnrest(i) < 100) {
+						action = 'incite';
+					}
+				}
+			}
+
+			if (action !== null) {
+				await runEspionage(i, action);			
+			}
 		}
 	}
+
 
 }
