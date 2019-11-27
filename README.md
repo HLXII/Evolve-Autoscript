@@ -43,3 +43,4 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Create additional setting templates in Saved Settings
 * Fix Auto Battle for multiple factions (Make dependant on Auto Unification as well for seiges or Cultural Supremacy)
 * Update Auto Unification with more settings. (maybe make it smarter somehow? idk how)
+* Add priority trigger system. Opens modal when clicking on custom priority UI, gives multiple option type / value for triggers. Basically coding

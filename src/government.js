@@ -273,7 +273,7 @@ export async function autoUnification() {
 
 	// Trying to purchase unification tech
 	if (window.evolve.global.tech['unify'] == 1 && !window.evolve.global.tech['m_boost']) {
-		let action = 'wc_' + settings.unification;
+		let action = 'tech-wc_' + settings.unification;
 		let btn = document.getElementById(action);
 		if (btn !== null) {
 			btn.children[0].click();

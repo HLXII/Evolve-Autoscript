@@ -539,11 +539,9 @@ export function autoTrade(priorityData) {
     console.log("FOC LIST:", focusList);
     let focusSequence = [];
     let curNum = {};
-    let curRatio = {};
     let wantedRatio = {};
     let totalPriority = 0;
     let priorities = [];
-    let ratios = [];
     let keys = [];
     let allocations = {};
     if (focusList.length > 0) {
@@ -552,11 +550,9 @@ export function autoTrade(priorityData) {
         for (let i = 0;i < focusList.length;i++) {totalPriority += (resources[focusList[i].res].priority * focusList[i].action.priority)**2;}
         for (let i = 0;i < focusList.length;i++) {
             curNum[focusList[i].res] = 0;
-            wantedRatio[focusList[i].res] = (resources[focusList[i].res].priority * focusList[i].action.priority)**2 / totalPriority;
-            if (wantedRatio[focusList[i].res] * totalTradeRoutes < 1) {wantedRatio[focusList[i].res] = 0;}
             if (focusList[i].res !== 'Money') {
-                priorities.push(resources[focusList[i].res].priority);
-                ratios.push(wantedRatio[focusList[i].res]);
+                let priority = (resources[focusList[i].res].priority * focusList[i].action.priority)**2;
+                priorities.push(priority);
                 keys.push(focusList[i].res);
             }
             //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
