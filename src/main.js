@@ -80,7 +80,7 @@ async function fastAutomate(count) {
             if (settings.autoGraphene) {
                 await autoGraphene();
             }
-            if (settings.autoSupport && count % settings.supportSettings.Interval == 0) {
+            if (settings.autoSupport) {
                 await autoSupport();
             }
         }

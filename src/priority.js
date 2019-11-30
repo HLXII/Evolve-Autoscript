@@ -343,7 +343,7 @@ export async function autoPriority(count) {
             await autoGraphene();
         }
     }
-    if (settings.autoSupport && count % settings.supportSettings.Interval == 0) {
+    if (settings.autoSupport) {
         await autoSupport(limits);
     }
 
