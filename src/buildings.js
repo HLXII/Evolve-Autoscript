@@ -5,6 +5,10 @@ import { researched } from './researches.js';
 import { checkPowerRequirements, getBaseCP, poweredBuildingList } from './support.js';
 import { openModal, closeModal } from './modal.js';
 
+const missions =   ['space-test_launch', 'space-moon_mission', 'space-red_mission', 'space-hell_mission', 
+                    'space-sun_mission', 'space-gas_mission', 'space-gas_moon_mission', 'space-belt_mission', 'space-dwarf_mission',
+                    'interstellar-alpha_mission' , 'interstellar-proxima_mission', 'interstellar-nebula_mission' ,'interstellar-neutron_mission' ,'interstellar-blackhole_mission'];
+
 export class Building extends Action {
     constructor(id, loc) {
         super(id, loc);
@@ -30,6 +34,9 @@ export class Building extends Action {
     }
 
     get unlocked() {
+        if (missions.includes(this.id)) {
+            return this.label !== null;
+        }
         return this.data !== null;
     }
 

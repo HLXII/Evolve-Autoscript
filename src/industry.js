@@ -71,6 +71,8 @@ function getSmelterData() {
 export async function autoSmelter(limits) {
     // Don't Auto smelt if not unlocked
     if (!researched('tech-steel')) {return;}
+    // Don't Auto smelt if haven't gotten a smelter yet
+    if (buildings['city-smelter'].numTotal < 1) {return;}
 
     // Finding relevent elements
     let data = getSmelterData();
