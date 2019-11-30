@@ -29,7 +29,6 @@ If the game is run for long enough without refreshing, then clicking buttons on 
 * Add Balorg slave catching setting to Auto Battle (If can get more slaves, override max campaign to ambush)
 * Add Slave Market Action
 * Add Priority Ignore setting for Auto Priority (Turns it into old Auto Build)
-* Salamander Forge may break Auto Smelter
 
 ## Large
 * Auto Fortress - Manage hell soldiers for both defense and patrols

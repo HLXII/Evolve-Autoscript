@@ -277,7 +277,6 @@ export async function autoUnification() {
 		let btn = document.getElementById(action);
 		if (btn !== null) {
 			btn.children[0].click();
-			return;
 		}
 	}
 
@@ -321,6 +320,4 @@ export async function autoUnification() {
 			}
 		}
 	}
-
-
 }

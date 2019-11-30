@@ -18,34 +18,37 @@ export function loadSmelter() {
 function getSmelterData() {
     let spans = document.querySelectorAll('#iSmelter > .fuels > span');
     let data = {};
-    // Wood (Lumber/Souls/Flesh)
-    if (!window.evolve.global.race['kindling_kindred'] || window.evolve.global.race['evil']) {
-        data.Wood = {};
-        data.Wood.decBtn = spans[0];
-        data.Wood.incBtn = spans[2];
-        let str = spans[1].attributes['data-label'].value
-        str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
-        data.Wood.num = window.evolve.global.city.smelter.Wood;
-        data.Wood.fuel = parseFloat(str[1]);
-        data.Wood.name = str[2];
-    }
-    // Coal
-    if (window.evolve.global.resource.Coal.display) {
-        data.Coal = {};
-        data.Coal.decBtn = (data.Wood) ? spans[3] : spans[0];
-        data.Coal.incBtn = (data.Wood) ? spans[5] : spans[2];
-        let str = (data.Wood) ? spans[4].attributes['data-label'].value : spans[1].attributes['data-label'].value;
-        data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-        data.Coal.num = window.evolve.global.city.smelter.Coal;
-    }
-    // Oil
-    if (window.evolve.global.resource.Oil.display) {
-        data.Oil = {};
-        data.Oil.decBtn = (data.Wood) ? spans[6] : spans[3];
-        data.Oil.incBtn = (data.Wood) ? spans[8] : spans[5];
-        let str = (data.Wood) ? spans[7].attributes['data-label'].value : spans[4].attributes['data-label'].value;
-        data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
-        data.Oil.num = window.evolve.global.city.smelter.Oil;
+
+    if (!window.evolve.global.race['forge']) {
+        // Wood (Lumber/Souls/Flesh)
+        if (!window.evolve.global.race['kindling_kindred'] || window.evolve.global.race['evil']) {
+            data.Wood = {};
+            data.Wood.decBtn = spans[0];
+            data.Wood.incBtn = spans[2];
+            let str = spans[1].attributes['data-label'].value
+            str = /Consume ([\d\.]+) ([\w]+)/.exec(str);
+            data.Wood.num = window.evolve.global.city.smelter.Wood;
+            data.Wood.fuel = parseFloat(str[1]);
+            data.Wood.name = str[2];
+        }
+        // Coal
+        if (window.evolve.global.resource.Coal.display) {
+            data.Coal = {};
+            data.Coal.decBtn = (data.Wood) ? spans[3] : spans[0];
+            data.Coal.incBtn = (data.Wood) ? spans[5] : spans[2];
+            let str = (data.Wood) ? spans[4].attributes['data-label'].value : spans[1].attributes['data-label'].value;
+            data.Coal.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
+            data.Coal.num = window.evolve.global.city.smelter.Coal;
+        }
+        // Oil
+        if (window.evolve.global.resource.Oil.display) {
+            data.Oil = {};
+            data.Oil.decBtn = (data.Wood) ? spans[6] : spans[3];
+            data.Oil.incBtn = (data.Wood) ? spans[8] : spans[5];
+            let str = (data.Wood) ? spans[7].attributes['data-label'].value : spans[4].attributes['data-label'].value;
+            data.Oil.fuel = parseFloat(/Burn ([\d\.]+).*/.exec(str)[1]);
+            data.Oil.num = window.evolve.global.city.smelter.Oil;
+        }
     }
 
     // Iron
