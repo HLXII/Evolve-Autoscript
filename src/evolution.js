@@ -1,6 +1,6 @@
 import { settings, loadSettings } from './settings.js';
 import { resetUI } from './ui.js';
-import { perkUnlocked, achievementUnlocked } from './utility.js';
+import { sleep, perkUnlocked, achievementUnlocked } from './utility.js';
 
 // IDs of the farming buttons
 const evoFarmActions = ["evo-rna", "evo-dna"];
@@ -116,7 +116,7 @@ export function loadEvolution() {
     maxEvo['evo-mitochondria'] = (maxEvo['evo-mitochondria'] <= 0) ? 1 : maxEvo['evo-mitochondria'];
 }
 
-export function autoEvolution() {
+export async function autoEvolution() {
     let actions = document.querySelectorAll('#evolution .action');
     let chosenAction = null;
     let chosenPriority = 0;
@@ -185,8 +185,9 @@ export function autoEvolution() {
     if (chosenAction !== null) {
         chosenAction.children[0].click();
         if (chosenPriority <= 5) {
-            loadSettings();
             resetUI();
+            await sleep(1000);
+            await loadSettings();
         }
     }
 }

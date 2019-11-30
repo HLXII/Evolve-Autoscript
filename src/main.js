@@ -34,14 +34,7 @@ async function main() {
         return;
     }
 
-    // Waiting for global to load
-    while(1) {
-        if (window.evolve.hasOwnProperty('global')) {
-            break;
-        }
-    }
-
-    loadSettings();
+    await loadSettings();
     console.log(settings);
 
     // Main script loop
@@ -64,7 +57,7 @@ async function fastAutomate(count) {
     if (inEvolution()) {
         // Evolution Automation
         if(settings.autoEvolution) {
-            autoEvolution();
+            await autoEvolution();
             // Loading buttons again to get DNA button
             loadFarm();
         }

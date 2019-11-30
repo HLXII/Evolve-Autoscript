@@ -1335,12 +1335,6 @@ function createBuildingSetting(loc, id, name, toolTip) {
     let div = $('<div style="display:flex"></div>').append(resText).append(resControls);
     return div;
 }
-function loadSupportUI(content) {
-    let intervalToolTip = 'This setting will determine how many script cycles before the setting will trigger.';
-    let intervalControl = createBuildingSetting('supportSettings', 'Interval', 'Interval', intervalToolTip);
-    content.append(intervalControl);
-    content.append($('<br>'));
-}
 function loadSmelterUI(content) {
 
     let woodControl = createBuildingSetting('smelterSettings', 'Wood', 'Wood Priority');
@@ -1394,8 +1388,7 @@ function createAutoSettingBuildingPage(tab) {
 
     // Auto Support
     let autoSupportDesc = 'Powers buildings and allocates support. Power Priority can be changed in the Priority Tab.';
-    let [autoSupportTitle, autoSupportContent] = createAutoSettingToggle('autoSupport', 'Auto Support', autoSupportDesc, true, tab);
-    loadSupportUI(autoSupportContent);
+    let [autoSupportTitle, autoSupportContent] = createAutoSettingToggle('autoSupport', 'Auto Support', autoSupportDesc, false, tab);
 
     // Auto Smelter
     let autoSmelterDesc = "Allocates the smelter building. The priorities determine how much each resource is weighted. Can choose whether to depend on the Auto Priority queue or just the priorities here.";

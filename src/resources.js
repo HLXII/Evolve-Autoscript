@@ -555,6 +555,9 @@ export function autoTrade(priorityData) {
                 priorities.push(priority);
                 keys.push(focusList[i].res);
             }
+            else {
+                resources.Money.trade = (resources[focusList[i].res].priority * focusList[i].action.priority)**2 / totalPriority;
+            }
             //if (focusList[i].res == 'Money') {wantedRatio[focusList[i].res] /= totalPriority;}
             //console.log(focusList[i].res, focusList[i].action.priority , resources[focusList[i].res].basePriority, wantedRatio[focusList[i].res],  wantedRatio[focusList[i].res] * totalTradeRoutes);
         }
@@ -574,7 +577,7 @@ export function autoTrade(priorityData) {
     // Allocating all possible trade routes with given money
     let curFreeTradeRoutes = totalTradeRoutes;
     // Keeping fraction of base money for money
-    if (wantedRatio.Money > 0) {resources.Money.temp_rate *= 1 - wantedRatio.Money;}
+    if (resources.Money.trade > 0) {resources.Money.temp_rate *= 1 - resources.Money.trade;}
     //console.log(wantedRatio.Money,resources.Money.temp_rate);
     // Begin allocating algorithm
     while (curFreeTradeRoutes > 0) {

@@ -4,7 +4,7 @@ import { loadFarm } from './farm.js';
 import { loadResources } from './resources.js';
 import { loadMiscActions, loadArpas, loadStorages } from './miscactions.js';
 import { loadResearches } from './researches.js';
-import { loadBuildings, loadSpaceDockBuildings } from './buildings.js';
+import { loadBuildings } from './buildings.js';
 import { loadJobs, loadCraftJobs } from './jobs.js';
 import { loadGovernments } from './government.js';
 import { loadSmelter, loadFactory, loadDroid, loadGraphene } from './industry.js';
@@ -13,7 +13,7 @@ import { updateUI, resetUI } from './ui.js';
 import { openModal, closeModal } from './modal.js';
 
 export var settings = {};
-export function loadSettings() {
+export async function loadSettings() {
     console.log("Loading Settings");
 
     let jsonSettings = localStorage.getItem('settings');
@@ -33,7 +33,6 @@ export function loadSettings() {
     try { loadResearches(); } catch(e) {console.log('Error: Load Researches', e);}
     // Buildings
     try { loadBuildings(); } catch(e) {console.log('Error: Load Buildings', e);}
-    try { loadSpaceDockBuildings(); } catch(e) {console.log('Error: Load SpaceDock Buildings', e);}
     // Jobs
     try { loadJobs(); } catch(e) {console.log('Error: Load Jobs', e);}
     try { loadCraftJobs(); } catch(e) {console.log('Error: Load Craft Jobs', e);}

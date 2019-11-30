@@ -30,7 +30,7 @@ export class Building extends Action {
     }
 
     get unlocked() {
-        return this.btn !== null;
+        return this.data !== null;
     }
 
     get numTotal() {
@@ -118,14 +118,14 @@ export class PoweredBuilding extends Building {
     async getCP() {
         let consume = [];
         let produce = [];
-        let effectFunc = this.effect;
-        let effect = await effectFunc(this.btn);
+        let effect = this.effect;
+        if (effect === null) {return;}
         [consume,produce] = getBaseCP(poweredBuildingList[this.id],effect);
 
         // Special since we can't read this info easily from the effect
         switch(this.id) {
             case 'city-mill': {
-                consume.push({res:'Food',cost:10});
+                consume.push({res:'Food',cost:100});
                 produce.push({res:'electricity',cost:1});
                 break;
             }
@@ -177,7 +177,6 @@ export class PoweredBuilding extends Building {
 export class SpaceDockBuilding extends Building {
     constructor(id, loc) {
         super(id, loc);
-        this.res = {};
     }
 
     get unlocked() {
@@ -196,39 +195,12 @@ export class SpaceDockBuilding extends Building {
         return window.evolve.global['starDock'][action];
     }
 
-    loadRes() {
-        let data = $('#' + this.id + ' > a')[0];
-        for (let i = 0;i < data.attributes.length;i++) {
-            let name = data.attributes[i].name;
-            let cost = data.attributes[i].value;
-            if (name.indexOf('data-') >= 0) {
-                this.res[name.substr(5, name.length)] = parseInt(cost);
-            }
-        }
-    }
-
-    getResDep(resid) {
-        return this.res[resid.toLowerCase()];
-    }
-
     async click() {
         if (!this.unlocked) {return false;}
 
-        // Opening modal
-        let opened = await openModal($('#space-star_dock > .special'));
-        if (!opened) {return false;}
-
-        // Delaying for modal animation
-        let tempID = this.id;
-        // Getting info
-        let build = buildings[tempID];
-        // Buying
-        if (build.btn !== null) {
-            build.btn.getElementsByTagName("a")[0].click();
-        }
-
-        await closeModal();
-        return true;
+        let def = this.def;
+        if (def === null) {return false;}
+        return def.action();
     }
 }
 
@@ -295,22 +267,4 @@ export function loadBuildings() {
         }
     }
     console.log(buildings);
-}
-
-export async function loadSpaceDockBuildings() {
-    if (buildings['space-star_dock'].numTotal < 1) {return;}
-
-    // Opening modal
-    let opened = await openModal($('#space-star_dock > .special'));
-    if (!opened) {return false;}
-
-    // Getting info
-    buildings['spcdock-probes'].num = buildings['spcdock-probes'].numTotal;
-    buildings['spcdock-probes'].loadRes();
-    buildings['spcdock-seeder'].num = buildings['spcdock-seeder'].numTotal;
-    buildings['spcdock-seeder'].loadRes();
-
-    // Closing modal
-    await closeModal();
-
 }

@@ -46,21 +46,10 @@ export class Action {
         return title;
     }
 
-    async effect(btn) {
-        return new Promise(resolve => {
-            // Opening popper window
-            btn.dispatchEvent(new Event('mouseover'));
-            setTimeout(function() {
-                // Reading effect
-                let data = document.querySelector(`#pop${btn.id}.popper > div:nth-child(3)`);
-                let effect = data ? data.innerHTML : "";
-                //Closing popper window
-                setTimeout(function() {
-                    btn.dispatchEvent(new Event('mouseout'));
-                    resolve(effect);
-                }, 25);
-            }, 25);
-        });
+    get effect() {
+        let def = this.def;
+        if (def === null) {return null;}
+        return def.effect();
     }
 
     get def() {
@@ -81,13 +70,12 @@ export class Action {
     }
 
     getResDep(resid) {
-        if (this.btn === null) {return null;}
-        let data = this.btn.querySelector('.button');
-        if (data === null) {return null;}
-        data = data.attributes[`data-${resid.toLowerCase()}`];
-        if (data === undefined) {return null;}
-        data = +data.value;
-        return data;
+        let def = this.def;
+        if (def === null) {return 0;}
+        if (def.cost.hasOwnProperty(resid)) {
+            return def.cost[resid]();
+        }
+        return 0;
     }
 
     click() {
