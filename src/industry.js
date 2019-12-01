@@ -281,7 +281,7 @@ export async function autoSmelter(limits) {
         }
     }
 
-    let produceAllocation = allocate(fuelAllocation.total,prodPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
+    let produceAllocation = allocate(totalSmelters,prodPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
     console.log("SMELTER PRODUCE:", produceAllocation);
 

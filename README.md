@@ -12,9 +12,6 @@ It is highly recommended to import settings from [Saved Settings](https://github
 
 All priority settings are very opaque. As in, it is not very clear how changes in priorities affects the underlying script decisions. Thus, asking about what a 'good' priority setting to have is a bit hard to answer. I suggest playing around with the values until you're happy with the result. If you are very curious of how the priorities affect the script, you'll have to dig into the algorithm.
 
-# Known Issues (AKA I won't fix)
-If the game is run for long enough without refreshing, then clicking buttons on the modal windows (smelter, factory, etc) will lag the game. I don't know why this is, and I don't know how to fix it. So... I added an Auto Refresh setting to reload the page every 200 seconds. Use if you want (but most people don't).
-
 # Stuff to do
 
 ## Bugfix
