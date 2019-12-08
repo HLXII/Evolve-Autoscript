@@ -753,7 +753,7 @@ function createAutoSettingGeneralPage(tab) {
     let autoRefreshDesc = 'Automatically reloads the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
     let [autoRefreshTitle, autoRefreshContent] = createAutoSettingToggle('autoRefresh', 'Auto Refresh', autoRefreshDesc, false, tab);
     let reloadBtnDetails = 'Resets the UI and reloads the backend variables.';
-    let reloadBtn = $(`<div role="button" class="is-primary is-bottom is-small b-tooltip is-animated is-multiline" data-label="${reloadBtnDetails}"><button class="button is-primary"><span>Reset UI</span></button></div>`);
+    let reloadBtn = $(`<div role="button" class="${toolTipClass}" data-label="${reloadBtnDetails}"><button class="button is-primary is-small"><span>Reset UI</span></button></div>`);
     reloadBtn.on('click', function(e){
         if (e.which != 1) {return;}
         resetUI();
@@ -1745,6 +1745,7 @@ function drawMercenaryItem(action, actionDiv) {
 }
 function populatePriorityList() {
     let priorityList = $('#priorityList')[0];
+    let priorityList = document.getElementById('priorityList');
     var x;
     var name;
     let temp_l = [];
@@ -1911,13 +1912,67 @@ function createPriorityList(settingsTab) {
     populatePriorityList();
     updatePriorityList();
 }
+export function loadPriorityQueue(priorityData) {
+    let priorityQueue = document.getElementById('priorityQueue');
+    if (!priorityQueue) {return;}
+
+    // Removing all elements
+    console.log(priorityQueue.childNodes)
+    while(priorityQueue.childNodes.length != 1) {
+        priorityQueue.removeChild(priorityQueue.lastChild);
+    }
+
+    let actions = priorityData.actions;
+    let limits = priorityData.limits;
+
+    // Drawing actions into queue
+    for (let i = 0;i < actions.length;i++) {
+        let action = actions[i];
+        var actionDiv;
+        if (i % 2) {
+            actionDiv = $(`<div id="${action.id}_PQ" style="display:flex" class="market-item"></div>`);
+        } else {
+            actionDiv = $(`<div id="${action.id}_PQ" style="display:flex" class="resource alt market-item"></div>`);
+        }
+        priorityQueue.appendChild(actionDiv[0]);
+
+        // Name Label
+        if (action.name === null) {
+            name = action.id.split('-')[1];
+        } else {
+            name = action.name;
+        }
+        let nameDiv = $(`<span class="${toolTipClass}" style="width:20%;" data-label="Id:${action.id}, Loc:${action.loc[action.loc.length-1]}">${name}</span>`);
+        nameDiv[0].classList.add(action.color);
+        actionDiv.append(nameDiv);
+    }
+}
+function createPriorityQueue(settingsTab) {
+    let priorityQueue = $('<div id="priorityQueue"></div>');
+    let priorityQueueLabel = $(`<div style="display:flex;">
+                                <div style="width:20%;text-align:left;padding-left:1rem;"><span class="name has-text-warning">Action</span></div>
+                                <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning">Priority</span></div>
+                                <div style="width:70%;text-align:center;padding-left:1rem;"><span class="name has-text-warning">Resources</span></div>
+                                </div>`);
+    priorityQueue.append(priorityQueueLabel);
+    settingsTab.append(priorityQueue);
+}
 function createAutoSettingPriorityPage(tab) {
 
     // Auto Priority
     let autoPriorityDesc = 'Main Priority System. Creates a priority queue for all the buildings/research/misc. The priority queue can also be used to manage allocation for other settings (smelter, trade, etc). This will probably be heavily reworked in the future.';
     let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, true, tab);
-
     createPriorityList(autoPriorityContent);
+
+    let PQViewToolTip = 'Loads UI for the priority queue in the next script cycle.';
+    let PQViewBtn = $(`<div role="button" class="${toolTipClass}" data-label="${PQViewToolTip}"><button class="button is-primary is-small"><span>Load Priority Queue</span></button></div>`);
+    PQViewBtn.on('click', function(e){
+        if (e.which != 1) {return;}
+        settings.loadPQ = true;
+    });
+    autoPriorityTitle.append(PQViewBtn);
+
+    createPriorityQueue(tab);
 }
 
 function createAutoLog() {

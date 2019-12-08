@@ -4,7 +4,7 @@ import { buildings, Building } from './buildings.js';
 import { researches, Research, researched } from './researches.js';
 import { miscActions, arpas, storages, ArpaAction } from './miscactions.js';
 import { messageQueue, getTotalGameDays, prioCompare } from './utility.js';
-import { resetUICheck } from './ui.js';
+import { resetUICheck, loadPriorityQueue } from './ui.js';
 import { autoSmelter, autoFactory, autoDroid, autoGraphene } from './industry.js';
 import { autoSupport } from './support.js';
 import { settings } from './settings.js';
@@ -308,5 +308,12 @@ export async function autoPriority(count) {
     console.log("ACT:", actions);
     console.log("LIM:", limits);
 
-    return {limits:limits}
+    let priorityData = {limits:limits,actions:actions};
+
+    if (settings.loadPQ) {
+        settings.loadPQ = false;
+        loadPriorityQueue(priorityData)
+    }
+
+    return priorityData;
 }

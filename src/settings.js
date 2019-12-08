@@ -195,6 +195,9 @@ export async function loadSettings() {
     if (!settings.hasOwnProperty('showMisc')) {
         settings.showMisc = false;
     }
+    if (!settings.hasOwnProperty('loadPQ')) {
+        settings.loadPQ = false;
+    }
 
     if (!settings.hasOwnProperty('log')) {settings.log = []};
 }
