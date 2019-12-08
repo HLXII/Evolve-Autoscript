@@ -1744,7 +1744,6 @@ function drawMercenaryItem(action, actionDiv) {
     actionDiv.append(priceDiv);
 }
 function populatePriorityList() {
-    let priorityList = $('#priorityList')[0];
     let priorityList = document.getElementById('priorityList');
     var x;
     var name;
