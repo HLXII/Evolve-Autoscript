@@ -521,7 +521,7 @@ export function autoTrade(priorityData) {
     let focusList = [];
     for (x in limits) {
         // There exists an action that requires this resource
-        if (limits[x] === null) {continue;}
+        if (limits[x] === undefined) {continue;}
         // Excluding craftable resources
         if (!(x in resources)) {continue;}
         // Excluding untradeable resources

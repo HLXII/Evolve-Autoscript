@@ -73,7 +73,7 @@ export class ArpaAction extends Building {
         console.log("Incrementing Button Size", this.id, this.size);
     }
 
-    getResDep(resid) {
+    getRes(resid) {
         if (this.res === null) {
             return null;
         }
@@ -228,7 +228,7 @@ export class StorageAction extends MiscAction {
         }
     }
 
-    getResDep(resid) {
+    getRes(resid) {
         if (this.res === null) {
             return null;
         }
@@ -276,7 +276,7 @@ export class GeneAction extends MiscAction {
         return "Assemble Gene";
     }
 
-    getResDep(resid) {
+    getRes(resid) {
         if (this.res === null) {
             return null;
         }
@@ -323,7 +323,7 @@ export class MercenaryAction extends MiscAction {
     get unlocked() {
         let unlocked = window.evolve.global.civic.garrison.mercs;
         let canBuySoldiers = getAvailableSoldiers() != getMaxSoldiers();
-        let belowMaxPrice = (this.maxPrice == -1) ? true : this.getResDep('Money') < this.maxPrice;
+        let belowMaxPrice = (this.maxPrice == -1) ? true : this.getRes('Money') < this.maxPrice;
         return unlocked && canBuySoldiers && belowMaxPrice;
     }
 
@@ -331,7 +331,7 @@ export class MercenaryAction extends MiscAction {
         return "Hire Garrison Mercenary";
     }
 
-    getResDep(resid) {
+    getRes(resid) {
         let str = $('.hire > span')[0].attributes['data-label'].value;
         let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
         this.res.Money = val[1];
@@ -390,8 +390,8 @@ export class AlterAction extends MiscAction {
         return "Sacrifice";
     }
 
-    getResDep(resid) {
-        return null;
+    getRes(resid) {
+        return 0;
     }
 
     click() {

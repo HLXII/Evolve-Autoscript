@@ -122,7 +122,7 @@ export async function autoSmelter(limits) {
         if (limits) {
             switch(data.Wood.name) {
                 case 'Lumber': {
-                    if (limits.Lumber !== null) {
+                    if (limits.Lumber !== undefined) {
                         priority /= limits.Lumber.priority;
                     } else {
                         priority = 10**5;
@@ -130,7 +130,7 @@ export async function autoSmelter(limits) {
                     break;
                 }
                 case 'Souls': {
-                    if (limits.Food !== null) {
+                    if (limits.Food !== undefined) {
                         priority /= limits.Food.priority;
                     } else {
                         priority = 10**5;
@@ -138,7 +138,7 @@ export async function autoSmelter(limits) {
                     break;
                 }
                 case 'Flesh': {
-                    if (limits.Furs !== null) {
+                    if (limits.Furs !== undefined) {
                         priority /= limits.Furs.priority;
                     } else {
                         priority = 10**5;
@@ -153,7 +153,7 @@ export async function autoSmelter(limits) {
         fuelKeys.push('Coal');
         let priority = settings.smelterSettings.Coal;
         if (limits) {
-            if (limits.Coal !== null) {
+            if (limits.Coal !== undefined) {
                 priority /= limits.Coal.priority;
             } else {
                 priority = 10**10;
@@ -165,7 +165,7 @@ export async function autoSmelter(limits) {
         fuelKeys.push('Oil');
         let priority = settings.smelterSettings.Oil;
         if (limits) {
-            if (limits.Oil !== null) {
+            if (limits.Oil !== undefined) {
                 priority /= limits.Oil.priority;
             } else {
                 priority = 10**20;
@@ -217,7 +217,7 @@ export async function autoSmelter(limits) {
         prodKeys.push('Iron');
         let priority = settings.smelterSettings.Iron;
         if (limits) {
-            if (limits.Iron !== null) {
+            if (limits.Iron !== undefined) {
                 priority /= limits.Iron.priority;
             } else {
                 priority = 0;
@@ -229,7 +229,7 @@ export async function autoSmelter(limits) {
         prodKeys.push('Steel');
         let priority = settings.smelterSettings.Steel;
         if (limits) {
-            if (limits.Steel !== null) {
+            if (limits.Steel !== undefined) {
                 priority /= limits.Steel.priority;
             } else {
                 priority = 0;
@@ -449,7 +449,7 @@ export async function autoFactory(limits) {
         keys.push('Lux');
         let priority = settings.factorySettings.Luxury_Goods;
         if (limits) {
-            if (limits.Money !== null) {
+            if (limits.Money !== undefined) {
                 priority *= limits.Money.priority;
             } else {
                 priority /= 10e10;
@@ -462,7 +462,7 @@ export async function autoFactory(limits) {
         keys.push('Alloy');
         let priority = settings.factorySettings.Alloy;
         if (limits) {
-            if (limits.Alloy !== null) {
+            if (limits.Alloy !== undefined) {
                 priority *= limits.Alloy.priority;
             } else {
                 priority /= 10e10;
@@ -475,7 +475,7 @@ export async function autoFactory(limits) {
         keys.push('Polymer');
         let priority = settings.factorySettings.Polymer;
         if (limits) {
-            if (limits.Polymer !== null) {
+            if (limits.Polymer !== undefined) {
                 priority *= limits.Polymer.priority;
             } else {
                 priority /= 10e10;
@@ -488,7 +488,7 @@ export async function autoFactory(limits) {
         keys.push('Nano');
         let priority = settings.factorySettings.Nano_Tube;
         if (limits) {
-            if (limits.Nano_Tube !== null) {
+            if (limits.Nano_Tube !== undefined) {
                 priority *= limits.Nano_Tube.priority;
             } else {
                 priority /= 10e10;
@@ -501,7 +501,7 @@ export async function autoFactory(limits) {
         keys.push('Stanene');
         let priority = settings.factorySettings.Stanene;
         if (limits) {
-            if (limits.Stanene !== null) {
+            if (limits.Stanene !== undefined) {
                 priority *= limits.Stanene.priority;
             } else {
                 priority /= 10e10;
@@ -668,7 +668,7 @@ export async function autoDroid(limits) {
         keys.push('Adamantite');
         let priority = settings.droidSettings.Adamantite;
         if (limits) {
-            if (limits.Adamantite !== null) {
+            if (limits.Adamantite !== undefined) {
                 priority *= limits.Adamantite.priority;
             } else {
                 priority /= 10e10;
@@ -681,7 +681,7 @@ export async function autoDroid(limits) {
         keys.push('Uranium');
         let priority = settings.droidSettings.Uranium;
         if (limits) {
-            if (limits.Uranium !== null) {
+            if (limits.Uranium !== undefined) {
                 priority *= limits.Uranium.priority;
             } else {
                 priority /= 10e10;
@@ -694,7 +694,7 @@ export async function autoDroid(limits) {
         keys.push('Coal');
         let priority = settings.droidSettings.Coal;
         if (limits) {
-            if (limits.Coal !== null) {
+            if (limits.Coal !== undefined) {
                 priority *= limits.Coal.priority;
             } else {
                 priority /= 10e10;
@@ -707,7 +707,7 @@ export async function autoDroid(limits) {
         keys.push('Aluminium');
         let priority = settings.droidSettings.Aluminium;
         if (limits) {
-            if (limits.Aluminium !== null) {
+            if (limits.Aluminium !== undefined) {
                 priority *= limits.Aluminium.priority;
             } else {
                 priority /= 10e10;
@@ -835,7 +835,7 @@ export async function autoGraphene(limits) {
         fuelKeys.push('Lumber');
         let priority = settings.grapheneSettings.Wood;
         if (limits) {
-            if (limits.Lumber !== null) {
+            if (limits.Lumber !== undefined) {
                 priority /= limits.Lumber.priority;
             } else {
                 priority *= 10e10;
@@ -847,7 +847,7 @@ export async function autoGraphene(limits) {
         fuelKeys.push('Coal');
         let priority = settings.grapheneSettings.Coal;
         if (limits) {
-            if (limits.Coal !== null) {
+            if (limits.Coal !== undefined) {
                 priority /= limits.Coal.priority;
             } else {
                 priority *= 10e10;
@@ -859,7 +859,7 @@ export async function autoGraphene(limits) {
         fuelKeys.push('Oil');
         let priority = settings.grapheneSettings.Oil;
         if (limits) {
-            if (limits.Oil !== null) {
+            if (limits.Oil !== undefined) {
                 priority /= limits.Oil.priority;
             } else {
                 priority *= 10e10;

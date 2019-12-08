@@ -69,13 +69,12 @@ export class Action {
         return window.evolve.global[type][action];
     }
 
-    getResDep(resid) {
+    getRes(resid) {
         let def = this.def;
         if (def === null) {return 0;}
-        if (def.cost.hasOwnProperty(resid)) {
-            return def.cost[resid]();
-        }
-        return 0;
+        if (!def.hasOwnProperty('cost')) {return 0;}
+        if (!def.cost.hasOwnProperty(resid)) {return 0;}
+        return def.cost[resid]();
     }
 
     click() {

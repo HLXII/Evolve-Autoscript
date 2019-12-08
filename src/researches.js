@@ -7,8 +7,11 @@ export class Research extends Action {
         this.color = 'has-text-danger';
     }
 
-    get researched() {
+    get priority() {
+        return this.basePriority * 50;
+    }
 
+    get researched() {
         let [grant, val] = this.def.grant;
         let old = false;
         if (window.evolve.global.tech[grant] !== undefined) {

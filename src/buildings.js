@@ -12,25 +12,29 @@ const missions =   ['space-test_launch', 'space-moon_mission', 'space-red_missio
 export class Building extends Action {
     constructor(id, loc) {
         super(id, loc);
-        if (!settings.actions[this.id].hasOwnProperty('atLeast')) {settings.actions[this.id].atLeast = 0;}
-        if (!settings.actions[this.id].hasOwnProperty('limit')) {settings.actions[this.id].limit = -1;}
-        if (!settings.actions[this.id].hasOwnProperty('softCap')) {settings.actions[this.id].softCap = -1;}
+        if (!settings.actions[this.id].hasOwnProperty('decay')) {settings.actions[this.id].decay = 0.95;}
+        if (!settings.actions[this.id].hasOwnProperty('min')) {settings.actions[this.id].min = 0;}
+        if (!settings.actions[this.id].hasOwnProperty('max')) {settings.actions[this.id].max = -1;}
         this.color = 'has-text-warning';
     }
 
-    get atLeast() {return settings.actions[this.id].atLeast;}
-    set atLeast(atLeast) {settings.actions[this.id].atLeast = atLeast;}
-    get limit() {return settings.actions[this.id].limit;}
-    set limit(limit) {settings.actions[this.id].limit = limit;}
-    get softCap() {return settings.actions[this.id].softCap;}
-    set softCap(softCap) {settings.actions[this.id].softCap = softCap;}
+    get decay() {return settings.actions[this.id].decay;}
+    set decay(decay) {settings.actions[this.id].decay = decay;}
+    get min() {return settings.actions[this.id].min;}
+    set min(min) {settings.actions[this.id].min = min;}
+    get max() {return settings.actions[this.id].max;}
+    set max(max) {settings.actions[this.id].max = max;}
 
     get priority() {
-        // Setting priority to 100 if building hasn't reached the At Least value
-        if (this.atLeast != 0 && this.numTotal < this.atLeast) {
+        // Setting priority to 100 if building hasn't reached the min amount
+        if (this.min != 0 && this.numTotal < this.min) {
             return 100;
         }
-        return this.basePriority;
+        let priority = this.basePriority;
+        // Scaling by decay
+        priority *= this.decay ** this.numTotal;
+
+        return priority;
     }
 
     get unlocked() {
@@ -47,43 +51,46 @@ export class Building extends Action {
         return this.data.count;
     }
 
-    decAtLeast(mult) {
-        if (this.atLeast == 0) {return;}
-        this.atLeast -= mult;
-        if (this.atLeast < 0) {this.atLeast = 0;}
+    decDecay(mult) {
+        if (this.decay == 0.01) {return;}
+        this.decay -= mult * 0.01;
+        this.decay = parseFloat(Number(this.decay).toFixed(2));
+        if (this.decay < 0.01) {this.decay = 0.01;}
         updateSettings();
-        console.log("Decrementing At Least", this.id, this.atLeast);
+        console.log("Decrementing Decay", this.id, this.decay);
     }
-    incAtLeast(mult) {
-        this.atLeast += mult;
+    incDecay(mult) {
+        if (this.decay == 1) {return;}
+        this.decay += mult * 0.01;
+        this.decay = parseFloat(Number(this.decay).toFixed(2));
+        if (this.decay > 1) {this.decay = 1;}
         updateSettings();
-        console.log("Incrementing At Least", this.id, this.atLeast);
+        console.log("Incrementing Decay", this.id, this.decay);
+    }
+    decMin(mult) {
+        if (this.min == 0) {return;}
+        this.min -= mult;
+        if (this.min < 0) {this.min = 0;}
+        updateSettings();
+        console.log("Decrementing Min", this.id, this.min);
+    }
+    incmin(mult) {
+        this.min += mult;
+        updateSettings();
+        console.log("Incrementing Min", this.id, this.min);
     }
 
-    decLimit(mult) {
-        if (this.limit == -1) {return;}
-        this.limit -= mult;
-        if (this.limit < -1) {this.limit = -1;}
+    decMax(mult) {
+        if (this.max == -1) {return;}
+        this.max -= mult;
+        if (this.max < -1) {this.max = -1;}
         updateSettings();
-        console.log("Decrementing Limit", this.id, this.limit);
+        console.log("Decrementing Max", this.id, this.max);
     }
-    incLimit(mult) {
-        this.limit += mult;
+    incMax(mult) {
+        this.max += mult;
         updateSettings();
-        console.log("Incrementing Limit", this.id, this.limit);
-    }
-
-    decSoftCap(mult) {
-        if (this.softCap == -1) {return;}
-        this.softCap -= mult;
-        if (this.softCap < -1) {this.softCap = 1;}
-        updateSettings();
-        console.log("Decrementing SoftCap", this.id, this.softCap);
-    }
-    incSoftCap(mult) {
-        this.softCap += mult;
-        updateSettings();
-        console.log("Incrementing SoftCap", this.id, this.softCap);
+        console.log("Incrementing Max", this.id, this.max);
     }
 }
 
@@ -91,14 +98,6 @@ export class PoweredBuilding extends Building {
     constructor(id, loc) {
         super(id, loc);
         if (!settings.actions[this.id].hasOwnProperty('powerPriority')) {settings.actions[this.id].powerPriority = 0;}
-        /*
-        try {
-        [this.consume,this.produce] = getPowerData(id, this.def);
-        //console.log(this.consume, this.produce);
-        } catch(e) {
-            console.log("Error loading power for ",this.id);
-        }
-        */
     }
 
     get powerPriority() {return settings.actions[this.id].powerPriority;}

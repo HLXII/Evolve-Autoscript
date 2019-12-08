@@ -1601,8 +1601,8 @@ function updatePriorityList() {
         if (res.length != 0 && action.res !== null) {
             let pass = false;
             for (let i = 0;i < res.length;i++) {
-                console.log(action.id, res, action.def.cost, action.getResDep(res[i]));
-                if (action.getResDep(res[i]) !== null && action.getResDep(res[i]) > 0) {
+                console.log(action.id, res, action.def.cost, action.getRes(res[i]));
+                if (action.getRes(res[i]) !== null && action.getRes(res[i]) > 0) {
                     pass = true;
                     break;
                 }
@@ -1622,47 +1622,47 @@ function updatePriorityList() {
 }
 function drawBuildingItem(building, buildingDiv) {
 
-    // Building At Least
-    let atLeastSub = function(mult) {
-        building.decAtLeast(mult);
-        return building.atLeast;
+    // Decay
+    let decaySub = function(mult) {
+        building.decDecay(mult);
+        return building.decay;
     }
-    let atLeastAdd = function(mult) {
-        building.incAtLeast(mult);
-        return building.atLeast;
+    let decayAdd = function(mult) {
+        building.incDecay(mult);
+        return building.decay;
     }
-    let atLeastControls = createNumControl(building.atLeast, building.id+'-min', atLeastSub, atLeastAdd);
-    let atLeastDiv = $('<div style="width:10%;" title="'+building.id+' Minimum"></div>');
-    atLeastDiv.append(atLeastControls);
-    buildingDiv.append(atLeastDiv);
+    let decayControls = createNumControl(building.decay,building.id+'-decay',decaySub,decayAdd);
+    let decayDiv = $('<div style="width:10%;" title="'+building.id+' Decay"></div>');
+    decayDiv.append(decayControls);
+    buildingDiv.append(decayDiv);
+
+    // Building Min
+    let minSub = function(mult) {
+        building.decMin(mult);
+        return building.min;
+    }
+    let minAdd = function(mult) {
+        building.incMin(mult);
+        return building.min;
+    }
+    let minControls = createNumControl(building.min, building.id+'-min', minSub, minAdd);
+    let minDiv = $('<div style="width:10%;" title="'+building.id+' Minimum"></div>');
+    minDiv.append(minControls);
+    buildingDiv.append(minDiv);
 
     // Building Limit
-    let limSub = function(mult) {
-        building.decLimit(mult);
-        return building.limit;
+    let maxSub = function(mult) {
+        building.decMax(mult);
+        return building.max;
     }
-    let limAdd = function(mult) {
-        building.incLimit(mult);
-        return building.limit;
+    let maxAdd = function(mult) {
+        building.incMax(mult);
+        return building.max;
     }
-    let limControls = createNumControl(building.limit, building.id+'-max', limSub, limAdd);
-    let limDiv = $('<div style="width:10%;" title="'+building.id+' Maximum"></div>');
-    limDiv.append(limControls);
-    buildingDiv.append(limDiv);
-
-    // Building SoftCap
-    let softCapSub = function(mult) {
-        building.decSoftCap(mult);
-        return building.softCap;
-    }
-    let softCapAdd = function(mult) {
-        building.incSoftCap(mult);
-        return building.softCap;
-    }
-    let softCapControls = createNumControl(building.softCap, building.id+'-softcap', softCapSub, softCapAdd);
-    let softCapDiv = $('<div style="width:10%;" title="'+building.id+' Soft Cap"></div>');
-    softCapDiv.append(softCapControls);
-    buildingDiv.append(softCapDiv);
+    let maxControls = createNumControl(building.max, building.id+'-max', maxSub, maxAdd);
+    let maxDiv = $('<div style="width:10%;" title="'+building.id+' Maximum"></div>');
+    maxDiv.append(maxControls);
+    buildingDiv.append(maxDiv);
 
     // Power Priority
     if (building instanceof PoweredBuilding) {
@@ -1777,6 +1777,12 @@ function populatePriorityList() {
         nameDiv[0].classList.add(action.color);
         actionDiv.append(nameDiv);
 
+        // Enable Toggle
+        let enableDiv = $('<div style="width:10%;" title="'+action.id+' Enabled"></div>');
+        actionDiv.append(enableDiv);
+        let toggle = createToggleControl(action.id+'_enabled', '', {path:[action, 'enabled'],small:true});
+        enableDiv.append(toggle);
+
         // Priority
         let prioSub = function(mult) {
             action.decBasePriority(mult);
@@ -1791,12 +1797,6 @@ function populatePriorityList() {
         let prioDiv = $('<div style="width:10%;" title="'+action.id+' Priority"></div>');
         prioDiv.append(prioControls);
         actionDiv.append(prioDiv);
-
-        // Enable Toggle
-        let enableDiv = $('<div style="width:10%;" title="'+action.id+' Enabled"></div>');
-        actionDiv.append(enableDiv);
-        let toggle = createToggleControl(action.id+'_enabled', '', {path:[action, 'enabled'],small:true});
-        enableDiv.append(toggle);
 
         if (action instanceof Building) {
             drawBuildingItem(action,actionDiv);
@@ -1827,7 +1827,7 @@ function createPriorityList(settingsTab) {
     let bottomLeft = $('<div id="prioritySettingsBottomLeft"></div>');
     let topRight = $('<div id="prioritySettingsTopRight" style="float:right"></div>');
     let bottomRight = $('<div id="prioritySettingsBottomRight"></div>');
-    let search = $('<input type="text" id="priorityInput" placeholder="Search for actions (ex: \'iron loc:city res:money\')" style="width:20rem;">');
+    let search = $('<input type="text" id="priorityInput" placeholder="Search for actions (ex: \'iron loc:city res:Sheet_Metal\')" style="width:20rem;">');
     search.on('input', updatePriorityList);
     let sortLabel = $('<span style="padding-left:20px;padding-right:20px;">Sort:</span>');
     let sort = $('<select style="width:110px;" id="prioritySort"><option value="none">None</option><option value="name">Name</option><option value="priority">Priority</option><option value="powerPriority">Power Priority</option></select>');
@@ -1898,11 +1898,11 @@ function createPriorityList(settingsTab) {
     let priorityList = $('<div id="priorityList"></div>');
     let priorityListLabel = $(`<div style="display:flex;">
                                 <div style="width:20%;text-align:left;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Action Name. Can be lowercase id if not currently available">Action</span></div>
-                                <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the priority of this action">Priority</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Enables this action for being automatically taken">Enabled</span></div>
+                                <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the priority of this action">Priority</span></div>
+                                <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the decay rate of the priority, based on number built">Decay</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will focus on buying this amount of this building before anything else.">Min</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will stop building this building after reaching this limit">Max</span></div>
-                                <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Will softcap this building after reaching this limit, however will still build if resources full">Soft Cap</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Sets the priority for powering this building">Power</span></div>
                                 <div style="width:10%;text-align:center;padding-left:1rem;"><span class="name has-text-warning ${toolTipClass}" data-label="Special settings for this action. Hover over for details.">Special</span></div>
                                 </div>`);
@@ -1915,9 +1915,9 @@ function createAutoSettingPriorityPage(tab) {
 
     // Auto Priority
     let autoPriorityDesc = 'Main Priority System. Creates a priority queue for all the buildings/research/misc. The priority queue can also be used to manage allocation for other settings (smelter, trade, etc). This will probably be heavily reworked in the future.';
-    let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, false, tab);
+    let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, true, tab);
 
-    createPriorityList(tab);
+    createPriorityList(autoPriorityContent);
 }
 
 function createAutoLog() {
