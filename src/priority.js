@@ -48,13 +48,12 @@ function getAvailableResearches() {
         if (btn === null) {continue;}
         if (btn.className.indexOf('cnam') >= 0) {continue;}
         // Research filters
-        if (settings.autoResearch) {
-            if(researches[x].id == "tech-fanaticism" && settings.religion1 == "anthropology") {continue;}
-            if(researches[x].id == "tech-anthropology" && settings.religion1 == "fanaticism") {continue;}
-            // Checking if study/deify ancients
-            if(researches[x].id == "tech-study" && settings.religion2 == "deify") {continue;}
-            if(researches[x].id == "tech-deify" && settings.religion2 == "study") {continue;}
-        }
+        if(researches[x].id == "tech-fanaticism" && settings.religion1 == "anthropology") {continue;}
+        if(researches[x].id == "tech-anthropology" && settings.religion1 == "fanaticism") {continue;}
+        // Checking if study/deify ancients
+        if(researches[x].id == "tech-study" && settings.religion2 == "deify") {continue;}
+        if(researches[x].id == "tech-deify" && settings.religion2 == "study") {continue;}
+            
         research.push(researches[x]);
     }
     //console.log(research);

@@ -170,9 +170,6 @@ export async function loadSettings() {
         settings.autoGraphene = false;
     }
 
-    if (!settings.hasOwnProperty('autoResearch')) {
-        settings.autoResearch = false;
-    }
     if (!settings.hasOwnProperty('religion1')) {
         settings.religion1 = "fanaticism";
     }

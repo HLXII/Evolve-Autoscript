@@ -1466,7 +1466,7 @@ function createAutoSettingResearchPage(tab) {
     // Research Settings
 
     let autoResearchDesc = 'Controls which research branches to take. Turning this off will have irregular research purchases.';
-    let [autoResearchTitle, autoResearchContent] = createAutoSettingToggle('autoResearch', 'Auto Research', autoResearchDesc, true, tab);
+    let [autoResearchTitle, autoResearchContent] = createAutoSettingTitle('autoResearch', 'Auto Research', autoResearchDesc, true, tab);
     // Creating Fanaticism/Anthropology choice
     let religionStr1 = 'This setting chooses between Fanaticism and Anthropology. This setting becomes obsolete after getting Transcendence.';
     let religionDetails1 = $(`<div><span>${religionStr1}</span></div>`);
