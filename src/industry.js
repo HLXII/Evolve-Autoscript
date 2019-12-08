@@ -206,7 +206,7 @@ export async function autoSmelter(limits) {
     };
     let fuelAllocation = allocate(totalSmelters,fuelPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
-    console.log("SMELTER FUEL:", fuelAllocation);
+    console.log("SMELTER FUEL:", fuelAllocation, fuelPriorities);
 
     // Calculating Production
     let prodKeys = [];
@@ -218,7 +218,7 @@ export async function autoSmelter(limits) {
         let priority = settings.smelterSettings.Iron;
         if (limits) {
             if (limits.Iron !== undefined) {
-                priority /= limits.Iron.priority;
+                priority * limits.Iron.priority;
             } else {
                 priority = 0;
             }
@@ -230,7 +230,7 @@ export async function autoSmelter(limits) {
         let priority = settings.smelterSettings.Steel;
         if (limits) {
             if (limits.Steel !== undefined) {
-                priority /= limits.Steel.priority;
+                priority * limits.Steel.priority;
             } else {
                 priority = 0;
             }
@@ -283,7 +283,7 @@ export async function autoSmelter(limits) {
 
     let produceAllocation = allocate(totalSmelters,prodPriorities,{requireFunc:resourceCheck, allocFunc:allocFunc});
 
-    console.log("SMELTER PRODUCE:", produceAllocation);
+    console.log("SMELTER PRODUCE:", produceAllocation, prodPriorities);
 
     // Removing extra fuel
     for (let i = 0;i < fuelKeys.length;i++) {

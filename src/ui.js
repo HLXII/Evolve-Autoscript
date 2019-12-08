@@ -1562,7 +1562,6 @@ function updatePriorityList() {
             let aAction = getActionFromId(a.id.split('=')[0]);
             return sortMethod(aAction, bAction);
         });
-        console.log(divs[0]);
 
         // Add them into the ul in order
         newPriorityList.appendChild(header);
@@ -1635,7 +1634,6 @@ function updatePriorityList() {
         if (res.length != 0 && action.res !== null) {
             let pass = false;
             for (let i = 0;i < res.length;i++) {
-                console.log(action.id, res, action.def.cost, action.getRes(res[i]));
                 if (action.getRes(res[i]) !== null && action.getRes(res[i]) > 0) {
                     pass = true;
                     break;
@@ -1957,7 +1955,6 @@ export function loadPriorityQueue(priorityData, count) {
     if (!priorityQueue) {return;}
 
     // Removing all elements
-    console.log(priorityQueue.childNodes)
     while(priorityQueue.childNodes.length != 1) {
         priorityQueue.removeChild(priorityQueue.lastChild);
     }

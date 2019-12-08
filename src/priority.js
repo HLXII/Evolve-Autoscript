@@ -210,6 +210,11 @@ export async function autoPriority(count) {
             let resDep = action.getRes(resource.id);
             // Doesn't depend on this resource
             if (!resDep) {continue;}
+
+            if (resource.remainingAmount != 0) {
+                limits[resource.id] = action;
+            }
+
             // Don't keep if there is an impossible completion time
             if (action.maxCompletionTime == -1) {
                 // Keeping all the availble resource that's not being produced
@@ -237,10 +242,6 @@ export async function autoPriority(count) {
                     action.keptRes[resource.id] = Math.min(resource.remainingAmount, action.getRes(resource.id) - giveAmount)
                     resource.remainingAmount -= action.keptRes[resource.id];
                 }
-            }
-            // Setting limiting action
-            if (resource.remainingAmount == 0 && limits[resource.id] === undefined) {
-                limits[resource.id] = action;
             }
         }
 
