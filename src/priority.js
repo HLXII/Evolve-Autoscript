@@ -53,7 +53,7 @@ function getAvailableResearches() {
         // Checking if study/deify ancients
         if(researches[x].id == "tech-study" && settings.religion2 == "deify") {continue;}
         if(researches[x].id == "tech-deify" && settings.religion2 == "study") {continue;}
-            
+
         research.push(researches[x]);
     }
     //console.log(research);
@@ -226,10 +226,17 @@ export async function autoPriority(count) {
             }
             // Finding total amount to allocate to this action
             else {
+                // Amount that will be created during the timespan until the limiting resource is full
                 let giveAmount = (action.maxCompletionTime - action.completionTime[resource.id]) * resource.temp_rate;
-                let give = Math.min(giveAmount,resource.remainingAmount);
-                action.keptRes[resource.id] = Math.min(action.getRes(resource.id), resource.remainingAmount - give);
-                resource.remainingAmount -= action.keptRes[resource.id];
+                // If this amount is greater than the total required, set to 0
+                // If it's less than the total required, keep the difference from the remaining amount
+                if (giveAmount > action.getRes(resource.id)) {
+                    action.keptRes[resource.id] = 0;
+                }
+                else {
+                    action.keptRes[resource.id] = Math.min(resource.remainingAmount, action.getRes(resource.id) - giveAmount)
+                    resource.remainingAmount -= action.keptRes[resource.id];
+                }
             }
             // Setting limiting action
             if (resource.remainingAmount == 0 && limits[resource.id] === undefined) {
