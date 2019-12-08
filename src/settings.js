@@ -198,6 +198,9 @@ export async function loadSettings() {
     if (!settings.hasOwnProperty('loadPQ')) {
         settings.loadPQ = false;
     }
+    if (!settings.hasOwnProperty('pqInterval')) {
+        settings.pqInterval = 5;
+    }
 
     if (!settings.hasOwnProperty('log')) {settings.log = []};
 }

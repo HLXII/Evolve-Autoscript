@@ -220,8 +220,8 @@ export async function autoPriority(count) {
             // Finding total amount to allocate to this action
             let giveAmount = (action.maxCompletionTime - action.completionTime[resource.id]) * resource.temp_rate;
             let give = Math.min(giveAmount,resource.remainingAmount);
-            action.keptRes[resource.id] = resource.remainingAmount - give;
-            resource.remainingAmount = give;
+            action.keptRes[resource.id] = Math.min(action.getRes(resource.id), resource.remainingAmount - give);
+            resource.remainingAmount -= action.keptRes[resource.id];
 
             // Setting limiting action
             if (resource.remainingAmount == 0 && limits[resource.id] === undefined) {
@@ -310,9 +310,9 @@ export async function autoPriority(count) {
 
     let priorityData = {limits:limits,actions:actions};
 
-    if (settings.loadPQ) {
+    if (settings.loadPQ || (settings.pqInterval && count % settings.pqInterval == 0)) {
         settings.loadPQ = false;
-        loadPriorityQueue(priorityData)
+        loadPriorityQueue(priorityData, count)
     }
 
     return priorityData;

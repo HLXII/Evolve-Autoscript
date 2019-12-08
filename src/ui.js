@@ -1,5 +1,5 @@
 import { url, version, workingVersion } from './main.js';
-import { keyMult, inEvolution, getTab, getRealValue } from './utility.js';
+import { keyMult, inEvolution, getTab, getRealValue, getYear, getDay } from './utility.js';
 import { settings, loadSettings, updateSettings, printSettings, importSettings, exportSettings } from './settings.js';
 import { evoChallengeActions } from './evolution.js';
 import { loadFarm } from './farm.js';
@@ -280,12 +280,12 @@ function createAutoSettings() {
     ctrlDiv.append(textArea);
     let control = $('<div class="field"></div>');
     control.append(label).append(ctrlDiv);
-    let importBtn = $('<button class="button">Import Settings</button><text> </text>');
+    let importBtn = $('<a class="button">Import Settings</a><text> </text>');
     importBtn.on('click', function(e) {
         if (e.which != 1) {return;}
         importSettings();
     });
-    let exportBtn = $('<button class="button">Export Settings</button>');
+    let exportBtn = $('<a class="button">Export Settings</a>');
     exportBtn.on('click', function(e) {
         if (e.which != 1) {return;}
         exportSettings();
@@ -704,6 +704,40 @@ function createAutoSettingToggle(id, name, description, hasContent, tab, enabled
     }
     return [titleDiv, content];
 }
+function createAutoSettingTitle(id, name, description, hasContent, tab) {
+    tab.append($('<br></br>'));
+    let settingDiv = $(`<div id=as-${id}-title></div>`)
+    tab.append(settingDiv)
+    let titleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
+    settingDiv.append(titleDiv);
+    let title = $(`<span style="display:inline-flex;align-items:center;height:1.575em;">${name}</span>`);
+    titleDiv.append(title);
+    let details = $(`<span>${description}</span>`);
+    settingDiv.append(details);
+    let content = null;
+    if (hasContent) {
+        let contentId = 'as-' + id + '-content';
+        let style = 'margin-left:0.5em;overflow:hidden;max-height:0;transition:max-height 0.2s ease-out;'
+        content = $(`<div style="${style}" id="${contentId}"></div>`);
+        tab.append(content);
+        content.append($('<br></br>'));
+        let btnId = contentId + '-btn';
+        let btn = $(`<div id="${btnId}" class="sub" style="position:absolute;left:0px;width:1.5rem;height:25px;">+</div>`);
+        settingDiv.prepend(btn);
+        btn.on('click', function(e) {
+            if (content[0].style.maxHeight != '0px'){
+              content[0].style.maxHeight = '0px';
+              btn[0].innerText = '+';
+              content[0].style.overflow = 'hidden';
+            } else {
+              content[0].style.maxHeight = content[0].scrollHeight + 'px';
+              btn[0].innerText = '-';
+              content[0].style.overflow = '';
+            }
+        });
+    }
+    return [titleDiv, content];
+}
 
 function createAutoSettingGeneralPage(tab) {
 
@@ -753,7 +787,7 @@ function createAutoSettingGeneralPage(tab) {
     let autoRefreshDesc = 'Automatically reloads the page every 200 seconds. This setting was made due to the modal windows lagging after too many launches. Refreshing will remove this lag.';
     let [autoRefreshTitle, autoRefreshContent] = createAutoSettingToggle('autoRefresh', 'Auto Refresh', autoRefreshDesc, false, tab);
     let reloadBtnDetails = 'Resets the UI and reloads the backend variables.';
-    let reloadBtn = $(`<div role="button" class="${toolTipClass}" data-label="${reloadBtnDetails}"><button class="button is-primary is-small"><span>Reset UI</span></button></div>`);
+    let reloadBtn = $(`<div role="button" class="${toolTipClass}" data-label="${reloadBtnDetails}"><a class="button is-primary is-small"><span>Reset UI</span></a></div>`);
     reloadBtn.on('click', function(e){
         if (e.which != 1) {return;}
         resetUI();
@@ -1481,9 +1515,9 @@ function getActionFromId(id) {
 }
 function updatePriorityList() {
     console.log("Updating Priority List");
-    let search = $('#priorityInput')[0];
-    let sort = $('#prioritySort')[0];
-    let priorityList = $('#priorityList')[0];
+    let search = document.getElementById('priorityInput');
+    let sort = document.getElementById('prioritySort');
+    let priorityList = document.getElementById('priorityList');
 
     // Finding search parameters
     let terms = search.value.split(' ');
@@ -1615,6 +1649,13 @@ function updatePriorityList() {
 
         div.style.display = 'flex';
 
+    }
+
+    // Updating max height
+    let contentId = 'as-autoPriority-content';
+    let content = document.getElementById(contentId);
+    if (content) {
+        content.style.maxHeight = content.scrollHeight + 'px';
     }
 
     // Set focus back on search
@@ -1817,7 +1858,7 @@ function populatePriorityList() {
 }
 function createPriorityList(settingsTab) {
     // Creation Priority List
-    let priorityLabel = $('<div><h3 class="name has-text-warning" title="Set the Priority settings">Actions:</h3></div></br>');
+    let priorityLabel = $('<div><h3 class="name has-text-warning" title="Set the Priority settings">Actions:</h3></div>');
     settingsTab.append(priorityLabel);
     let prioritySettingsDiv = $('<div id="prioritySettingsDiv" style="overflow:auto"></div>');
     let prioritySettingsLeft = $('<div id="prioritySettingsLeft" style="float:left"></div>');
@@ -1844,7 +1885,7 @@ function createPriorityList(settingsTab) {
     let enableAllBtn = $('<a class="button is-dark is-small" id="enable-all-btn"><span>All</span></a>');
     enableAllBtn.on('click', function(e){
         if (e.which != 1) {return;}
-        let priorityList = $('#priorityList')[0];
+        let priorityList = document.getElementById('priorityList');
         for (let i = 1;i < priorityList.childNodes.length;i++) {
             getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = true;
         }
@@ -1854,7 +1895,7 @@ function createPriorityList(settingsTab) {
     let enableVisBtn = $('<a class="button is-dark is-small" id="enable-vis-btn"><span>Visible</span></a>');
     enableVisBtn.on('click', function(e){
         if (e.which != 1) {return;}
-        let priorityList = $('#priorityList')[0];
+        let priorityList = document.getElementById('priorityList');
         for (let i = 1;i < priorityList.childNodes.length;i++) {
             if (priorityList.childNodes[i].style.display !== 'none') {
                 getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = true;
@@ -1869,7 +1910,7 @@ function createPriorityList(settingsTab) {
     let disableAllBtn = $('<a class="button is-dark is-small" id="disable-all-btn"><span>All</span></a>');
     disableAllBtn.on('click', function(e){
         if (e.which != 1) {return;}
-        let priorityList = $('#priorityList')[0];
+        let priorityList = document.getElementById('priorityList');
         for (let i = 1;i < priorityList.childNodes.length;i++) {
             getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = false;
         }
@@ -1879,7 +1920,7 @@ function createPriorityList(settingsTab) {
     let disableVisBtn = $('<a class="button is-dark is-small" id="disable-vis-btn"><span>Visible</span></a>');
     disableVisBtn.on('click', function(e){
         if (e.which != 1) {return;}
-        let priorityList = $('#priorityList')[0];
+        let priorityList = document.getElementById('priorityList');
         for (let i = 1;i < priorityList.childNodes.length;i++) {
             if (priorityList.childNodes[i].style.display !== 'none') {
                 getActionFromId(priorityList.childNodes[i].id.split('=')[0]).enabled = false;
@@ -1911,7 +1952,7 @@ function createPriorityList(settingsTab) {
     populatePriorityList();
     updatePriorityList();
 }
-export function loadPriorityQueue(priorityData) {
+export function loadPriorityQueue(priorityData, count) {
     let priorityQueue = document.getElementById('priorityQueue');
     if (!priorityQueue) {return;}
 
@@ -1944,9 +1985,59 @@ export function loadPriorityQueue(priorityData) {
         let nameDiv = $(`<span class="${toolTipClass}" style="width:20%;" data-label="Id:${action.id}, Loc:${action.loc[action.loc.length-1]}">${name}</span>`);
         nameDiv[0].classList.add(action.color);
         actionDiv.append(nameDiv);
+
+        // Priority
+        let priority = parseFloat(Number(action.temp_priority).toFixed(2));
+        let priorityDiv = $(`<span style="width:10%;text-align:center;">${priority}</span>`)
+        actionDiv.append(priorityDiv);
+
+        // Resources
+        let resourcesDiv = $(`<div style="width:70%;display:inline-flex"></div>`);
+        actionDiv.append(resourcesDiv);
+        for (let resource in action.keptRes) {
+            let resourceDiv = $(`<div></div>`);
+            resourcesDiv.append(resourceDiv);
+
+            let resName = $(`<span class="${resources[resource].color}">${resource}: </span>`);
+            resourceDiv.append(resName);
+
+            let curAmt = action.keptRes[resource].toFixed(0);
+            let totAmt = action.getRes(resource).toFixed(0)
+            let amtStr = curAmt + '/' + totAmt;
+            let time = action.completionTime[resource].toFixed(0);
+            let resAmt = $(`<span class="${toolTipClass}" data-label="${time}" style="padding-right:1rem;">${amtStr}</span>`);
+            resourceDiv.append(resAmt)
+            if (curAmt == totAmt) {
+                resAmt.addClass('has-text-fade');
+            }
+            else if (limits[resource] && limits[resource].id == action.id) {
+                resAmt.addClass('has-text-caution');
+            }
+        }
     }
+
+    // Un-collapsing content
+    let btnId = 'as-priorityQueue-content-btn';
+    let btn = document.getElementById(btnId);
+    if (btn === null) {return;}
+    if (btn.innerText == '+') {
+        btn.click();
+    }
+
+    // Updating Last Update time
+    let updateDiv = document.getElementById('priorityQueueUpdate');
+    let year = getYear();
+    let day = getDay();
+    updateDiv.innerText = `Last Updated: Year ${year} Day ${day} - Script Cycle ${count}`
 }
-function createPriorityQueue(settingsTab) {
+function createPriorityQueue(settingsTab) {    
+
+    let priorityQueueTitleDiv = $('<div style="display:flex;justify-content:space-between;"></div>');
+    settingsTab.append(priorityQueueTitleDiv);
+    let priorityQueueTitle = $('<div id="priorityQueueTitle" class="has-text-warning">Priority Queue:</div>')
+    priorityQueueTitleDiv.append(priorityQueueTitle);
+    let priorityQueueUpdate = $('<div id="priorityQueueUpdate" class="has-text-warning"></div>');
+    priorityQueueTitleDiv.append(priorityQueueUpdate);
     let priorityQueue = $('<div id="priorityQueue"></div>');
     let priorityQueueLabel = $(`<div style="display:flex;">
                                 <div style="width:20%;text-align:left;padding-left:1rem;"><span class="name has-text-warning">Action</span></div>
@@ -1963,15 +2054,39 @@ function createAutoSettingPriorityPage(tab) {
     let [autoPriorityTitle, autoPriorityContent] = createAutoSettingToggle('autoPriority', 'Auto Priority', autoPriorityDesc, true, tab);
     createPriorityList(autoPriorityContent);
 
+    // Priority Queue
+    let priorityQueueDesc = 'Where the priority queue UI is loaded when the Load Priority Queue button is clicked.';
+    let [priorityQueueTitle, priorityQueueContent] = createAutoSettingTitle('priorityQueue', 'Priority Queue', priorityQueueDesc, true, tab);
+
     let PQViewToolTip = 'Loads UI for the priority queue in the next script cycle.';
-    let PQViewBtn = $(`<div role="button" class="${toolTipClass}" data-label="${PQViewToolTip}"><button class="button is-primary is-small"><span>Load Priority Queue</span></button></div>`);
+    let PQViewBtn = $(`<div role="button" class="${toolTipClass}" data-label="${PQViewToolTip}"><a class="button is-primary is-small"><span>Load Priority Queue</span></a></div>`);
     PQViewBtn.on('click', function(e){
         if (e.which != 1) {return;}
         settings.loadPQ = true;
     });
-    autoPriorityTitle.append(PQViewBtn);
+    priorityQueueTitle.append(PQViewBtn);
 
-    createPriorityQueue(tab);
+    // Priority Queue Interval
+    let pqIntervalDiv = $('<div style="display:flex;"></div>');
+    priorityQueueContent.append(pqIntervalDiv);
+    let pqIntervalToolTip = 'Reloads the priority queue UI every # script cycles. Set to 0 to disable automatic reloads.'
+    let pqIntervalTxt = $(`<span class="has-text-warning ${toolTipClass}" data-label="${pqIntervalToolTip}" style="width:12rem;">Priority Queue Interval:</span>`)
+    pqIntervalDiv.append(pqIntervalTxt);
+    let pqIntervalSub = function(mult) {
+        settings.pqInterval -= mult;
+        if (settings.pqInterval < 0) {settings.pqInterval = 0;}
+        return settings.pqInterval;
+    }
+    let pqIntervalAdd = function(mult) {
+        settings.pqInterval += mult;
+        return settings.pqInterval;
+    }
+    let pqIntervalControl = createNumControl(settings.pqInterval, "pqInterval", pqIntervalSub, pqIntervalAdd);
+    pqIntervalDiv.append(pqIntervalControl);
+    priorityQueueContent.append($('<br>'));
+
+    createPriorityQueue(priorityQueueContent);
+
 }
 
 function createAutoLog() {
