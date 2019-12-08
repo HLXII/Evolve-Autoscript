@@ -49,7 +49,7 @@ export class Action {
     get effect() {
         let def = this.def;
         if (def === null) {return null;}
-        return def.effect();
+        return (typeof def.effect == 'function') ? def.effect() : def.effect;
     }
 
     get def() {
