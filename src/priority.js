@@ -113,7 +113,6 @@ function getAvailableActions() {
 function getAvailableResources() {
     let res = [];
     for (var x in resources) {
-        if (!resources[x].unlocked) {continue;}
         res.push(resources[x]);
     }
     return res;
@@ -185,7 +184,7 @@ export async function autoPriority(count) {
             // Doesn't depend on this resource
             if (!resDep) {continue;}
             // Resource is full or has enough to complete
-            if (resource.ratio == 1 || resource.remainingAmount >= resDep) {
+            if (resource.unlocked && (resource.ratio == 1 || resource.remainingAmount >= resDep)) {
                 action.completionTime[resource.id] = 0;
                 action.completion[resource.id] = true;
                 continue;
@@ -214,15 +213,25 @@ export async function autoPriority(count) {
             if (!resDep) {continue;}
             // Don't keep if there is an impossible completion time
             if (action.maxCompletionTime == -1) {
-                action.keptRes[resource.id] = 0;
-                continue;
+                // Keeping all the availble resource that's not being produced
+                if (action.completionTime[resource.id] == -1) {
+                    let amt = Math.min(resource.remainingAmount, resDep)
+                    action.keptRes[resource.id] = amt;
+                    resource.remainingAmount -= amt;
+                }
+                // Keeping none of the other resources since it'll never be completed
+                else {
+                    action.keptRes[resource.id] = 0;
+                }
+
             }
             // Finding total amount to allocate to this action
-            let giveAmount = (action.maxCompletionTime - action.completionTime[resource.id]) * resource.temp_rate;
-            let give = Math.min(giveAmount,resource.remainingAmount);
-            action.keptRes[resource.id] = Math.min(action.getRes(resource.id), resource.remainingAmount - give);
-            resource.remainingAmount -= action.keptRes[resource.id];
-
+            else {
+                let giveAmount = (action.maxCompletionTime - action.completionTime[resource.id]) * resource.temp_rate;
+                let give = Math.min(giveAmount,resource.remainingAmount);
+                action.keptRes[resource.id] = Math.min(action.getRes(resource.id), resource.remainingAmount - give);
+                resource.remainingAmount -= action.keptRes[resource.id];
+            }
             // Setting limiting action
             if (resource.remainingAmount == 0 && limits[resource.id] === undefined) {
                 limits[resource.id] = action;

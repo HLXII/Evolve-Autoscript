@@ -2001,8 +2001,8 @@ export function loadPriorityQueue(priorityData, count) {
             let resName = $(`<span class="${resources[resource].color}">${resource}: </span>`);
             resourceDiv.append(resName);
 
-            let curAmt = action.keptRes[resource].toFixed(0);
-            let totAmt = action.getRes(resource).toFixed(0)
+            let curAmt = Number(action.keptRes[resource]).toFixed(0);
+            let totAmt = Number(action.getRes(resource)).toFixed(0)
             let amtStr = curAmt + '/' + totAmt;
             let time = action.completionTime[resource].toFixed(0);
             let resAmt = $(`<span class="${toolTipClass}" data-label="${time}" style="padding-right:1rem;">${amtStr}</span>`);

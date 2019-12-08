@@ -75,7 +75,7 @@ export class ArpaAction extends Building {
 
     getRes(resid) {
         if (this.res === null) {
-            return null;
+            return 0;
         }
         let multiplier = this.multiplier;
         if (window.evolve.global.race['creative']){
@@ -230,7 +230,7 @@ export class StorageAction extends MiscAction {
 
     getRes(resid) {
         if (this.res === null) {
-            return null;
+            return 0;
         }
         return this.res[resid] * this.size;
     }
@@ -278,7 +278,7 @@ export class GeneAction extends MiscAction {
 
     getRes(resid) {
         if (this.res === null) {
-            return null;
+            return 0;
         }
         return this.res[resid];
     }
@@ -332,13 +332,11 @@ export class MercenaryAction extends MiscAction {
     }
 
     getRes(resid) {
+        if (resid !== "Money") {return 0;}
         let str = $('.hire > span')[0].attributes['data-label'].value;
         let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
-        this.res.Money = val[1];
-        if (this.res === null) {
-            return null;
-        }
-        return this.res[resid];
+        console.log(val[1]);
+        return val[1];
     }
 
     click() {

@@ -74,7 +74,7 @@ export class Building extends Action {
         updateSettings();
         console.log("Decrementing Min", this.id, this.min);
     }
-    incmin(mult) {
+    incMin(mult) {
         this.min += mult;
         updateSettings();
         console.log("Incrementing Min", this.id, this.min);

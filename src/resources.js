@@ -526,6 +526,8 @@ export function autoTrade(priorityData) {
         if (!(x in resources)) {continue;}
         // Excluding untradeable resources
         if (!(resources[x] instanceof TradeableResource) && x != 'Money') {continue;}
+        // Excluding locked resources
+        if (!resources[x].unlocked) {continue;}
         // Excluding actions whose resource is already filled
         if (limits[x].completion[x] == true) {continue;}
         focusList.push({action:limits[x], res:x});
