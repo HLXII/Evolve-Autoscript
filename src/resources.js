@@ -639,7 +639,7 @@ export function autoTrade(priorityData) {
         }
         // Changing all routes that require less
         else {
-            if (Math.abs(newTradeRoutes[x]) <= Math.abs(curTradeRoutes[x])) {
+            if (Math.abs(newTradeRoutes[x]) < Math.abs(curTradeRoutes[x])) {
                 let routeChange = newTradeRoutes[x] - curTradeRoutes[x];
                 if (routeChange < 0) {
                     resources[x].tradeDec(-routeChange);
@@ -659,7 +659,7 @@ export function autoTrade(priorityData) {
         if (routeChange < 0) {
             resources[x].tradeDec(-routeChange);
         }
-        else {
+        else if (routeChange > 0) {
             resources[x].tradeInc(routeChange);
         }
     }
