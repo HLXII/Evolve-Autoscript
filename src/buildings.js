@@ -141,7 +141,12 @@ export class PoweredBuilding extends Building {
                 break;
             }
             case 'city-windmill': {
-                produce.push({res:'electricity',cost:1});
+                if (global.race['environmentalist']) {
+                    produce.push({res:'electricity',cost:1.5});
+                }
+                else {
+                    produce.push({res:'electricity',cost:1});
+                }
                 break;
             }
         }
