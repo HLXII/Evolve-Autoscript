@@ -335,7 +335,6 @@ export class MercenaryAction extends MiscAction {
         if (resid !== "Money") {return 0;}
         let str = $('.hire > span')[0].attributes['data-label'].value;
         let val = /[^\d]*([\d]+)[^\d]*/.exec(str);
-        console.log(val[1]);
         return val[1];
     }
 

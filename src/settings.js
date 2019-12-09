@@ -260,22 +260,13 @@ export async function autoPrestige() {
             // Checking if seeder is available
             if (!window.evolve.global.starDock.hasOwnProperty('seeder')) {return;}
             // Checking if seeding is complete
-            let seedCount = window.evolve.global.starDock.seeder.count;
-            if (seedCount !== 100) {return;}
+            if (window.evolve.global.starDock.seeder.count !== 100) {return;}
             // Checking if already clicked
             if (prestigeCheck) {return;}
 
-            let opened = await openModal($('#space-star_dock > .special'));
-            if (!opened) {return;}
-
-            // Getting buttons
-            let prep_ship = document.querySelector('#spcdock-prep_ship > a');
-            let launch_ship = document.querySelector('#spcdock-launch_ship > a');
-            if (prep_ship) {prep_ship.click();}
-            if (launch_ship) {launch_ship.click();}
-            // Closing modal
-            await closeModal();
-
+            // Clicking ship actions
+            window.evolve.actions.starDock.prep_ship.action();
+            window.evolve.actions.starDock.launch_ship.action();
             prestigeCheck = true;
             break;
         }
