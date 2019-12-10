@@ -1787,7 +1787,7 @@ function populatePriorityList() {
             return action.basePriority;
         }
         let settingVal = action.basePriority;
-        let prioControls = createNumControl(settingVal,"action_"+name+"_priority",prioSub,prioAdd);
+        let prioControls = createNumControl(settingVal,"action_"+action.id+"_priority",prioSub,prioAdd);
         let prioDiv = $('<div style="width:10%;" title="'+action.id+' Priority"></div>');
         prioDiv.append(prioControls);
         actionDiv.append(prioDiv);
