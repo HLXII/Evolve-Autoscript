@@ -133,7 +133,12 @@ export class PoweredBuilding extends Building {
         switch(this.id) {
             case 'city-mill': {
                 consume.push({res:'Food',cost:100});
-                produce.push({res:'electricity',cost:1});
+                if (global.race['environmentalist']) {
+                    produce.push({res:'electricity',cost:1.5});
+                }
+                else {
+                    produce.push({res:'electricity',cost:1});
+                }
                 break;
             }
             case 'city-tourist_center': {
@@ -141,12 +146,7 @@ export class PoweredBuilding extends Building {
                 break;
             }
             case 'city-windmill': {
-                if (global.race['environmentalist']) {
-                    produce.push({res:'electricity',cost:1.5});
-                }
-                else {
-                    produce.push({res:'electricity',cost:1});
-                }
+                produce.push({res:'electricity',cost:1});
                 break;
             }
         }
