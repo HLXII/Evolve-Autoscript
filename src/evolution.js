@@ -79,12 +79,12 @@ const evoRaceTrees = {
 
 // Will contain the minimum amount of each evolution building to move onto civilization
 // Is loaded by loadEvolution
-var maxEvo = {}
+export const maxEvo = {}
 
 // Loads maxEvo
 export function loadEvolution() {
     // Loading all maximum values for evolution upgrades
-    maxEvo = {};
+
     // Need these to unlock next upgrades
     maxEvo['evo-organelles'] = 2;
     maxEvo['evo-nucleus'] = 1;
