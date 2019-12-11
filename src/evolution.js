@@ -79,7 +79,7 @@ const evoRaceTrees = {
 
 // Will contain the minimum amount of each evolution building to move onto civilization
 // Is loaded by loadEvolution
-export const maxEvo = {}
+export const maxEvo = {};
 
 // Loads maxEvo
 export function loadEvolution() {
@@ -95,8 +95,9 @@ export function loadEvolution() {
     }
     let baseStorage = 100;
     // Adding to baseStorage if Creator is unlocked
-    if (achievementUnlocked('Creator') != -1) {
-        baseStorage += (achievementUnlocked('Creator')-1)*50;
+    let creatorLevel = achievementUnlocked('Creator')
+    if (creatorLevel != -1) {
+        baseStorage += (creatorLevel-1)*50;
     }
     // Finding most optimal maxes to reach sentience
     let total = 1000;

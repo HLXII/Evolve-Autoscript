@@ -283,7 +283,8 @@ export function achievementUnlocked(achievement) {
     let divList = $('.achievement');
     for (let i = 0;i < divList.length;i++) {
         if (divList[i].children[0].innerText == achievement) {
-            return $('.achievement')[0].children[2].children[0].attributes.class.value[4];
+            if (divList[i].children.length < 3) { return 1; }
+            return divList[i].children[2].children[0].attributes.class.value[4];
         }
     }
     return -1;
