@@ -38,3 +38,4 @@ All priority settings are very opaque. As in, it is not very clear how changes i
 * Fix Auto Battle for multiple factions (Make dependant on Auto Unification as well for seiges or Cultural Supremacy)
 * Update Auto Unification with more settings. (maybe make it smarter somehow? idk how)
 * Add priority trigger system. Opens modal when clicking on custom priority UI, gives multiple option type / value for triggers. Basically coding
+* Add Citadel to autopower,  will need to revamp system to accommodate for changing cost

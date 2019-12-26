@@ -78,11 +78,12 @@ export const poweredBuildingList = {
     'interstellar-g_factory': ['alpha_support'],
     'interstellar-xfer_station': ['alpha_support', 'Uranium', 'electricity'],
     'interstellar-cruiser': ['Helium_3'],
-    'interstellar-dyson_net': ['electricity'],
+    'interstellar-dyson': ['electricity'],
     'interstellar-nexus': ['nebula_support', 'electricity', 'Money'],
     'interstellar-harvester': ['nebula_support', 'Helium_3', 'Deuterium'],
     'interstellar-elerium_prospector': ['nebula_support', 'Elerium'],
     'interstellar-neutron_miner': ['Neutronium', 'Helium_3', 'electricity'],
+    //'interstellar-citadel': TOOD Implement
     'interstellar-far_reach': ['electricity'],
     'interstellar-stellar_engine': ['electricity'],
     'interstellar-mass_ejector': ['electricity'],
@@ -414,11 +415,15 @@ export async function autoSupport(priorityData) {
         if (buildings[x].id == 'interstellar-stellar_engine') {
             if (buildings[x].numTotal == 100) {
                 support.electricity += buildings[x].produce[0].cost;
+                console.log("STELLAR: ", buildings[x].produce[0].cost);
             }
             continue;
         }
-        if (buildings[x].id == 'interstellar-dyson_net') {
-            //TODO Add dyson net electricity
+        if (buildings[x].id == 'interstellar-dyson') {
+            if (buildings[x].numTotal == 100) {
+                support.electricity += buildings[x].produce[0].cost;
+                console.log("DYSON: ", buildings[x].produce[0].cost);
+            }
             continue;
         }
 
