@@ -64,8 +64,7 @@ export class Resource {
         return window.evolve.global.interstellar.mass_ejector[this.id];
     }
     get ejectMass() {
-        // TODO: Fix in 0.7.0
-        return window.evolve.atomic_mass[this.id].mass / window.evolve.atomic_mass[this.id].size;
+        return window.evolve.atomic_mass[this.id];
     }
     ejectInc(num) {
         num = (num === undefined) ? 1 : num;
